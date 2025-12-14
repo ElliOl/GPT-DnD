@@ -1,0 +1,93 @@
+{
+  "name": "Elara Moonwhisper",
+  "class": "Wizard",
+  "level": 1,
+  "race": "High Elf",
+  "background": "Sage",
+  "abilities": {
+    "str": 8,
+    "dex": 14,
+    "con": 13,
+    "int": 16,
+    "wis": 12,
+    "cha": 10
+  },
+  "hp": 7,
+  "max_hp": 7,
+  "temp_hp": 0,
+  "ac": 15,
+  "speed": 30,
+  "proficiency_bonus": 2,
+  "proficiencies": [
+    "Arcana",
+    "History",
+    "Investigation",
+    "Perception"
+  ],
+  "save_proficiencies": [
+    "int",
+    "wis"
+  ],
+  "weapons": [
+    {
+      "name": "Quarterstaff",
+      "attack_bonus": 1,
+      "damage_dice": "1d6",
+      "damage_bonus": -1,
+      "damage_type": "bludgeoning"
+    },
+    {
+      "name": "Light Crossbow",
+      "attack_bonus": 4,
+      "damage_dice": "1d8",
+      "damage_bonus": 2,
+      "damage_type": "piercing",
+      "ranged": true,
+      "range": "80/320"
+    }
+  ],
+  "spellcasting": {
+    "ability": "int",
+    "spell_save_dc": 13,
+    "spell_attack_bonus": 5,
+    "spell_slots": {
+      "1st": 0
+    },
+    "spells_prepared": [
+      "Mage Armor",
+      "Magic Missile",
+      "Shield",
+      "Detect Magic",
+      "Identify"
+    ],
+    "cantrips": [
+      "Fire Bolt",
+      "Ray of Frost",
+      "Mage Hand"
+    ]
+  },
+  "inventory": [
+    "Spellbook",
+    "Component pouch",
+    "Scholar's pack",
+    "Bottle of black ink",
+    "Quill",
+    "Small knife",
+    "Letter from dead colleague with unanswered question",
+    "Common clothes"
+  ],
+  "gold": 10,
+  "features": [
+    "Arcane Recovery: Recover spell slots = half wizard level (rounded up) once per day",
+    "Darkvision: 60 feet",
+    "Fey Ancestry: Advantage on saves vs charm, immune to magic sleep",
+    "Trance: Meditate 4 hours instead of sleeping"
+  ],
+  "personality": {
+    "trait": "I use polysyllabic words that convey the impression of great erudition.",
+    "ideal": "Knowledge: The path to power and self-improvement is through knowledge.",
+    "bond": "I have an ancient text that holds terrible secrets.",
+    "flaw": "I am easily distracted by the promise of information."
+  },
+  "notes": "Hired by Gundren to research ancient dwarven ruins near Phandalin. Fascinated by Wave Echo Cave legends."
+}

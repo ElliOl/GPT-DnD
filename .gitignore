@@ -1,0 +1,52 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+pip-log.txt
+pip-delete-this-directory.txt
+.pytest_cache/
+*.cover
+.coverage
+
+# Node
+node_modules/
+dist/
+build/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Audio cache
+audio_cache/
+*.mp3
+
+# Game data (optional - uncomment if you want to keep personal campaign data private)
+# data/characters/*.json
+# data/campaigns/**/*
+# backend/prompts/dm_system_prompt.txt
+
+# Build artifacts
+*.pyc
+*.egg-info/
+.eggs/

@@ -1,0 +1,25 @@
+{
+  "id": "adv-lost-mines-phandelver",
+  "name": "Lost Mines of Phandelver",
+  "description": "A classic D&D 5e starter adventure. The party has been hired by Gundren Rockseeker to escort a wagon of supplies to Phandalin. Along the way, they discover Gundren and his escort have been ambushed by goblins.",
+  "characters": [
+    "Elara Moonwhisper",
+    "Thorin Ironforge"
+  ],
+  "notes": "Starting adventure for new players. Focus on exploration and roleplay.",
+  "createdAt": "2025-01-27T00:00:00.000Z",
+  "updatedAt": "2025-01-27T00:00:00.000Z",
+  "currentState": null,
+  "history": [
+    {
+      "id": "save-start",
+      "timestamp": "2025-01-27T00:00:00.000Z",
+      "description": "Beginning of Adventure - On the Triboar Trail",
+      "narrative": "You find yourselves on the Triboar Trail, a well-traveled road that runs from Neverwinter to the mining town of Phandalin. The sun is high overhead, and the journey has been uneventful so far. Gundren Rockseeker, a dwarf prospector, hired you to escort a wagon of supplies to Phandalin. He rode ahead with his escort, Sildar Hallwinter, promising to meet you in Phandalin.\n\nAs you round a bend in the trail, you come upon a disturbing sight: two dead horses blocking the path, black-feathered arrows protruding from their bodies. The horses belong to Gundren and Sildar.\n\nWhat do you do?",
+      "gameState": null
+    }
+  ],
+  "currentSavePoint": "save-start",
+  "conversationHistory": []
+}
+

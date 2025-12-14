@@ -1,0 +1,41 @@
+D&D 5e RULES - STRICT & STREAMLINED
+
+ABILITY CHECKS:
+- Roll: d20 + ability modifier + proficiency (if proficient)
+- DC: 5=easy, 10=medium, 15=hard, 20=very hard, 25+ nearly impossible
+- Advantage: roll 2d20, take higher
+- Disadvantage: roll 2d20, take lower
+
+COMBAT:
+- Initiative: d20 + DEX modifier (highest first)
+- Attack: d20 + attack bonus vs target AC
+- Natural 20 = critical hit (double damage dice)
+- Natural 1 = critical miss
+- 0 HP = unconscious (death saves)
+
+DEATH SAVES:
+- Roll d20 each turn at 0 HP
+- 10+ = success, 9- = failure
+- 3 successes = stabilized
+- 3 failures = dead
+- Nat 20 = wake with 1 HP
+- Nat 1 = 2 failures
+
+DAMAGE TYPES:
+- Physical: slashing, piercing, bludgeoning
+- Elemental: fire, cold, lightning, thunder, acid, poison
+- Magical: radiant, necrotic, psychic, force
+
+ABILITY SCORES:
+- STR: Athletics, melee attacks
+- DEX: Acrobatics, Stealth, AC, ranged attacks
+- CON: HP, concentration saves
+- INT: Arcana, Investigation, History
+- WIS: Perception, Insight, Survival
+- CHA: Persuasion, Deception, Performance
+
+CRITICAL RULES:
+- Use tools for ALL mechanics - never simulate dice yourself
+- Wait for tool results before narrating outcomes
+- Check character stats before describing results
+- Follow DC guidelines strictly (5/10/15/20/25+)

@@ -1,0 +1,61 @@
+{
+  "name": "Gundren Rockseeker",
+  "race": "Dwarf (Mountain)",
+  "class": "Expert/Merchant",
+  "alignment": "Lawful Good",
+  
+  "appearance": {
+    "age": 150,
+    "description": "A hardy dwarf with a thick brown beard streaked with gray. Wears practical traveling clothes and a wide-brimmed hat. Carries himself with the confidence of someone who's spent years in the wilderness."
+  },
+  
+  "personality": {
+    "traits": [
+      "Optimistic and enthusiastic about his discovery",
+      "Generous with friends, shrewd in business",
+      "Stubborn (typical dwarf)",
+      "Impatient to reach Phandalin"
+    ],
+    "voice": "Gruff but warm. Heavy dwarven accent. Laughs easily.",
+    "mannerisms": [
+      "Strokes beard when thinking",
+      "Taps his pipe against his boot",
+      "Uses mining metaphors for everything"
+    ]
+  },
+  
+  "background": {
+    "profession": "Prospector and miner",
+    "family": "Brothers: Tharden and Nundro Rockseeker",
+    "history": "The Rockseeker brothers have been searching for the legendary Wave Echo Cave for years. Recently found a map!"
+  },
+  
+  "relationships": {
+    "sildar_hallwinter": "Hired bodyguard and friend from Neverwinter",
+    "party": "Hired them to escort supplies, doesn't know them well yet",
+    "brothers": "Very close. They're waiting in Phandalin."
+  },
+  
+  "current_status": "Captured by goblins after ambush on Triboar Trail. Being held at Cragmaw Castle.",
+  
+  "secrets": [
+    "Found a map to Wave Echo Cave",
+    "The map is hidden in his pack",
+    "Knows the cave contains the Forge of Spells",
+    "His brothers are already in Phandalin setting up operations"
+  ],
+  
+  "sample_dialogue": [
+    "Bah! Nothing a bit of dwarvish ale won't fix!",
+    "I tell ye, this discovery will make us all rich as kings!",
+    "Wave Echo Cave... it's real, lads. As real as the stone beneath our feet!",
+    "My brothers are good dwarves. Bit stuffy, but solid as granite.",
+    "Phandalin's a rough town, but it's got good bones. Good people too, mostly."
+  ],
+  
+  "quest_hooks": [
+    "If rescued, offers significant reward (25gp each + magic item)",
+    "Begs party to check on his brothers in Phandalin",
+    "Warns about the 'Black Spider' - someone else looking for the cave"
+  ]
+}

@@ -1,0 +1,63 @@
+{
+  "id": "campaign-lost-mines-1",
+  "adventureId": "adv-lost-mines-phandelver",
+  "campaignName": "Lost Mines of Phandelver - Session 1",
+  "sessionNumber": 1,
+  "dateStarted": "2024-12-09",
+  "lastPlayed": "2024-12-09T00:00:00.000Z",
+  "currentLocation": "cragmaw_hideout_prison_chamber",
+  "activeEncounter": "cragmaw_hideout",
+  "party": [
+    "thorin_ironforge",
+    "elara_moonwhisper"
+  ],
+  "questLog": [
+    {
+      "id": "quest-1",
+      "name": "Escort Supplies to Phandalin",
+      "status": "in_progress",
+      "description": "Gundren Rockseeker hired us to escort a wagon of supplies to Phandalin. Payment: 10gp each upon delivery.",
+      "notes": "Gundren left ahead of us with a warrior named Sildar Hallwinter",
+      "timestamp": "2024-12-09T00:00:00.000Z",
+      "updatedAt": "2024-12-09T00:00:00.000Z"
+    },
+    {
+      "id": "quest-2",
+      "name": "Rescue Gundren Rockseeker",
+      "status": "in_progress",
+      "description": "Gundren's horses were found dead on the Triboar Trail, ambushed by goblins. The wagon was dragged east into the Neverwinter Wood. We must find where they took him.",
+      "notes": "Found and infiltrated goblin hideout. Killed all goblins in first chamber and eastern passage. Found Gundren Rockseeker and Sildar Hallwinter in prison chamber - both alive but unconscious and bound. Need to free them and escape.",
+      "timestamp": "2024-12-09T00:00:00.000Z",
+      "updatedAt": "2024-12-09T00:00:00.000Z"
+    }
+  ],
+  "worldState": {
+    "gundren_location": "cragmaw_hideout_prison_chamber",
+    "sildar_location": "cragmaw_hideout_prison_chamber",
+    "gundren_found": true,
+    "sildar_found": true,
+    "gundren_status": "unconscious_bound",
+    "sildar_status": "unconscious_bound",
+    "cragmaw_hideout_discovered": true,
+    "cragmaw_hideout_location": "rocky_outcropping_east_of_trail",
+    "wave_echo_cave_location": "unknown",
+    "goblin_trail_followed": true,
+    "trail_direction": "east_into_neverwinter_wood"
+  },
+  "partyInventory": {
+    "sharedItems": [
+      "Wagon of mining supplies",
+      "Two horses (pulling wagon)",
+      "10 gold pieces (from scattered supplies)"
+    ],
+    "goldPool": 10
+  },
+  "notes": [
+    "Party hired in Neverwinter 3 days ago",
+    "Gundren seemed excited about something he and his brothers discovered",
+    "He mentioned 'Wave Echo Cave' but wouldn't give details",
+    "Long rest taken at ambush site. Successfully infiltrated goblin hideout at night.",
+    "Killed goblin lookout and guard at hideout entrance",
+    "Defeated all goblins in first chamber and eastern passage. Found Gundren Rockseeker and Sildar Hallwinter in prison chamber - both alive but unconscious and bound."
+  ]
+}

@@ -1,0 +1,79 @@
+{
+  "characters": {
+    "Elara Moonwhisper": {
+      "name": "Elara Moonwhisper",
+      "race": "High Elf",
+      "char_class": "Wizard",
+      "level": 1,
+      "max_hp": 7,
+      "current_hp": 7,
+      "armor_class": 15,
+      "abilities": {
+        "STR": 8,
+        "DEX": 14,
+        "CON": 13,
+        "INT": 16,
+        "WIS": 12,
+        "CHA": 10
+      },
+      "proficiency_bonus": 2,
+      "skills": {
+        "Arcana": true,
+        "History": true,
+        "Investigation": true,
+        "Perception": true
+      },
+      "inventory": [
+        "Spellbook",
+        "Component pouch",
+        "Scholar's pack",
+        "Bottle of black ink",
+        "Quill",
+        "Small knife",
+        "Letter from dead colleague with unanswered question",
+        "Common clothes"
+      ],
+      "conditions": []
+    },
+    "Thorin Ironforge": {
+      "name": "Thorin Ironforge",
+      "race": "Human",
+      "char_class": "Fighter",
+      "level": 1,
+      "max_hp": 12,
+      "current_hp": 5,
+      "armor_class": 18,
+      "abilities": {
+        "STR": 16,
+        "DEX": 14,
+        "CON": 15,
+        "INT": 10,
+        "WIS": 12,
+        "CHA": 8
+      },
+      "proficiency_bonus": 2,
+      "skills": {
+        "Athletics": true,
+        "Intimidation": true,
+        "Perception": true,
+        "Survival": true
+      },
+      "inventory": [
+        "Backpack",
+        "Bedroll",
+        "Mess kit",
+        "Tinderbox",
+        "10 torches",
+        "10 days of rations",
+        "Waterskin",
+        "50 feet of hempen rope",
+        "Insignia of rank (from military service)",
+        "Trophy from fallen enemy",
+        "Healing potion"
+      ],
+      "conditions": []
+    }
+  },
+  "lastUpdated": "2025-01-27T00:00:00.000Z"
+}
+

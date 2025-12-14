@@ -1,0 +1,83 @@
+{
+  "name": "Thorin Ironforge",
+  "class": "Fighter",
+  "level": 1,
+  "race": "Human",
+  "background": "Soldier",
+  "abilities": {
+    "str": 16,
+    "dex": 14,
+    "con": 15,
+    "int": 10,
+    "wis": 12,
+    "cha": 8
+  },
+  "hp": 5,
+  "max_hp": 12,
+  "temp_hp": 0,
+  "ac": 18,
+  "speed": 30,
+  "proficiency_bonus": 2,
+  "proficiencies": [
+    "Athletics",
+    "Intimidation",
+    "Perception",
+    "Survival"
+  ],
+  "save_proficiencies": [
+    "str",
+    "con"
+  ],
+  "weapons": [
+    {
+      "name": "Longsword",
+      "attack_bonus": 5,
+      "damage_dice": "1d8",
+      "damage_bonus": 3,
+      "damage_type": "slashing"
+    },
+    {
+      "name": "Handaxe",
+      "attack_bonus": 5,
+      "damage_dice": "1d6",
+      "damage_bonus": 3,
+      "damage_type": "slashing",
+      "thrown": true,
+      "range": "20/60"
+    }
+  ],
+  "armor": {
+    "name": "Chain Mail",
+    "ac_base": 16,
+    "type": "heavy"
+  },
+  "shield": {
+    "name": "Shield",
+    "ac_bonus": 2
+  },
+  "inventory": [
+    "Backpack",
+    "Bedroll",
+    "Mess kit",
+    "Tinderbox",
+    "10 torches",
+    "10 days of rations",
+    "Waterskin",
+    "50 feet of hempen rope",
+    "Insignia of rank (from military service)",
+    "Trophy from fallen enemy",
+    "Healing potion"
+  ],
+  "gold": 10,
+  "features": [
+    "Fighting Style: Defense (+1 AC when wearing armor)",
+    "Second Wind: Regain 1d10 + 1 HP once per short rest"
+  ],
+  "personality": {
+    "trait": "I can stare down a hell hound without flinching.",
+    "ideal": "Greater Good: Our lot is to lay down our lives in defense of others.",
+    "bond": "I would still lay down my life for the people I served with.",
+    "flaw": "I obey authority without question, even if I disagree."
+  },
+  "notes": "Hired by Gundren Rockseeker to escort supplies to Phandalin. Former soldier from the Neverwinter Guard."
+}
