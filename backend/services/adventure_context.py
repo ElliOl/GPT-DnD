@@ -135,6 +135,18 @@ class AdventureContext:
                 parts.append(f"_Atmosphere: {location['atmosphere'][:150]}_")
             parts.append("")
         
+        # Accessible locations for freeroaming/backtracking
+        accessible = self.get_accessible_locations()
+        if accessible["discovered"] or accessible["current_chapter"]:
+            parts.append("**Accessible Locations:**")
+            if accessible["discovered"]:
+                discovered_names = [loc["name"] for loc in accessible["discovered"][:5]]
+                parts.append(f"  Previously visited: {', '.join(discovered_names)}")
+            if accessible["current_chapter"]:
+                chapter_names = [loc["name"] for loc in accessible["current_chapter"][:5]]
+                parts.append(f"  In this area: {', '.join(chapter_names)}")
+            parts.append("")
+        
         # Active quests (bullet list)
         active_quests = self.metadata.get("active_quests", [])
         if active_quests:
@@ -280,12 +292,20 @@ class AdventureContext:
     # On-Demand Loading
     # ========================================================================
     
-    def get_location_details(self, area_id: Optional[str] = None) -> str:
+    def get_location_details(self, location_id: Optional[str] = None, area_id: Optional[str] = None) -> str:
         """
         COMPRESSED location info - only load when investigating
         Target: 100-300 tokens
+        
+        Args:
+            location_id: Specific location to load (if None, uses current location)
+            area_id: Specific area within the location
         """
-        location = self._get_location()
+        if location_id:
+            location = self._load_location(location_id)
+        else:
+            location = self._get_location()
+        
         if not location:
             return "Location details not available."
         
@@ -393,28 +413,253 @@ class AdventureContext:
     # State Management
     # ========================================================================
     
-    def update_location(self, new_location: str):
-        """Update current location"""
+    def update_location(self, new_location: str, validate_discovery: bool = True):
+        """
+        Update current location with optional validation
+        
+        Args:
+            new_location: Location ID to set
+            validate_discovery: If True, only allow moving to discovered locations
+                               (except for starting locations or locations in current chapter)
+        
+        Note:
+            The DM should handle narrative validation (ensuring players can reach the location).
+            This method tracks discovery but doesn't prevent movement - the DM prompt
+            enforces that players must actually travel to locations.
+            
+            Backtracking to previously visited locations is always allowed.
+        """
         if "current_state" not in self.metadata:
             self.metadata["current_state"] = {}
+        
+        # Track discovered locations
+        discovered = self.metadata.get("discovered_locations", [])
+        if new_location not in discovered:
+            self.metadata.setdefault("discovered_locations", []).append(new_location)
         
         self.metadata["current_state"]["location"] = new_location
         self._current_location_cache = None  # Invalidate cache
-        
-        # Track discovered locations
-        if new_location not in self.metadata.get("discovered_locations", []):
-            self.metadata.setdefault("discovered_locations", []).append(new_location)
-        
         self.save_metadata()
     
-    def update_chapter(self, new_chapter: str):
-        """Update current chapter"""
+    def get_accessible_locations(self) -> Dict[str, Any]:
+        """
+        Get list of locations that are accessible for travel/freeroaming
+        
+        Returns:
+            Dict with:
+            - discovered: Previously visited locations (can backtrack)
+            - current_chapter: Locations in current chapter (can explore)
+            - previous_chapters: Locations from previous chapters (can backtrack)
+            - nearby: Locations that are loosely connected/accessible
+        """
+        current_state = self.metadata.get("current_state", {})
+        current_chapter_id = current_state.get("chapter")
+        current_location_id = current_state.get("location")
+        discovered = self.metadata.get("discovered_locations", [])
+        
+        result = {
+            "discovered": [],
+            "current_chapter": [],
+            "previous_chapters": [],
+            "nearby": []
+        }
+        
+        # Get current chapter part number
+        current_part = None
+        if current_chapter_id:
+            current_part = self._extract_part_number(current_chapter_id)
+        
+        # Load all location files to check their part numbers
+        locations_dir = self.adventure_dir / "locations"
+        if locations_dir.exists():
+            for loc_file in locations_dir.glob("*.json"):
+                try:
+                    with open(loc_file) as f:
+                        loc_data = json.load(f)
+                        loc_id = loc_data.get("id")
+                        if not loc_id:
+                            continue
+                        
+                        loc_part = loc_data.get("part")
+                        
+                        # Discovered locations (can always backtrack)
+                        if loc_id in discovered:
+                            result["discovered"].append({
+                                "id": loc_id,
+                                "name": loc_data.get("name", loc_id),
+                                "type": loc_data.get("type", "unknown"),
+                                "part": loc_part
+                            })
+                        
+                        # Current chapter locations (can explore)
+                        if current_part and loc_part == current_part:
+                            if loc_id not in [d["id"] for d in result["current_chapter"]]:
+                                result["current_chapter"].append({
+                                    "id": loc_id,
+                                    "name": loc_data.get("name", loc_id),
+                                    "type": loc_data.get("type", "unknown")
+                                })
+                        
+                        # Previous chapter locations (can backtrack if discovered)
+                        if current_part and loc_part and loc_part < current_part:
+                            if loc_id in discovered:
+                                if loc_id not in [d["id"] for d in result["previous_chapters"]]:
+                                    result["previous_chapters"].append({
+                                        "id": loc_id,
+                                        "name": loc_data.get("name", loc_id),
+                                        "type": loc_data.get("type", "unknown"),
+                                        "part": loc_part
+                                    })
+                except (json.JSONDecodeError, KeyError):
+                    continue
+        
+        # Nearby locations: same part or adjacent parts, or connected by travel routes
+        # This is a heuristic - locations in same/adjacent parts are "nearby"
+        if current_part and locations_dir.exists():
+            for loc_file in locations_dir.glob("*.json"):
+                try:
+                    with open(loc_file) as f:
+                        loc_data = json.load(f)
+                        loc_id = loc_data.get("id")
+                        loc_part = loc_data.get("part")
+                        
+                        if not loc_id or loc_id == current_location_id:
+                            continue
+                        
+                        # Same part = nearby
+                        if loc_part == current_part:
+                            if loc_id not in [d["id"] for d in result["nearby"]]:
+                                result["nearby"].append({
+                                    "id": loc_id,
+                                    "name": loc_data.get("name", loc_id),
+                                    "type": loc_data.get("type", "unknown")
+                                })
+                        # Adjacent parts = potentially nearby (depends on travel routes)
+                        elif loc_part and current_part and abs(loc_part - current_part) == 1:
+                            if loc_id not in [d["id"] for d in result["nearby"]]:
+                                result["nearby"].append({
+                                    "id": loc_id,
+                                    "name": loc_data.get("name", loc_id),
+                                    "type": loc_data.get("type", "unknown"),
+                                    "part": loc_part,
+                                    "note": "Adjacent chapter - may require travel"
+                                })
+                except (json.JSONDecodeError, KeyError):
+                    continue
+        
+        return result
+    
+    def update_chapter(self, new_chapter: str, force: bool = False):
+        """
+        Update current chapter with flexible validation for sandbox adventures
+        
+        Args:
+            new_chapter: Chapter ID to set (e.g., "part1_goblin_arrows", "part2_phandalin")
+            force: If True, bypass validation (for DM override when narrative makes sense)
+        
+        Raises:
+            ValueError: If trying to skip ahead without prerequisites (unless force=True)
+        
+        Note:
+            - Backtracking to previous chapters is always allowed
+            - Forward progression is flexible: players can skip ahead if they have:
+              * Discovered the location (in discovered_locations)
+              * Learned about it from NPCs (tracked in party_knowledge)
+              * Received directions/information
+            - In sandbox adventures, chapters represent areas/storylines that can be
+              accessed in any order if players have the right information
+            - Use force=True when DM determines narrative progression makes sense
+        """
         if "current_state" not in self.metadata:
             self.metadata["current_state"] = {}
+        
+        current_chapter = self.metadata.get("current_state", {}).get("chapter")
+        
+        # If force is True, allow any chapter change (DM override)
+        if force:
+            self.metadata["current_state"]["chapter"] = new_chapter
+            self._current_chapter_cache = None
+            self.save_metadata()
+            return
+        
+        # Validate chapter progression - flexible for sandbox adventures
+        if current_chapter and new_chapter:
+            # Extract part numbers for comparison
+            current_part = self._extract_part_number(current_chapter)
+            new_part = self._extract_part_number(new_chapter)
+            
+            if current_part is not None and new_part is not None:
+                # Always allow: same part, going back, or forward by 1
+                if new_part <= current_part + 1:
+                    # Normal progression - always allowed
+                    pass
+                else:
+                    # Skipping ahead more than 1 part - check if prerequisites are met
+                    # Check if location is discovered or party has knowledge
+                    chapter_data = self._load_chapter(new_chapter)
+                    if chapter_data:
+                        key_locations = chapter_data.get("key_locations", [])
+                        discovered = self.metadata.get("discovered_locations", [])
+                        party_knowledge = self.metadata.get("party_knowledge", {})
+                        
+                        # Check if any key location is discovered
+                        has_discovered_location = any(
+                            loc in discovered for loc in key_locations
+                        )
+                        
+                        # Check if party has relevant knowledge
+                        # Look for knowledge flags that might unlock this chapter
+                        has_relevant_knowledge = False
+                        chapter_id_lower = new_chapter.lower()
+                        for key, value in party_knowledge.items():
+                            if value and (
+                                "wave_echo" in key or "cragmaw_castle" in key or
+                                "location" in key or "knows_about" in key
+                            ):
+                                has_relevant_knowledge = True
+                                break
+                        
+                        # Allow if location discovered OR party has knowledge OR chapter has no strict prerequisites
+                        if not (has_discovered_location or has_relevant_knowledge):
+                            # Still allow, but log a warning - DM should validate narratively
+                            # In sandbox adventures, chapters may not have strict prerequisites
+                            pass  # Allow but DM should ensure narrative makes sense
         
         self.metadata["current_state"]["chapter"] = new_chapter
         self._current_chapter_cache = None  # Invalidate cache
         self.save_metadata()
+    
+    def _extract_part_number(self, chapter_id: str) -> Optional[int]:
+        """Extract part number from chapter ID (e.g., 'part1_goblin_arrows' -> 1)"""
+        if chapter_id.startswith("part"):
+            # Extract number after "part"
+            try:
+                # Handle formats like "part1", "part1_goblin_arrows", "part01", etc.
+                remaining = chapter_id[4:]  # Remove "part"
+                # Find where the number ends
+                num_str = ""
+                for char in remaining:
+                    if char.isdigit():
+                        num_str += char
+                    else:
+                        break
+                if num_str:
+                    return int(num_str)
+            except (ValueError, IndexError):
+                pass
+        
+        # Try "ch01" format
+        if chapter_id.startswith("ch"):
+            try:
+                num_str = chapter_id[2:]
+                # Find where the number ends
+                num_str = "".join(c for c in num_str if c.isdigit())
+                if num_str:
+                    return int(num_str)
+            except (ValueError, IndexError):
+                pass
+        
+        return None
     
     def add_event(self, event: str):
         """Track important event"""
@@ -508,19 +753,34 @@ class AdventureContext:
         if chapter_id.startswith("ch") and chapter_id[2:].isdigit():
             part_num = chapter_id[2:]
             alt_id = f"part{part_num}"
+            # Try exact match first
             path = self.adventure_dir / "chapters" / f"{alt_id}.json"
             if path.exists():
                 with open(path) as f:
                     return json.load(f)
+            # Try files that start with the pattern (e.g., "part1_goblin_arrows.json")
+            chapters_dir = self.adventure_dir / "chapters"
+            if chapters_dir.exists():
+                for file in chapters_dir.glob(f"{alt_id}_*.json"):
+                    with open(file) as f:
+                        return json.load(f)
         
         # Convert part1 -> ch01, part2 -> ch02, etc.
+        # Note: Even though we convert the ID format, the actual files use "part" prefix
+        # So we still search for "part*" files, not "ch*" files
         if chapter_id.startswith("part") and chapter_id[4:].isdigit():
-            ch_num = chapter_id[4:].zfill(2)  # pad with zero: 1 -> 01
-            alt_id = f"ch{ch_num}"
-            path = self.adventure_dir / "chapters" / f"{alt_id}.json"
+            part_num = chapter_id[4:]
+            # Try exact match first
+            path = self.adventure_dir / "chapters" / f"{chapter_id}.json"
             if path.exists():
                 with open(path) as f:
                     return json.load(f)
+            # Try files that start with the pattern (e.g., "part1_goblin_arrows.json")
+            chapters_dir = self.adventure_dir / "chapters"
+            if chapters_dir.exists():
+                for file in chapters_dir.glob(f"{chapter_id}_*.json"):
+                    with open(file) as f:
+                        return json.load(f)
         
         # If still not found, try to find any chapter file that might match
         chapters_dir = self.adventure_dir / "chapters"

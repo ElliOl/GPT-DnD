@@ -511,7 +511,12 @@ async def update_adventure_state(request: dict):
             current_adventure.update_location(updates["location"])
         
         if "chapter" in updates:
-            current_adventure.update_chapter(updates["chapter"])
+            try:
+                # Allow force flag for DM override when narrative progression makes sense
+                force = updates.get("force_chapter_change", False)
+                current_adventure.update_chapter(updates["chapter"], force=force)
+            except ValueError as e:
+                raise HTTPException(status_code=400, detail=str(e))
         
         if "event" in updates:
             current_adventure.add_event(updates["event"])
@@ -576,7 +581,7 @@ async def get_location_details(location_id: str, area_id: Optional[str] = None):
         raise HTTPException(status_code=400, detail="No adventure loaded")
     
     try:
-        details = current_adventure.get_location_details(area_id)
+        details = current_adventure.get_location_details(location_id, area_id)
         return {"location_id": location_id, "area_id": area_id, "details": details}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -602,6 +607,19 @@ async def list_chapters():
         raise HTTPException(status_code=400, detail="No adventure loaded")
     
     return {"chapters": current_adventure.list_available_chapters()}
+
+
+@app.get("/api/adventures/accessible-locations")
+async def get_accessible_locations():
+    """Get list of locations accessible for travel/freeroaming"""
+    if not current_adventure:
+        raise HTTPException(status_code=400, detail="No adventure loaded")
+    
+    try:
+        accessible = current_adventure.get_accessible_locations()
+        return accessible
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get("/api/adventures/locations")

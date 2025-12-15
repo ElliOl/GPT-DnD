@@ -993,7 +993,7 @@ export function Players({ characters, onCharactersChange }: PlayersProps) {
                             key={skill}
                             className={`text-[9px] px-1.5 py-0.5 rounded border ${
                               proficient
-                                ? 'bg-primary/20 border-primary text-primary-foreground'
+                                ? 'bg-primary border-primary text-primary-foreground font-semibold'
                                 : 'bg-card border-border text-muted-foreground'
                             }`}
                           >
@@ -1013,7 +1013,7 @@ export function Players({ characters, onCharactersChange }: PlayersProps) {
                         {(char as any).save_proficiencies.map((save: string) => (
                           <div
                             key={save}
-                            className="text-[9px] px-1.5 py-0.5 rounded border bg-primary/20 border-primary text-primary-foreground uppercase"
+                            className="text-[9px] px-1.5 py-0.5 rounded border bg-primary border-primary text-primary-foreground font-semibold uppercase"
                           >
                             {save}
                           </div>
