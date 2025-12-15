@@ -27,10 +27,12 @@ class DMAgent:
         game_engine,
         tts_service,
         system_prompt: Optional[str] = None,
+        adventure_context=None,
     ):
         self.ai_client = ai_client
         self.game_engine = game_engine
         self.tts_service = tts_service
+        self.adventure_context = adventure_context
         self.conversation_history: List[Message] = []
 
         # Load system prompt (DM personality and rules)
@@ -296,6 +298,20 @@ Always use tools for game mechanics - never guess or simulate dice rolls yoursel
                     "required": ["character", "item"],
                 },
             ),
+            ToolDefinition(
+                name="long_rest",
+                description="Process a long rest for the party. Restores HP, spell slots, and checks for level up eligibility. Call this when players take a long rest (8 hours of rest).",
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "description": {
+                            "type": "string",
+                            "description": "Brief description of where/how they're resting"
+                        }
+                    },
+                    "required": [],
+                },
+            ),
         ]
 
     async def process_player_input(
@@ -533,6 +549,9 @@ Always use tools for game mechanics - never guess or simulate dice rolls yoursel
 
         # Add narrative to conversation history
         self.conversation_history.append(Message(role="assistant", content=narrative))
+        
+        # Trim conversation history if it gets too long (prevents token bloat)
+        self._trim_conversation_history(max_messages=50)
 
         # Generate TTS if requested (will return None if TTS is disabled/failed)
         audio_url = None
@@ -602,7 +621,16 @@ Always use tools for game mechanics - never guess or simulate dice rolls yoursel
             return self.game_engine.start_combat(get_param("participants"))
 
         elif tool_name == "end_combat":
-            return self.game_engine.end_combat()
+            result = self.game_engine.end_combat()
+            # Track combat encounter completion for leveling
+            if self.adventure_context and hasattr(self.adventure_context, 'leveling'):
+                # Try to identify the encounter from combat state
+                combat_state = self.game_engine.combat_state
+                if combat_state.get("active") == False and combat_state.get("round", 0) > 0:
+                    # Combat just ended - track it
+                    encounter_id = f"encounter_{combat_state.get('round', 0)}"
+                    self.adventure_context.leveling.track_combat_encounter(encounter_id)
+            return result
 
         elif tool_name == "get_character_info":
             return self.game_engine.get_character(get_param("character"))
@@ -613,6 +641,39 @@ Always use tools for game mechanics - never guess or simulate dice rolls yoursel
                 item=get_param("item"),
                 quantity=parameters.get("quantity", 1),
             )
+
+        elif tool_name == "long_rest":
+            # Process long rest and check for level up
+            if not self.adventure_context:
+                return {"error": "No adventure loaded. Cannot process long rest."}
+            
+            try:
+                current_state = self.adventure_context.metadata.get("current_state", {})
+                current_level = current_state.get("party_level", 1)
+                
+                # Process long rest through leveling system
+                result = self.adventure_context.leveling.process_long_rest(current_level)
+                
+                # Restore HP for all characters (long rest restores all HP)
+                if self.game_engine:
+                    for char_name in self.game_engine.characters.keys():
+                        char = self.game_engine.characters[char_name]
+                        if "max_hp" in char:
+                            char["hp"] = char["max_hp"]
+                            char["current_hp"] = char["max_hp"]
+                
+                return {
+                    "rest_complete": True,
+                    "hp_restored": True,
+                    "level_up": result.get("level_up", False),
+                    "old_level": result.get("old_level", current_level),
+                    "new_level": result.get("new_level", current_level),
+                    "reason": result.get("reason", ""),
+                    "message": f"Level up to {result.get('new_level', current_level)}!" if result.get("level_up") else "Rest complete. No level up."
+                }
+            except Exception as e:
+                import traceback
+                return {"error": f"Error processing long rest: {str(e)}", "traceback": traceback.format_exc()}
 
         else:
             return {"error": f"Unknown tool: {tool_name}"}
@@ -711,3 +772,20 @@ Always use tools for game mechanics - never guess or simulate dice rolls yoursel
     def reset_conversation(self):
         """Clear conversation history (start fresh session)"""
         self.conversation_history = []
+    
+    def _trim_conversation_history(self, max_messages: int = 50):
+        """
+        Trim conversation history to keep only recent messages
+        
+        Keeps the most recent messages to prevent token bloat in long sessions.
+        Always keeps at least the last 2 messages (player + DM) for context.
+        
+        Args:
+            max_messages: Maximum number of messages to keep (default: 50)
+        """
+        if len(self.conversation_history) <= max_messages:
+            return  # No trimming needed
+        
+        # Keep the most recent messages
+        # This preserves recent context while removing older messages
+        self.conversation_history = self.conversation_history[-max_messages:]

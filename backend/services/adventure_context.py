@@ -48,6 +48,10 @@ class AdventureContext:
         self._current_chapter_cache = None
         self._current_location_cache = None
         self._npc_cache = {}
+        
+        # Initialize leveling system
+        from .leveling_system import LevelingSystem
+        self.leveling = LevelingSystem(self)
     
     def _load_metadata(self) -> Dict[str, Any]:
         """Load adventure metadata (state tracking)"""
@@ -436,6 +440,9 @@ class AdventureContext:
         discovered = self.metadata.get("discovered_locations", [])
         if new_location not in discovered:
             self.metadata.setdefault("discovered_locations", []).append(new_location)
+            # Track exploration milestone
+            if hasattr(self, 'leveling'):
+                self.leveling.track_exploration(f"discovered_{new_location}", new_location)
         
         self.metadata["current_state"]["location"] = new_location
         self._current_location_cache = None  # Invalidate cache
@@ -672,6 +679,9 @@ class AdventureContext:
         """Track that party met an NPC"""
         if npc_id not in self.metadata.get("met_npcs", []):
             self.metadata.setdefault("met_npcs", []).append(npc_id)
+            # Track social interaction
+            if hasattr(self, 'leveling'):
+                self.leveling.track_social_interaction("met_npc", npc_id)
         self.save_metadata()
     
     def add_quest(self, quest: Dict[str, Any]):
@@ -683,7 +693,12 @@ class AdventureContext:
         """Update quest status"""
         for quest in self.metadata.get("active_quests", []):
             if isinstance(quest, dict) and quest.get("id") == quest_id:
+                old_status = quest.get("status")
                 quest["status"] = status
+                # Track social interaction if quest completed
+                if status == "completed" and old_status != "completed":
+                    if hasattr(self, 'leveling'):
+                        self.leveling.track_social_interaction("quest_completed", None, quest_id)
                 break
         self.save_metadata()
     

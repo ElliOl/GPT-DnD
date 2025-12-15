@@ -66,11 +66,12 @@ async def lifespan(app: FastAPI):
     )
     print(f"✅ AI client initialized: {os.getenv('AI_PROVIDER', 'anthropic')}")
 
-    # Initialize DM Agent
+    # Initialize DM Agent (adventure_context will be set when adventure is loaded)
     dm_agent = DMAgent(
         ai_client=ai_client,
         game_engine=game_engine,
         tts_service=tts_service,
+        adventure_context=None,  # Will be updated when adventure is loaded
     )
     print("✅ DM Agent ready")
 
@@ -457,6 +458,11 @@ async def load_adventure(request: dict):
         current_adventure = AdventureContext(adventure_id)
         context_manager = ContextManager(current_adventure)
         
+        # Update DM agent with adventure context
+        global dm_agent
+        if dm_agent:
+            dm_agent.adventure_context = current_adventure
+        
         return {
             "success": True,
             "message": f"Loaded adventure: {current_adventure.metadata['name']}",
@@ -618,6 +624,79 @@ async def get_accessible_locations():
     try:
         accessible = current_adventure.get_accessible_locations()
         return accessible
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/adventures/long-rest")
+async def process_long_rest():
+    """
+    Process a long rest and check for level up eligibility
+    
+    Returns level up information if party is eligible.
+    DM should announce level up and allow players to update character sheets.
+    """
+    if not current_adventure:
+        raise HTTPException(status_code=400, detail="No adventure loaded")
+    
+    try:
+        current_state = current_adventure.metadata.get("current_state", {})
+        current_level = current_state.get("party_level", 1)
+        
+        result = current_adventure.leveling.process_long_rest(current_level)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/adventures/progression")
+async def get_progression_summary():
+    """Get summary of party progression across combat, exploration, and social pillars"""
+    if not current_adventure:
+        raise HTTPException(status_code=400, detail="No adventure loaded")
+    
+    try:
+        summary = current_adventure.leveling.get_progression_summary()
+        return summary
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/adventures/track-combat")
+async def track_combat_encounter(encounter_id: str, xp_value: int = 0):
+    """Track a combat encounter completion"""
+    if not current_adventure:
+        raise HTTPException(status_code=400, detail="No adventure loaded")
+    
+    try:
+        current_adventure.leveling.track_combat_encounter(encounter_id, xp_value)
+        return {"success": True, "message": f"Tracked combat encounter: {encounter_id}"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/adventures/track-exploration")
+async def track_exploration(milestone: str, location_id: Optional[str] = None):
+    """Track an exploration milestone"""
+    if not current_adventure:
+        raise HTTPException(status_code=400, detail="No adventure loaded")
+    
+    try:
+        current_adventure.leveling.track_exploration(milestone, location_id)
+        return {"success": True, "message": f"Tracked exploration: {milestone}"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/adventures/track-social")
+async def track_social_interaction(interaction_type: str, npc_id: Optional[str] = None, quest_id: Optional[str] = None):
+    """Track a social interaction (NPC met, quest completed, etc.)"""
+    if not current_adventure:
+        raise HTTPException(status_code=400, detail="No adventure loaded")
+    
+    try:
+        current_adventure.leveling.track_social_interaction(interaction_type, npc_id, quest_id)
+        return {"success": True, "message": f"Tracked social interaction: {interaction_type}"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
