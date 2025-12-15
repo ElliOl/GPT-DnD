@@ -1,0 +1,29 @@
+{
+  "id": "halia_thornton",
+  "name": "Halia Thornton",
+  "race": "Human",
+  "class": "Zhentarim Agent",
+  "alignment": "Neutral Evil",
+  "location": "Phandalin Miner's Exchange",
+  "personality": {
+    "traits": [
+      "Ambitious",
+      "Calculating",
+      "Charismatic",
+      "Manipulative"
+    ],
+    "goals": [
+      "Control Phandalin through Miner's Exchange",
+      "Expand Zhentarim influence",
+      "Eliminate Redbrands to take over their operation"
+    ],
+    "mannerisms": "Professional, records everything, cold smile, always thinking several moves ahead"
+  },
+  "role": "Guildmaster of Miner's Exchange. Secret Zhentarim agent working to control town through wealth.",
+  "quest": "Kill Glasstaff, bring any correspondence from his quarters. Offers 100 gp. Has ulterior motive - wants to take over Redbrand operation herself.",
+  "information": "Knows Redbrands have goblin minion who might know Cragmaw Castle location",
+  "insight_dc": 15,
+  "recruitment": "If party eliminates Glasstaff, approaches members who share Zhentarim values (wealth, power) to join. Awards title of 'Fang'.",
+  "secret_agenda": "If Glasstaff captured, breaks him out of jail (if no guards posted) to interrogate about Wave Echo Cave",
+  "treasure": "Wealthy but doesn't share it"
+}

@@ -1,0 +1,30 @@
+{
+  "id": "harbin_wester",
+  "name": "Harbin Wester",
+  "race": "Human",
+  "class": "Commoner (Banker/Townmaster)",
+  "alignment": "Neutral",
+  "location": "Townmaster's Hall (Phandalin)",
+  "personality": {
+    "traits": [
+      "Fat",
+      "Pompous",
+      "Cowardly",
+      "Ineffectual",
+      "Old fool"
+    ],
+    "goals": [
+      "Avoid conflict",
+      "Maintain appearance of authority",
+      "Not anger Redbrands"
+    ],
+    "speech": "Bluster and excuses. 'Not all that much trouble, really.'",
+    "mannerisms": "Sweats when nervous, avoids eye contact with strong personalities"
+  },
+  "role": "Elected townmaster. Supposed to judge disputes and keep records. Completely intimidated by Redbrands.",
+  "claim": "Redbrands are 'just a mercenary guild'",
+  "quest": "100 gp to deal with ore band near Wyvern Tor (east on Triboar Trail)",
+  "jail": "Small serviceable jail in cellar (2 cells). Harbin has keys.",
+  "weakness": "Won't keep Redbrand prisoners unless whole gang defeated. Can be persuaded/intimidated.",
+  "development": "After Redbrands eliminated, more willing to assert authority"
+}

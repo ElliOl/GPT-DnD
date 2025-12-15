@@ -1,0 +1,13 @@
+{
+  "id": "wyvern_tor",
+  "name": "Wyvern Tor",
+  "type": "wilderness",
+  "part": 3,
+  "description": "Prominent crag visible for 20 miles. Former wyvern nest (cleared years ago). Now occupied by orc scouts.",
+  "atmosphere": "Rugged hill. Smell of smoke. Ravine with cave at base.",
+  "enemies": "Brughor Axe-Biter (orc, 30 hp) + 6 orcs + Gog (ogre)",
+  "tactics": "Orcs fight until Brughor dies, then flee. Ogre fights to death.",
+  "finding_camp": "DC 15 Perception or DC 10 Survival per hour searching",
+  "treasure": "Chest in cave: 750 cp, 180 sp, 62 ep, 30 gp, 3 vials perfume (10 gp each)",
+  "quest_giver": "Harbin Wester offers 100 gp reward"
+}

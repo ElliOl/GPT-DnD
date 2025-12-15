@@ -1,0 +1,62 @@
+{
+  "id": "part1_goblin_arrows",
+  "name": "Part 1: Goblin Arrows",
+  "level_range": "1",
+  "estimated_sessions": "1-2",
+  
+  "overview": "Party escorts supply wagon from Neverwinter to Phandalin. Ambushed by Cragmaw goblins on the Triboar Trail. Must track goblins to their hideout and rescue Sildar Hallwinter.",
+  
+  "key_locations": [
+    "triboar_trail",
+    "goblin_ambush_site",
+    "cragmaw_hideout"
+  ],
+  
+  "key_npcs": [
+    "sildar_hallwinter",
+    "klarg",
+    "yeemik"
+  ],
+  
+  "objectives": [
+    {
+      "id": "survive_ambush",
+      "description": "Deal with 4 goblin ambushers",
+      "xp": 200,
+      "required": true
+    },
+    {
+      "id": "find_hideout",
+      "description": "Track goblins to Cragmaw Hideout",
+      "xp": 75,
+      "required": false
+    },
+    {
+      "id": "clear_hideout",
+      "description": "Defeat Klarg and rescue Sildar",
+      "xp": 275,
+      "advancement": "Reach level 2",
+      "required": false
+    }
+  ],
+  
+  "random_encounters": {
+    "frequency": "None - linear path",
+    "enemies": []
+  },
+  
+  "major_treasure": [
+    "Boots of Striding and Springing (on Tharden's corpse)",
+    "Lionshield Coster supplies (50 gp reward)",
+    "600 cp, 110 sp, 2 potions of healing, jade frog statuette (40 gp)"
+  ],
+  
+  "plot_developments": [
+    "Gundren and Sildar ambushed - Gundren taken to Cragmaw Castle",
+    "Sildar reveals Wave Echo Cave exists",
+    "Black Spider mentioned as mastermind",
+    "Map to Wave Echo Cave stolen"
+  ],
+  
+  "next_part": "part2_phandalin"
+}

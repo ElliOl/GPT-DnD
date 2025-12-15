@@ -16,7 +16,7 @@ export function DMSettings({ onRestoreChat }: DMSettingsProps) {
   const [archivedChats, setArchivedChats] = useState<ArchivedChat[]>([])
   const [archivedChatsExpanded, setArchivedChatsExpanded] = useState(true)
   const [expandedArchives, setExpandedArchives] = useState<Set<string>>(new Set())
-  const [additionalRulesExpanded, setAdditionalRulesExpanded] = useState(true)
+  const [additionalRulesExpanded, setAdditionalRulesExpanded] = useState(false)
 
   // Load additional rules and archived chats on mount
   useEffect(() => {
@@ -81,7 +81,7 @@ export function DMSettings({ onRestoreChat }: DMSettingsProps) {
   return (
     <div className="bg-card border border-border p-3">
       <h2 className="text-xs font-semibold text-foreground mb-3 flex items-center gap-1.5">
-        <Settings className="w-3 h-3" />
+        <Settings className="w-5 h-5" />
         DM Settings
       </h2>
 
@@ -94,12 +94,12 @@ export function DMSettings({ onRestoreChat }: DMSettingsProps) {
           >
             <div className="flex items-center gap-1.5">
               {additionalRulesExpanded ? (
-                <ChevronDown className="w-3 h-3 text-muted-foreground" />
+                <ChevronDown className="w-5 h-5 text-muted-foreground" />
               ) : (
-                <ChevronRight className="w-3 h-3 text-muted-foreground" />
+                <ChevronRight className="w-5 h-5 text-muted-foreground" />
               )}
               <label className="text-xs font-medium text-foreground flex items-center gap-1.5">
-                <Plus className="w-3 h-3" />
+                <Plus className="w-5 h-5" />
                 Additional Rules (adds to core D&D rules)
               </label>
             </div>
@@ -111,7 +111,7 @@ export function DMSettings({ onRestoreChat }: DMSettingsProps) {
               disabled={additionalRulesSaving || additionalRulesLoading}
               className="text-xs px-2 py-1 rounded border border-border hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
             >
-              <Save className="w-3 h-3" />
+              <Save className="w-5 h-5" />
               {additionalRulesSaving ? 'Saving...' : 'Save'}
             </button>
           </div>
@@ -152,12 +152,12 @@ export function DMSettings({ onRestoreChat }: DMSettingsProps) {
           >
             <div className="flex items-center gap-1.5">
               {archivedChatsExpanded ? (
-                <ChevronDown className="w-3 h-3 text-muted-foreground" />
+                <ChevronDown className="w-5 h-5 text-muted-foreground" />
               ) : (
-                <ChevronRight className="w-3 h-3 text-muted-foreground" />
+                <ChevronRight className="w-5 h-5 text-muted-foreground" />
               )}
               <label className="text-xs font-medium text-foreground flex items-center gap-1.5">
-                <Archive className="w-3 h-3" />
+                <Archive className="w-5 h-5" />
                 Archived Chats
                 {archivedChats.length > 0 && (
                   <span className="text-[10px] text-muted-foreground">
@@ -212,9 +212,9 @@ export function DMSettings({ onRestoreChat }: DMSettingsProps) {
                         >
                           <div className="flex items-start gap-1.5 flex-1 min-w-0">
                             {isExpanded ? (
-                              <ChevronDown className="w-3 h-3 text-muted-foreground flex-shrink-0 mt-0.5" />
+                              <ChevronDown className="w-5 h-5 text-muted-foreground flex-shrink-0 mt-0.5" />
                             ) : (
-                              <ChevronRight className="w-3 h-3 text-muted-foreground flex-shrink-0 mt-0.5" />
+                              <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0 mt-0.5" />
                             )}
                             <div className="flex-1 min-w-0">
                               <div className="text-xs font-semibold text-foreground">
@@ -236,7 +236,7 @@ export function DMSettings({ onRestoreChat }: DMSettingsProps) {
                                 onClick={() => handleRestoreArchive(archive.id)}
                                 className="px-2 py-1 text-[10px] bg-primary border border-primary text-primary-foreground hover:bg-primary-hover transition-colors flex items-center gap-1"
                               >
-                                <RotateCcw className="w-3 h-3" />
+                                <RotateCcw className="w-5 h-5" />
                                 Restore
                               </Button>
                             )}
@@ -244,7 +244,7 @@ export function DMSettings({ onRestoreChat }: DMSettingsProps) {
                               onClick={() => handleDeleteArchive(archive.id)}
                               className="px-2 py-1 text-[10px] bg-destructive border border-destructive text-destructive-foreground hover:bg-destructive/80 transition-colors flex items-center gap-1"
                             >
-                              <Trash2 className="w-3 h-3" />
+                              <Trash2 className="w-5 h-5" />
                               Delete
                             </Button>
                           </div>

@@ -5,7 +5,9 @@ Main application entry point.
 """
 
 import os
+import json
 from contextlib import asynccontextmanager
+from typing import Optional
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
@@ -18,6 +20,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from backend.services.dm_agent import DMAgent
 from backend.services.ai_factory import AIClientFactory
 from backend.services.tts_service import TTSService
+from backend.services.adventure_context import AdventureContext, ContextManager
 from backend.models.game_state import PlayerAction, DMResponse, GameState
 from game_engine.engine import GameEngine
 from pydantic import BaseModel
@@ -27,6 +30,8 @@ from pydantic import BaseModel
 dm_agent: DMAgent = None
 game_engine: GameEngine = None
 tts_service: TTSService = None
+current_adventure: AdventureContext = None
+context_manager: ContextManager = None
 
 
 @asynccontextmanager
@@ -127,10 +132,22 @@ async def player_action(action: PlayerAction):
         raise HTTPException(status_code=503, detail="DM Agent not initialized")
 
     try:
+        # If using modular adventure system, get smart context
+        adventure_context_str = None
+        if current_adventure and context_manager:
+            # Use smart context manager to get appropriate context level
+            adventure_context_str = context_manager.get_context_for_turn(
+                action.message,
+                turn_type="auto"  # Auto-detect based on player input
+            )
+        elif action.adventure_context:
+            # Legacy: Use passed adventure_context dict
+            adventure_context_str = action.adventure_context
+        
         response = await dm_agent.process_player_input(
             player_message=action.message,
             voice=action.voice,
-            adventure_context=action.adventure_context,
+            adventure_context=adventure_context_str,
             session_state=action.session_state,
         )
 
@@ -382,6 +399,227 @@ async def check_ollama_health():
             "status": "error",
             "message": str(e),
         }
+
+
+# ============================================================================
+# Adventure System Endpoints
+# ============================================================================
+
+
+@app.get("/api/adventures/available")
+async def get_available_adventures():
+    """List all available adventure modules"""
+    from pathlib import Path
+    
+    adventures_dir = Path(__file__).parent / "adventures"
+    if not adventures_dir.exists():
+        return {"adventures": []}
+    
+    adventures = []
+    for adventure_path in adventures_dir.iterdir():
+        if adventure_path.is_dir():
+            metadata_path = adventure_path / "adventure.json"
+            if metadata_path.exists():
+                try:
+                    with open(metadata_path) as f:
+                        metadata = json.load(f)
+                        adventures.append({
+                            "id": metadata.get("id", adventure_path.name),
+                            "name": metadata.get("name", adventure_path.name),
+                            "description": metadata.get("description", ""),
+                            "level_range": metadata.get("level_range", [1, 20]),
+                            "estimated_sessions": metadata.get("estimated_sessions"),
+                        })
+                except Exception as e:
+                    print(f"Error loading adventure {adventure_path.name}: {e}")
+    
+    return {"adventures": adventures}
+
+
+@app.post("/api/adventures/load")
+async def load_adventure(request: dict):
+    """
+    Load an adventure module
+    
+    Request body:
+        {
+            "adventure_id": "lost_mines_of_phandelver"
+        }
+    """
+    global current_adventure, context_manager
+    
+    adventure_id = request.get("adventure_id")
+    if not adventure_id:
+        raise HTTPException(status_code=400, detail="adventure_id is required")
+    
+    try:
+        # Load adventure
+        current_adventure = AdventureContext(adventure_id)
+        context_manager = ContextManager(current_adventure)
+        
+        return {
+            "success": True,
+            "message": f"Loaded adventure: {current_adventure.metadata['name']}",
+            "adventure_info": current_adventure.get_adventure_info(),
+        }
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        import traceback
+        error_detail = f"Failed to load adventure: {str(e)}\n{traceback.format_exc()}"
+        print(f"❌ {error_detail}")
+        raise HTTPException(status_code=500, detail=error_detail)
+
+
+@app.get("/api/adventures/current")
+async def get_current_adventure():
+    """Get currently loaded adventure info"""
+    if not current_adventure:
+        return {"loaded": False}
+    
+    return {
+        "loaded": True,
+        "adventure_info": current_adventure.get_adventure_info(),
+        "metadata": current_adventure.metadata,
+    }
+
+
+@app.post("/api/adventures/update")
+async def update_adventure_state(request: dict):
+    """
+    Update adventure state
+    
+    Request body can include:
+        {
+            "location": "new_location_id",
+            "chapter": "new_chapter_id",
+            "event": "Important event description",
+            "met_npc": "npc_id",
+            "quest": {"id": "quest1", "status": "completed"},
+            "party_knowledge": {"key": "knows_something", "value": true},
+            "session_number": 5,
+            "party_level": 3
+        }
+    """
+    if not current_adventure:
+        raise HTTPException(status_code=400, detail="No adventure loaded")
+    
+    try:
+        updates = request
+        
+        if "location" in updates:
+            current_adventure.update_location(updates["location"])
+        
+        if "chapter" in updates:
+            current_adventure.update_chapter(updates["chapter"])
+        
+        if "event" in updates:
+            current_adventure.add_event(updates["event"])
+        
+        if "met_npc" in updates:
+            current_adventure.meet_npc(updates["met_npc"])
+        
+        if "quest" in updates:
+            quest = updates["quest"]
+            if "status" in quest:
+                current_adventure.update_quest_status(quest["id"], quest["status"])
+            else:
+                current_adventure.add_quest(quest)
+        
+        if "party_knowledge" in updates:
+            knowledge = updates["party_knowledge"]
+            current_adventure.update_party_knowledge(knowledge["key"], knowledge["value"])
+        
+        if "session_number" in updates:
+            current_adventure.update_session_number(updates["session_number"])
+        
+        if "party_level" in updates:
+            current_adventure.update_party_level(updates["party_level"])
+        
+        return {
+            "success": True,
+            "metadata": current_adventure.metadata,
+        }
+    except Exception as e:
+        import traceback
+        error_detail = f"Failed to update adventure: {str(e)}\n{traceback.format_exc()}"
+        print(f"❌ {error_detail}")
+        raise HTTPException(status_code=500, detail=error_detail)
+
+
+@app.get("/api/adventures/context/{context_type}")
+async def get_adventure_context(context_type: str):
+    """
+    Get adventure context at specified detail level
+    
+    context_type: minimal, standard, or detailed
+    """
+    if not current_adventure:
+        raise HTTPException(status_code=400, detail="No adventure loaded")
+    
+    if context_type == "minimal":
+        context = current_adventure.get_minimal_context()
+    elif context_type == "standard":
+        context = current_adventure.get_standard_context()
+    elif context_type == "detailed":
+        context = current_adventure.get_detailed_context()
+    else:
+        raise HTTPException(status_code=400, detail="Invalid context_type. Use minimal, standard, or detailed")
+    
+    return {"context": context, "type": context_type}
+
+
+@app.get("/api/adventures/location/{location_id}")
+async def get_location_details(location_id: str, area_id: Optional[str] = None):
+    """Get detailed information about a location or specific area"""
+    if not current_adventure:
+        raise HTTPException(status_code=400, detail="No adventure loaded")
+    
+    try:
+        details = current_adventure.get_location_details(area_id)
+        return {"location_id": location_id, "area_id": area_id, "details": details}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/adventures/npc/{npc_id}")
+async def get_npc_info(npc_id: str):
+    """Get information about an NPC"""
+    if not current_adventure:
+        raise HTTPException(status_code=400, detail="No adventure loaded")
+    
+    try:
+        info = current_adventure.get_npc_info(npc_id)
+        return {"npc_id": npc_id, "info": info}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/adventures/chapters")
+async def list_chapters():
+    """List all available chapters in current adventure"""
+    if not current_adventure:
+        raise HTTPException(status_code=400, detail="No adventure loaded")
+    
+    return {"chapters": current_adventure.list_available_chapters()}
+
+
+@app.get("/api/adventures/locations")
+async def list_locations():
+    """List all available locations in current adventure"""
+    if not current_adventure:
+        raise HTTPException(status_code=400, detail="No adventure loaded")
+    
+    return {"locations": current_adventure.list_available_locations()}
+
+
+@app.get("/api/adventures/npcs")
+async def list_npcs():
+    """List all available NPCs in current adventure"""
+    if not current_adventure:
+        raise HTTPException(status_code=400, detail="No adventure loaded")
+    
+    return {"npcs": current_adventure.list_available_npcs()}
 
 
 # ============================================================================

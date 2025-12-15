@@ -1,0 +1,47 @@
+{
+  "id": "iarno_glasstaff",
+  "name": "Iarno 'Glasstaff' Albrek",
+  "race": "Human",
+  "class": "Evil Mage (Wizard 4)",
+  "alignment": "Lawful Evil",
+  "personality": {
+    "traits": [
+      "Arrogant",
+      "Greedy",
+      "Cowardly when threatened",
+      "Pretentious"
+    ],
+    "goals": [
+      "Get rich",
+      "Gain power through Black Spider alliance",
+      "Control Phandalin"
+    ],
+    "speech": "Genteel Old World mannerisms. Calls thugs 'my good gentlemen'. Refers to crimes as 'unpleasant business' or 'unfortunate events'.",
+    "mannerisms": "Adjusts glasses, speaks softly, never raises voice. Beneath courtesy is pure thug."
+  },
+  "background": "Lords' Alliance member sent to establish constabulary in Phandalin. Instead formed Redbrands gang for personal profit. Allied with Black Spider.",
+  "alias": "Glasstaff (from his glass staff of defense)",
+  "hideout": "Redbrand Hideout area 12 under Tresendar Manor",
+  "tactics": {
+    "combat": "Casts mage armor first, then offensive spells. Uses shield power from staff. Flees if reduced to 8 HP or less.",
+    "escape": "If warned by rat familiar, grabs scrolls + staff, flees to area 1, gets emergency satchel, uses potion invisibility, escapes hideout",
+    "surrender": "If cornered, surrenders. Values life over everything. Expects Black Spider to rescue him."
+  },
+  "spells_prepared": [
+    "Mage armor",
+    "Magic missile",
+    "Shield",
+    "Invisibility",
+    "Suggestion"
+  ],
+  "magic_items": "Staff of defense, potions healing (2), scroll charm person, scroll fireball",
+  "interrogation_reveals": {
+    "black_spider": "Drow who wants Wave Echo Cave for Forge of Spells secrets",
+    "cragmaws": "Work for Black Spider. ~20 miles NE in castle.",
+    "wave_echo": "Black Spider searching for it now but doesn't know exact location",
+    "alliance": "No other Alliance members know of betrayal"
+  },
+  "capture_reward": "200 gp from Sildar (double XP value too)",
+  "stats": "HP 22, AC 12 (15 with mage armor)",
+  "treasure": "See Redbrand Hideout area 12"
+}

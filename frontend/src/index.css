@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -69,6 +69,26 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: 'JetBrains Mono', monospace;
+    font-family: 'Press Start 2P', monospace;
+  }
+  select.retro {
+    font-family: 'Press Start 2P', monospace !important;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+  }
+  select.retro:focus {
+    outline: none !important;
+    border-color: hsl(var(--primary)) !important;
+    box-shadow: 0 0 0 1px hsl(var(--primary)) !important;
+  }
+  select.retro option {
+    font-family: 'Press Start 2P', monospace !important;
+    background-color: hsl(var(--background)) !important;
+    color: hsl(var(--foreground)) !important;
+  }
+  select.retro option:checked {
+    background-color: hsl(var(--primary) / 0.2) !important;
+    color: hsl(var(--primary)) !important;
   }
 }

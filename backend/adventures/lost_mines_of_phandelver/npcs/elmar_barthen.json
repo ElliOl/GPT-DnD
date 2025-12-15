@@ -1,0 +1,32 @@
+{
+  "id": "elmar_barthen",
+  "name": "Elmar Barthen",
+  "race": "Human",
+  "class": "Commoner (Merchant)",
+  "alignment": "Neutral Good",
+  "location": "Barthen's Provisions (Phandalin)",
+  "personality": {
+    "traits": [
+      "Kindly",
+      "Lean and balding (50s)",
+      "Patient",
+      "Fair dealer"
+    ],
+    "goals": [
+      "Run successful business",
+      "Help friends",
+      "See Phandalin prosper"
+    ],
+    "mannerisms": "Adjusts spectacles, keeps meticulous ledgers, always fair in deals"
+  },
+  "role": "Owner of largest trading post in Phandalin. Gundren's friend.",
+  "employees": "Ander and Thistle (young clerks)",
+  "quest_payment": "If party delivers wagon (Meet Me in Phandalin hook), pays 10 gp per character",
+  "information": {
+    "gundren": "Friend and customer. Expected days ago. Worried if party says he's captured.",
+    "brothers": "Nundro and Tharden camped outside town. Haven't seen them in tenday. Due back 'any day now' to resupply.",
+    "redbrands": "Making life hard on everyone. Shaking down businesses. Advises party to avoid Sleeping Giant tavern."
+  },
+  "inventory": "Most adventuring gear under 25 gp. No weapons/armor (see Lionshield Coster)",
+  "treasure": "10 gp per character (payment)"
+}

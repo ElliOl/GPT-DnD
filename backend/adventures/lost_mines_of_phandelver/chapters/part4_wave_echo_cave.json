@@ -1,0 +1,167 @@
+{
+  "id": "part4_wave_echo_cave",
+  "name": "Part 4: Wave Echo Cave",
+  "level_range": "4-5",
+  "estimated_sessions": "2-3",
+  
+  "overview": "Final dungeon. Ancient dwarven mine lost for 500 years. Party explores cave, deals with undead and monsters, confronts Black Spider (Nezznar the drow), finds Forge of Spells, rescues Nundro.",
+  
+  "atmosphere": "Rhythmic booming sound echoes through caves (underground hot spring). Cold, damp, drafty. Mix of worked stone and natural caverns. Undead and monsters lurk throughout.",
+  
+  "key_locations": [
+    "cave_entrance",
+    "mine_tunnels",
+    "old_entrance",
+    "old_guardroom",
+    "assayers_office",
+    "south_barracks",
+    "ruined_storeroom",
+    "fungi_cavern",
+    "great_cavern",
+    "dark_pool",
+    "north_barracks",
+    "smelter_cavern",
+    "starry_cavern",
+    "wizards_quarters",
+    "forge_of_spells",
+    "booming_cavern",
+    "collapsed_cavern",
+    "temple_dumathoin",
+    "priests_quarters"
+  ],
+  
+  "key_npcs": [
+    "nezznar_black_spider",
+    "mormesk_wraith",
+    "nundro_rockseeker",
+    "spectator"
+  ],
+  
+  "wandering_monsters": {
+    "frequency": "Check on long rests or excessive noise (d20, 17-20)",
+    "table": [
+      "Stirges (2d4)",
+      "Ghouls (1d4)",
+      "Gricks (1d4)",
+      "Bugbears (1d4)",
+      "Skeletons (1d6)",
+      "Zombies (1d6)",
+      "Ochre jelly (1)"
+    ]
+  },
+  
+  "major_encounters": [
+    {
+      "id": "stirges",
+      "location": "Old Entrance (Area 3)",
+      "enemies": "10 stirges",
+      "xp": 250,
+      "tactics": "Clinging to ceiling, surprise attack"
+    },
+    {
+      "id": "skeletons",
+      "location": "Tresendar Crypts (Area 4)",
+      "enemies": "3 skeletons",
+      "xp": 150,
+      "trigger": "Approaching certain doors"
+    },
+    {
+      "id": "ghouls",
+      "location": "Great Cavern (Area 9)",
+      "enemies": "7 ghouls",
+      "xp": 1400,
+      "tactics": "Lurk on western ledge"
+    },
+    {
+      "id": "bugbears",
+      "location": "North Barracks (Area 11)",
+      "enemies": "5 bugbears",
+      "xp": 1000,
+      "note": "Black Spider's guards"
+    },
+    {
+      "id": "flameskull_zombies",
+      "location": "Smelter Cavern (Area 12)",
+      "enemies": "1 flameskull + 8 zombies",
+      "xp": 1300,
+      "tactics": "Flameskull casts spells, zombies pursue"
+    },
+    {
+      "id": "mormesk",
+      "location": "Wizards Quarters (Area 14)",
+      "enemies": "Mormesk the wraith",
+      "xp": 700,
+      "note": "Can negotiate - wants magic items or help vs spectator"
+    },
+    {
+      "id": "spectator",
+      "location": "Forge of Spells (Area 15)",
+      "enemies": "1 spectator",
+      "xp": 700,
+      "note": "Can be tricked/persuaded to leave or blinded"
+    },
+    {
+      "id": "black_spider",
+      "location": "Temple of Dumathoin (Area 19)",
+      "enemies": "Nezznar + 4 giant spiders + doppelganger",
+      "xp": 1400,
+      "note": "Final boss. Capture alive for double XP"
+    }
+  ],
+  
+  "objectives": [
+    {
+      "id": "find_nundro",
+      "description": "Rescue Nundro Rockseeker from Area 20",
+      "xp": 200,
+      "required": false
+    },
+    {
+      "id": "defeat_black_spider",
+      "description": "Stop Nezznar",
+      "xp": "450 or 900 if captured alive",
+      "required": true
+    },
+    {
+      "id": "secure_forge",
+      "description": "Claim the Forge of Spells",
+      "required": true
+    }
+  ],
+  
+  "major_treasure": [
+    "Boots of Striding and Springing (Tharden's body, Area 1)",
+    "Wand of magic missiles (Dark Pool, Area 10)",
+    "+1 mace 'Lightbringer' (Forge of Spells, Area 15)",
+    "+1 breastplate 'Dragonguard' (Forge of Spells, Area 15)",
+    "Gauntlets of ogre power (Collapsed Cavern, Area 18)",
+    "Spider staff (Nezznar)",
+    "Potion of healing, spider staff, 190 ep, 130 gp, 15 pp, 9 gems (10gp each), electrum mug (100gp) - Nezznar's sack"
+  ],
+  
+  "special_features": {
+    "brazier_of_green_flame": {
+      "location": "Forge of Spells (Area 15)",
+      "power": "Bathe weapon/armor for 1 min = +1 bonus for 1d12 hours",
+      "note": "Magic too weak for permanent enchantment"
+    },
+    "booming_waves": {
+      "description": "Rhythmic thunder every 2 minutes from Area 16",
+      "effect": "Atmospheric, helps orient party"
+    }
+  },
+  
+  "plot_resolution": [
+    "Black Spider defeated - Nezznar captured or killed",
+    "Nundro rescued",
+    "Tharden's body found (can be returned to Gundren)",
+    "Forge of Spells secured",
+    "Wave Echo Cave cleared for Rockseeker mining operation",
+    "Party gets 10% share of mine profits",
+    "Phandalin safe and prosperous"
+  ],
+  
+  "advancement": "Party should reach level 5 by end",
+  
+  "conclusion": "Mine reopens. Phandalin prospers. Party are local heroes with permanent stake in successful mine."
+}

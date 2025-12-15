@@ -1,0 +1,24 @@
+{
+  "id": "thundertree",
+  "name": "Ruins of Thundertree",
+  "type": "ruins",
+  "part": 3,
+  "description": "Abandoned village destroyed 30 years ago by Mount Hotenow eruption. Overrun by ash zombies and mutated plants. Now home to young green dragon Venomfang.",
+  "atmosphere": "Eerie silence. Overgrown with dangerous plant life. Crumbling buildings. Warning sign: 'DANGER! Plant monsters AND zombies!'",
+  "key_areas": [
+    "1-2. Blighted Cottages - Twig blights hiding",
+    "3. Brown Horse Tavern - 4 ash zombies",
+    "4. Druid's Watch - Reidoth camps here",
+    "5. Blighted Farmhouse - 8 twig blights",
+    "6. Ruined Store - 2 giant spiders with webs",
+    "7. Dragon's Tower - Venomfang lair, wizard's treasure",
+    "9. Herbalist Shop - Mirna's emerald necklace (200 gp)",
+    "13. Dragon Cultists - 6 cultists led by Favric"
+  ],
+  "special_npcs": [
+    "reidoth",
+    "venomfang"
+  ],
+  "dragon_tactics": "Venomfang flees at half HP, will return for revenge later",
+  "side_quest": "Mirna's heirloom - emerald necklace in area 9"
+}

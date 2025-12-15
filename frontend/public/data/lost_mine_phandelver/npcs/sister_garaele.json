@@ -1,0 +1,28 @@
+{
+  "id": "sister_garaele",
+  "name": "Sister Garaele",
+  "race": "Elf",
+  "class": "Acolyte of Tymora (Cleric 2)",
+  "alignment": "Neutral Good",
+  "location": "Shrine of Luck (Phandalin)",
+  "personality": {
+    "traits": [
+      "Zealous",
+      "Scholarly",
+      "Despairing over Redbrands",
+      "Idealistic"
+    ],
+    "goals": [
+      "Rid Phandalin of Redbrands",
+      "Serve Tymora",
+      "Help Harper network"
+    ],
+    "mannerisms": "Earnest, wrings hands when worried, quotes Tymora's teachings"
+  },
+  "role": "Priestess of Tymora, Harper agent. Reports on Phandalin events to Harper superiors.",
+  "quest": "Ask banshee Agatha about Bowgentle's spellbook location. Gift: jeweled silver comb. Reward: 3 potions of healing.",
+  "background": "Sought out Agatha herself but banshee wouldn't appear. Needs intermediary with flattery skills.",
+  "harpers": "Scattered network of spies opposing tyranny, gathering info, thwarting abusers of power",
+  "recruitment": "If party helps with Agatha quest, approaches members who value secrecy and positive change. Awards title of 'Watcher'.",
+  "treasure": "Silver comb for party (to give Agatha), 3 potions healing (reward)"
+}

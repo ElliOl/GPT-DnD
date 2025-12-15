@@ -1,4 +1,4 @@
-import { Mic, MicOff, Send, Volume2, Square } from 'lucide-react'
+import { Mic, MicOff, Sword, AudioWaveform, Square } from 'lucide-react'
 import { Button } from '@base-ui/react/button'
 import { Input } from '@base-ui/react/input'
 import type { SpeechRecognition } from '../types/speech-recognition'
@@ -63,9 +63,9 @@ export function ChatInput({
           title="Voice input"
         >
           {isListening ? (
-            <MicOff className="w-4 h-4" />
+            <MicOff className="w-6 h-6" />
           ) : (
-            <Mic className="w-4 h-4" />
+            <Mic className="w-6 h-6" />
           )}
         </Button>
         <Button
@@ -77,14 +77,14 @@ export function ChatInput({
           }`}
           title="Voice narration"
         >
-          <Volume2 className="w-4 h-4" />
+          <AudioWaveform className="w-6 h-6" />
         </Button>
         <Button
           onClick={onSend}
           disabled={loading || !message.trim()}
-          className="w-[52px] h-[52px] flex items-center justify-center bg-primary border-primary text-primary-foreground hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="w-[52px] h-[52px] flex items-center justify-center bg-primary border-primary text-primary-foreground hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-none"
         >
-          <Send className="w-4 h-4" />
+          <Sword className="w-6 h-6" />
         </Button>
       </div>
 
@@ -94,7 +94,7 @@ export function ChatInput({
             onClick={stopAudio}
             className="flex items-center gap-1 text-[10px] text-destructive hover:text-destructive/80 transition-colors bg-transparent border-0 p-0"
           >
-            <Square className="w-3 h-3" />
+            <Square className="w-5 h-5" />
             Stop audio
           </Button>
         </div>

@@ -52,7 +52,7 @@ export function CharacterPanel({ characters }: CharacterPanelProps) {
       <div className="bg-card border border-border">
         <div className="p-3 border-b border-border">
           <h2 className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-            <Users className="w-3 h-3" />
+            <Users className="w-5 h-5" />
             Party
           </h2>
         </div>

@@ -1,0 +1,28 @@
+{
+  "id": "qelline_alderleaf",
+  "name": "Qelline Alderleaf",
+  "race": "Halfling",
+  "class": "Commoner (Farmer)",
+  "alignment": "Neutral Good",
+  "location": "Alderleaf Farm (Phandalin)",
+  "personality": {
+    "traits": [
+      "Pragmatic",
+      "Wise",
+      "Hospitable",
+      "Knows everything in town"
+    ],
+    "goals": [
+      "Protect son Carp",
+      "Help good people",
+      "Maintain farm"
+    ],
+    "mannerisms": "Offers food immediately, practical advice, motherly concern"
+  },
+  "role": "Halfling farmer. Town's informal information network hub. Willing to let party sleep in hayloft.",
+  "son": "Carp (10 years old, precocious, wants to be adventurer)",
+  "carps_discovery": "Found secret tunnel near Tresendar Manor. Saw 'big ugly bandits' meet with Redbrands. Can lead party to tunnel (enters Redbrand hideout area 8).",
+  "quest": "Consult druid Reidoth about Cragmaw Castle or Wave Echo Cave location. He's at Thundertree ruins (~50 miles NW). Provides directions.",
+  "information": "Reidoth knows every inch of land. If anyone knows where things are, he does.",
+  "treasure": "Fresh bread, hospitality, valuable information"
+}

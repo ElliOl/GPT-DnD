@@ -4,24 +4,84 @@
       "name": "Elara Moonwhisper",
       "race": "High Elf",
       "char_class": "Wizard",
+      "class": "Wizard",
       "level": 1,
       "max_hp": 7,
       "current_hp": 7,
+      "hp": 7,
+      "temp_hp": 0,
       "armor_class": 15,
+      "ac": 15,
+      "speed": 30,
+      "background": "Sage",
+      "proficiency_bonus": 2,
       "abilities": {
         "STR": 8,
         "DEX": 14,
         "CON": 13,
         "INT": 16,
         "WIS": 12,
-        "CHA": 10
+        "CHA": 10,
+        "str": 8,
+        "dex": 14,
+        "con": 13,
+        "int": 16,
+        "wis": 12,
+        "cha": 10
       },
-      "proficiency_bonus": 2,
       "skills": {
         "Arcana": true,
         "History": true,
         "Investigation": true,
         "Perception": true
+      },
+      "proficiencies": [
+        "Arcana",
+        "History",
+        "Investigation",
+        "Perception"
+      ],
+      "save_proficiencies": [
+        "int",
+        "wis"
+      ],
+      "weapons": [
+        {
+          "name": "Quarterstaff",
+          "attack_bonus": 1,
+          "damage_dice": "1d6",
+          "damage_bonus": -1,
+          "damage_type": "bludgeoning"
+        },
+        {
+          "name": "Light Crossbow",
+          "attack_bonus": 4,
+          "damage_dice": "1d8",
+          "damage_bonus": 2,
+          "damage_type": "piercing",
+          "ranged": true,
+          "range": "80/320"
+        }
+      ],
+      "spellcasting": {
+        "ability": "int",
+        "spell_save_dc": 13,
+        "spell_attack_bonus": 5,
+        "spell_slots": {
+          "1st": 0
+        },
+        "spells_prepared": [
+          "Mage Armor",
+          "Magic Missile",
+          "Shield",
+          "Detect Magic",
+          "Identify"
+        ],
+        "cantrips": [
+          "Fire Bolt",
+          "Ray of Frost",
+          "Mage Hand"
+        ]
       },
       "inventory": [
         "Spellbook",
@@ -33,30 +93,93 @@
         "Letter from dead colleague with unanswered question",
         "Common clothes"
       ],
+      "gold": 10,
+      "features": [
+        "Arcane Recovery: Recover spell slots = half wizard level (rounded up) once per day",
+        "Darkvision: 60 feet",
+        "Fey Ancestry: Advantage on saves vs charm, immune to magic sleep",
+        "Trance: Meditate 4 hours instead of sleeping"
+      ],
+      "personality": {
+        "trait": "I use polysyllabic words that convey the impression of great erudition.",
+        "ideal": "Knowledge: The path to power and self-improvement is through knowledge.",
+        "bond": "I have an ancient text that holds terrible secrets.",
+        "flaw": "I am easily distracted by the promise of information."
+      },
+      "notes": "Hired by Gundren to research ancient dwarven ruins near Phandalin. Fascinated by Wave Echo Cave legends.",
       "conditions": []
     },
     "Thorin Ironforge": {
       "name": "Thorin Ironforge",
       "race": "Human",
       "char_class": "Fighter",
+      "class": "Fighter",
       "level": 1,
       "max_hp": 12,
       "current_hp": 5,
+      "hp": 5,
+      "temp_hp": 0,
       "armor_class": 18,
+      "ac": 18,
+      "speed": 30,
+      "background": "Soldier",
+      "proficiency_bonus": 2,
       "abilities": {
         "STR": 16,
         "DEX": 14,
         "CON": 15,
         "INT": 10,
         "WIS": 12,
-        "CHA": 8
+        "CHA": 8,
+        "str": 16,
+        "dex": 14,
+        "con": 15,
+        "int": 10,
+        "wis": 12,
+        "cha": 8
       },
-      "proficiency_bonus": 2,
       "skills": {
         "Athletics": true,
         "Intimidation": true,
         "Perception": true,
         "Survival": true
+      },
+      "proficiencies": [
+        "Athletics",
+        "Intimidation",
+        "Perception",
+        "Survival"
+      ],
+      "save_proficiencies": [
+        "str",
+        "con"
+      ],
+      "weapons": [
+        {
+          "name": "Longsword",
+          "attack_bonus": 5,
+          "damage_dice": "1d8",
+          "damage_bonus": 3,
+          "damage_type": "slashing"
+        },
+        {
+          "name": "Handaxe",
+          "attack_bonus": 5,
+          "damage_dice": "1d6",
+          "damage_bonus": 3,
+          "damage_type": "slashing",
+          "thrown": true,
+          "range": "20/60"
+        }
+      ],
+      "armor": {
+        "name": "Chain Mail",
+        "ac_base": 16,
+        "type": "heavy"
+      },
+      "shield": {
+        "name": "Shield",
+        "ac_bonus": 2
       },
       "inventory": [
         "Backpack",
@@ -71,9 +194,20 @@
         "Trophy from fallen enemy",
         "Healing potion"
       ],
+      "gold": 10,
+      "features": [
+        "Fighting Style: Defense (+1 AC when wearing armor)",
+        "Second Wind: Regain 1d10 + 1 HP once per short rest"
+      ],
+      "personality": {
+        "trait": "I can stare down a hell hound without flinching.",
+        "ideal": "Greater Good: Our lot is to lay down our lives in defense of others.",
+        "bond": "I would still lay down my life for the people I served with.",
+        "flaw": "I obey authority without question, even if I disagree."
+      },
+      "notes": "Hired by Gundren Rockseeker to escort supplies to Phandalin. Former soldier from the Neverwinter Guard.",
       "conditions": []
     }
   },
   "lastUpdated": "2025-01-27T00:00:00.000Z"
 }
-

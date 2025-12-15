@@ -1,0 +1,12 @@
+{
+  "id": "old_owl_well",
+  "name": "Old Owl Well",
+  "type": "ruins",
+  "part": 3,
+  "description": "Ruined watchtower from ancient Netheril empire. Just crumbling walls and broken tower stump. Old well still provides fresh water.",
+  "atmosphere": "Deathly odor from tower. Colorful tent in courtyard. Undead guardians.",
+  "enemies": "Hamun Kost (Red Wizard necromancer) + 12 zombies",
+  "negotiation": "Kost willing to deal: wants orcs at Wyvern Tor removed, or will pay for asking Agatha question",
+  "quest_reward": "Info on Cragmaw Castle or Wave Echo Cave location",
+  "treasure": "In Kost's tent: 35 sp, 20 ep, 20 gp, 5 pp, 1 pearl (100 gp), potion healing, scroll darkness, ring of protection (Netheril), tiny jeweled box (25 gp)"
+}

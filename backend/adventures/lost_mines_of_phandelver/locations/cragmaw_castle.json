@@ -1,0 +1,143 @@
+{
+  "id": "cragmaw_castle",
+  "name": "Cragmaw Castle",
+  "type": "dungeon",
+  "part": 3,
+  
+  "description": "Ruined castle of 7 crumbling towers. Upper levels collapsed. Only ground floor habitable. Ancient stronghold of wizard-noble from Phalorm, now goblin fortress.",
+  
+  "atmosphere": "Centuries of decay. Crude goblin repairs with timbers shore up weakest areas. Structure ready to collapse completely. King Grol's domain.",
+  
+  "location_in_world": "~20 miles NE of Cragmaw Hideout in Neverwinter Wood. Hidden, must learn location from: Reidoth, captured goblin, Agatha, Hamun Kost, or random goblin encounter.",
+  
+  "general_features": {
+    "ceilings": "15 ft unless noted",
+    "doors": "Wood with iron bands. No locks. DC 15 Str to break if barricaded",
+    "walls": "Exterior 5 ft thick (1 ft stone, 3 ft fill, 1 ft stone). Interior 1 ft stone",
+    "arrow_slits": "10 ft above outside, 4 ft above inside, 8 in wide, 4 ft high. Three-quarters cover",
+    "light": "Small natural light through slits. Mostly dim/dark"
+  },
+  
+  "areas": {
+    "1_castle_entrance": {
+      "description": "7 crumbling towers of different sizes. Upper stories collapsed. Steps lead to terrace. Pair of sundered bronze doors (corroded, collapsed). Round towers overlook entrance with arrow slits.",
+      "enemies": null,
+      "tactics": "Goblins in area 3 supposed to watch but are lazy. DC varies by party stealth vs goblin passive Perception 9."
+    },
+    
+    "2_trapped_hall": {
+      "description": "Foyer with crumbling rubble. Doors N and S. Broad corridor east with dusty rubble and fallen plaster.",
+      "trap": "Copper tripwire in rubble before area 8 door. Passive Perception 20 or DC 10 active search. Triggers ceiling cave-in: DC 10 Dex save or 3d6 bludgeoning, half on success.",
+      "tactics": "If trap triggers, alerts areas 3, 7, 8, 9",
+      "features": ["Rubble difficult terrain", "Southern passage partially blocked"]
+    },
+    
+    "3_archer_post": {
+      "description": "Small room littered with debris. Arrow slit offers field of fire over castle gates.",
+      "enemies": "2 goblins in each (4 total in both towers)",
+      "tactics": "Take turns shooting and ducking. Drop bows for melee when party enters room.",
+      "features": ["Fine field of fire over entrance"],
+      "treasure": null
+    },
+    
+    "4_ruined_barracks": {
+      "description": "SW tower is heap of rubble. Ragged bedrolls on remaining floor. Small twisting passage leads east through ruins.",
+      "enemies": "3 goblins",
+      "features": ["Rubble stable despite appearance", "Eastern passage safe"],
+      "development": "Noise attracts area 7 goblins. One investigates after 1 round."
+    },
+    
+    "5_storeroom": {
+      "description": "Old casks of salted meat, sacks of rotting grain. Bloody suit of chain mail, heavy crossbow, longsword with Neverwinter emblem.",
+      "features": ["Inedible stores (goblins tolerate when desperate)", "Sildar's gear"],
+      "treasure": "Small cask dwarven brandy (20 glasses). 1 glass = regain 1 hp, 2 glasses in 1 hour = poisoned for 1 hour",
+      "special": "Chain mail and longsword belong to Sildar Hallwinter (grateful if returned)"
+    },
+    
+    "6_hobgoblin_barracks": {
+      "description": "4 straw pallets and bedrolls. Weapon racks on walls: spears, swords, morningstars. North wall damaged but floor swept clean.",
+      "enemies": "4 hobgoblins",
+      "tactics": "Don't react to goblin noise (always fighting). Quick to defend tower or respond to alarm.",
+      "treasure": "5 spears, 4 longswords, 3 morningstars, 2 greatswords, 1 quarterstaff (engraved feathers, light, 10 gp)"
+    },
+    
+    "7_banquet_hall": {
+      "description": "Once grand hall, now goblin mess. Western end is rubble wall. 25 ft ceiling. 2 large tables with benches. Brass brazier with glowing coals. Dirty dishes, half-full pots, moldy bread, gnawed bones.",
+      "enemies": "7 goblins + Yegg (goblin leader, 12 hp, chief cook)",
+      "tactics": "Yegg bullies assistants. If Yegg dies, others flee E or W (avoid N door due to trap in area 2).",
+      "features": ["Tables provide half cover", "Brazier corner"]
+    },
+    
+    "8_dark_hall": {
+      "description": "High narrow hall (once chapel). Angelic figures sculpted in upper reaches. Heavy curtains block N archways. Cracked ornate stone brazier between archways.",
+      "enemies": "1 grick (Lhupo's pet from area 9)",
+      "tactics": "Grick climbs to ledge in shadows (Stealth vs passive Perception). Drops to attack. Knows not to eat goblins unless Lhupo says. Goblins terrified, rush through in groups.",
+      "religion_check": "DC 10 identifies deities: Oghma (knowledge), Mystra (magic), Lathander (dawn), Tymora (luck) - human builders",
+      "treasure": "Gold statuette sun elf in brazier coals (100 gp). Wrapped in crimson cloth. Detect magic = divination aura. Non-evil can ask question (augury effect), once per creature ever.",
+      "trap": "If either eye removed from statue, pillars crack, ceiling collapses. DC 15 Dex save or 4d10 bludgeoning, prone. Half damage on success."
+    },
+    
+    "9_goblin_shrine": {
+      "description": "Northern tower. Stone altar with bloodstained black cloth. Golden ritual items: chalice, knife, censer. Heavy curtains on S archways.",
+      "enemies": "Lhupo (goblin, 12 hp) + 2 goblin acolytes (in filthy robes over armor, no divine powers)",
+      "tactics": "If heard grick fight, hide behind altar for surprise. Otherwise kneeling praying to Maglubiyet.",
+      "features": ["Altar engraved with human gods (same as area 8)", "Bloodstained cloth covers altar"],
+      "treasure": "Chalice (150 gp), knife (60 gp), censer (120 gp) - human-made"
+    },
+    
+    "10_postern_gate": {
+      "description": "South side entrance. Overgrown path leads to passage climbing into wall. Large iron door with heavy bands. Arrow slits 10 ft above ground overlook path.",
+      "locked": "DC 15 thieves tools or DC 25 Str",
+      "arrow_slits": "Connect to area 7. Goblins hear activity here if listen. Door noise = alarm.",
+      "features": ["Sheltered from direct attack", "Side entrance"]
+    },
+    
+    "11_ruined_tower": {
+      "description": "Tower almost completely collapsed. Ground floor has open space. Rotting crates and barrels (old provisions). Heavy curtain blocks crumbling area S. Intact door E. Canvas screen N hides passage through rubble.",
+      "secret": "Canvas door (DC 15 Perception from outside or DC 10 if searching)",
+      "features": ["Old storage", "Hidden north exit to forest (100 ft)"]
+    },
+    
+    "12_guard_barracks": {
+      "description": "Stone brazier with glowing coals. 4 straw pallets on E wall. South wall collapsed but barred door clear. Curtain in N archway.",
+      "enemies": "2 hobgoblins (smart, tough, loyal to Grol)",
+      "tactics": "Combat starts = 1 hobgoblin runs to warn King Grol (area 14), returns in 2 rounds. Both fight to death.",
+      "features": ["Former parlor", "Brazier for heat"]
+    },
+    
+    "13_owlbear_tower": {
+      "description": "Door barred from outside. Upper floors collapsed creating 30+ ft silo. Dust, rubble, broken glass. Old worktables and bookshelves (former library/workshop). Hulking owlbear in center.",
+      "locked": "Heavy wooden bar on door",
+      "enemies": "1 owlbear (captured by Cragmaws, doesn't know what to do with it)",
+      "tactics": "Kept dark to stay calm. Attacks first creature in doorway. If fed meat, eats. Otherwise attacks.",
+      "escape": "If door opened and clear path, owlbear flees (most likely through area 11), attacking anything in way.",
+      "treasure": "Jagged ledge 15 ft up (DC 15 Perception). Wooden chest: 90 ep, 120 gp, potion healing, scroll silence, scroll revivify"
+    },
+    
+    "14_king_grol_quarters": {
+      "description": "Crude living space. Thick furs as carpets. Old trophies on walls. Large bed N. Round table with chairs S near door. Brazier burning. Unconscious dwarf on floor (Gundren, badly beaten).",
+      "enemies": "King Grol (bugbear, 45 hp), Snarl (wolf, 18 hp), Doppelganger (disguised as female drow - Vyerith, Black Spider messenger)",
+      "negotiation": "Grol wants to sell map instead of giving to Black Spider. Vyerith wants to question Gundren then kill him and destroy map.",
+      "tactics": "If warned, Vyerith hides behind NE door (ambush from rear). Grol holds Gundren hostage. If Grol dies, Vyerith tries to kill Gundren, grab map, flee to area 11.",
+      "gundren": "Dwarf commoner, unconscious, 0 hp but stable",
+      "arrow_slits": "15 ft above outside ground. Not watching.",
+      "nw_room": "Collapsed bathroom with tile tub",
+      "treasure": "Under Grol's bed mattress: 220 sp, 160 ep, 3 potions healing, MAP TO WAVE ECHO CAVE"
+    }
+  },
+  
+  "returning_war_band": {
+    "optional_complication": "3 hobgoblins + Targor Bloodsword (hobgoblin, 20 hp) + 2 wolves returning as party leaves",
+    "treasure": "1d4 carry bloody sacks with severed elf heads (trophies)",
+    "negotiation": "Targor ambitious. DC 15 Persuasion to convince him Grol's death = his chance to lead tribe. Might spare party.",
+    "xp": 500
+  },
+  
+  "key_npcs": ["king_grol", "gundren_rockseeker", "vyerith_doppelganger"],
+  
+  "key_treasure": "Map to Wave Echo Cave (under Grol's bed)",
+  
+  "total_xp": "~2500-3000 depending on encounters",
+  
+  "advancement": "Should be level 4 after clearing castle and rescuing Gundren"
+}

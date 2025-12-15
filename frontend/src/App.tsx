@@ -14,6 +14,7 @@ import { useAdventure } from './hooks/useAdventure'
 import { useCharacters } from './hooks/useCharacters'
 import { useAudio } from './hooks/useAudio'
 import { useSavePoint } from './hooks/useSavePoint'
+import { useHeaderImages } from './hooks/useHeaderImages'
 import { Tabs } from '@base-ui/react/tabs'
 
 function App() {
@@ -22,6 +23,7 @@ function App() {
   const [voiceEnabled, setVoiceEnabled] = useState(true)
 
   // Custom hooks
+  const { images: headerImages, refreshImages: refreshHeaderImages } = useHeaderImages()
   const { currentAdventure, setCurrentAdventure, restoreConversationHistory } = useAdventure()
   const { characters, setCharacters } = useCharacters()
   const { currentAudio, playAudio, stopAudio } = useAudio()
@@ -32,7 +34,7 @@ function App() {
     loading,
     setLoading,
     sendMessage: sendMessageToDM,
-    archiveChat,
+    archiveChat: archiveChatBase,
     restoreChat,
   } = useConversation({
     currentAdventure,
@@ -40,6 +42,12 @@ function App() {
     onAdventureUpdate: setCurrentAdventure,
     onCharactersUpdate: setCharacters,
   })
+
+  // Wrapper for archiveChat to refresh header images
+  const archiveChat = async () => {
+    await archiveChatBase()
+    refreshHeaderImages()
+  }
 
   const { loadSavePoint } = useSavePoint({
     currentAdventure,
@@ -61,6 +69,18 @@ function App() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []) // Only run on mount
+
+  // Refresh header images when tab changes
+  useEffect(() => {
+    refreshHeaderImages()
+  }, [activeTab, refreshHeaderImages])
+
+  // Refresh header images when adventure loads
+  useEffect(() => {
+    if (currentAdventure) {
+      refreshHeaderImages()
+    }
+  }, [currentAdventure?.id, refreshHeaderImages])
 
   const sendMessage = async () => {
     if (!message.trim() || loading) return
@@ -99,7 +119,7 @@ function App() {
   return (
     <div className="min-h-screen bg-background text-foreground dark">
       <div className="container mx-auto p-3 max-w-7xl">
-        <Header />
+        <Header leftImage={headerImages[0]} rightImage={headerImages[1]} />
 
         <Tabs.Root value={activeTab} onValueChange={(value: string | null) => setActiveTab(value || 'game')}>
           <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
@@ -134,12 +154,10 @@ function App() {
           </Tabs.Panel>
 
           <Tabs.Panel value="players">
-            <div className="max-w-2xl">
-              <Players 
-                characters={characters} 
-                onCharactersChange={setCharacters}
-              />
-            </div>
+            <Players 
+              characters={characters} 
+              onCharactersChange={setCharacters}
+            />
           </Tabs.Panel>
 
           <Tabs.Panel value="adventure">

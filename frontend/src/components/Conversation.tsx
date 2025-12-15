@@ -1,4 +1,4 @@
-import { Volume2, Archive } from 'lucide-react'
+import { AudioWaveform, Archive } from 'lucide-react'
 import { Button } from '@base-ui/react/button'
 import type { Adventure } from '../services/adventureStorage'
 
@@ -31,7 +31,7 @@ export function Conversation({
             onClick={onArchiveChat}
             className="px-2 py-1 text-[10px] bg-secondary border border-border text-secondary-foreground hover:bg-accent transition-colors flex items-center gap-1"
           >
-            <Archive className="w-3 h-3" />
+            <Archive className="w-5 h-5" />
             Archive Chat
           </Button>
         </div>
@@ -78,7 +78,7 @@ export function Conversation({
                 }}
                 className="mt-1.5 flex items-center gap-1 text-[10px] text-primary hover:text-primary-hover transition-colors bg-transparent border-0 p-0"
               >
-                <Volume2 className="w-3 h-3" />
+                <AudioWaveform className="w-5 h-5" />
                 Play audio
               </Button>
             )}

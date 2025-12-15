@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect } from 'react'
-import { BookOpen, Upload, Download, Plus, Trash2, Save, FolderOpen, ChevronDown, ChevronRight, FileDown, FileUp, History, FileText, X } from 'lucide-react'
+import { BookOpen, Upload, Download, Plus, Trash2, Save, FolderOpen, ChevronDown, ChevronRight, FileDown, FileUp, History, FileText, X, Check, Loader2 } from 'lucide-react'
 import { Button } from '@base-ui/react/button'
 import { Input } from '@base-ui/react/input'
 import { adventureStorage, type Adventure } from '../services/adventureStorage'
 import { campaignStorage, type Campaign, type QuestLogEntry } from '../services/campaignStorage'
+import { useModularAdventure } from '../hooks/useModularAdventure'
 
 interface AdventureSetupProps {
   onAdventureLoaded?: (adventure: Adventure) => void
@@ -12,6 +13,17 @@ interface AdventureSetupProps {
 }
 
 export function AdventureSetup({ onAdventureLoaded, onCampaignLoaded, onQuestLogUpdated }: AdventureSetupProps = {}) {
+  // Modular Adventure System (Backend)
+  const {
+    availableAdventures,
+    loadingAdventures,
+    currentAdventure: modularAdventure,
+    loadingCurrent,
+    loadAdventure: loadModularAdventure,
+    error: modularError,
+  } = useModularAdventure()
+
+  // Legacy Adventure System (LocalStorage)
   const [adventures, setAdventures] = useState<Adventure[]>([])
   const [selectedAdventure, setSelectedAdventure] = useState<Adventure | null>(null)
   const [currentCampaign, setCurrentCampaign] = useState<Campaign | null>(null)
@@ -24,6 +36,50 @@ export function AdventureSetup({ onAdventureLoaded, onCampaignLoaded, onQuestLog
   const campaignFileInputRef = useRef<HTMLInputElement>(null)
   const [expandedQuests, setExpandedQuests] = useState<Set<string>>(new Set())
   const [editingQuestNotes, setEditingQuestNotes] = useState<Set<string>>(new Set())
+  const [openStatusDropdown, setOpenStatusDropdown] = useState<string | null>(null)
+  const statusDropdownRefs = useRef<Map<string, HTMLButtonElement>>(new Map())
+  const [dropdownPosition, setDropdownPosition] = useState<{ top: number; left: number } | null>(null)
+
+  // Close dropdown when clicking outside and calculate position
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (openStatusDropdown) {
+        const buttonElement = statusDropdownRefs.current.get(openStatusDropdown)
+        const dropdownElement = document.querySelector(`[data-status-dropdown="${openStatusDropdown}"]`)
+        if (buttonElement && dropdownElement) {
+          if (!buttonElement.contains(event.target as Node) && !dropdownElement.contains(event.target as Node)) {
+            setOpenStatusDropdown(null)
+            setDropdownPosition(null)
+          }
+        }
+      }
+    }
+    
+    const updatePosition = () => {
+      if (openStatusDropdown) {
+        const buttonElement = statusDropdownRefs.current.get(openStatusDropdown)
+        if (buttonElement) {
+          const rect = buttonElement.getBoundingClientRect()
+          setDropdownPosition({
+            top: rect.bottom + 4, // Fixed positioning is relative to viewport, not document
+            left: rect.left
+          })
+        }
+      }
+    }
+
+    if (openStatusDropdown) {
+      updatePosition()
+      window.addEventListener('scroll', updatePosition, true)
+      window.addEventListener('resize', updatePosition)
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => {
+        window.removeEventListener('scroll', updatePosition, true)
+        window.removeEventListener('resize', updatePosition)
+        document.removeEventListener('mousedown', handleClickOutside)
+      }
+    }
+  }, [openStatusDropdown])
 
   useEffect(() => {
     const loaded = adventureStorage.loadAdventures()
@@ -397,20 +453,102 @@ export function AdventureSetup({ onAdventureLoaded, onCampaignLoaded, onQuestLog
   return (
     <div className="bg-card border border-border p-3">
       <h2 className="text-xs font-semibold text-foreground mb-3 flex items-center gap-1.5">
-        <BookOpen className="w-3 h-3" />
+        <BookOpen className="w-5 h-5" />
         Adventure & Campaign
       </h2>
 
       <div className="space-y-3">
-        {/* Adventure Selector */}
+        {/* Modular Adventure System (Backend) */}
+        <div className="bg-background border border-primary/30 p-2 space-y-2">
+          <div className="flex items-center justify-between">
+            <label className="text-[10px] font-semibold text-primary">Modular Adventures (Backend)</label>
+            {modularError && (
+              <span className="text-[9px] text-destructive">{modularError}</span>
+            )}
+          </div>
+          
+          {loadingAdventures ? (
+            <div className="text-[10px] text-muted-foreground flex items-center gap-1">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Loading adventures from backend...
+            </div>
+          ) : modularError ? (
+            <div className="text-[10px] text-destructive p-2 bg-destructive/10 border border-destructive/30 rounded">
+              <div className="font-semibold mb-1">Error loading adventures:</div>
+              <div>{modularError}</div>
+              <div className="mt-2 text-[9px] text-muted-foreground">
+                Make sure the backend server is running on port 8000
+              </div>
+            </div>
+          ) : availableAdventures.length > 0 ? (
+            <div className="space-y-1">
+              {availableAdventures.map((adv) => (
+                <div
+                  key={adv.id}
+                  className="flex items-center justify-between p-1.5 bg-card border border-border rounded"
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[10px] font-semibold text-foreground truncate">
+                      {adv.name}
+                    </div>
+                    <div className="text-[9px] text-muted-foreground">
+                      Levels {adv.level_range[0]}-{adv.level_range[1]} • {adv.estimated_sessions || '?'} sessions
+                    </div>
+                  </div>
+                  <Button
+                    onClick={async () => {
+                      try {
+                        await loadModularAdventure(adv.id)
+                        alert(`✅ Loaded ${adv.name}!\n\nThe adventure is now active on the backend. Start playing!`)
+                      } catch (err) {
+                        alert(`Failed to load adventure: ${err}`)
+                      }
+                    }}
+                    disabled={loadingCurrent || (modularAdventure?.loaded && modularAdventure.adventure_info?.id === adv.id)}
+                    className="px-2 py-1 text-[9px] bg-primary border border-primary text-primary-foreground hover:bg-primary-hover transition-colors disabled:opacity-50"
+                  >
+                    {loadingCurrent ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : modularAdventure?.loaded && modularAdventure.adventure_info?.id === adv.id ? (
+                      '✓ Loaded'
+                    ) : (
+                      'Load'
+                    )}
+                  </Button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-[10px] text-muted-foreground text-center py-2">
+              No modular adventures found in backend
+            </div>
+          )}
+          
+          {modularAdventure?.loaded && (
+            <div className="mt-2 p-2 bg-primary/10 border border-primary/30 rounded">
+              <div className="text-[9px] font-semibold text-primary mb-1">
+                ✓ Active: {modularAdventure.adventure_info?.name}
+              </div>
+              {modularAdventure.metadata?.current_state && (
+                <div className="text-[9px] text-muted-foreground">
+                  Chapter: {modularAdventure.metadata.current_state.chapter?.replace('part', 'Part ') || 'Unknown'}<br />
+                  Location: {modularAdventure.metadata.current_state.location?.replace(/_/g, ' ') || 'Unknown'}<br />
+                  Level: {modularAdventure.metadata.current_state.party_level || 1}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Legacy Adventure Selector */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <label className="text-[10px] font-semibold text-muted-foreground">Adventure (Module)</label>
+            <label className="text-[10px] font-semibold text-muted-foreground">Legacy Adventures (LocalStorage)</label>
             <Button
               onClick={() => setIsCreating(true)}
               className="px-2 py-1 text-xs bg-primary border border-primary text-primary-foreground hover:bg-primary-hover transition-colors flex items-center gap-1"
             >
-              <Plus className="w-3 h-3" />
+              <Plus className="w-5 h-5" />
               New
             </Button>
           </div>
@@ -472,14 +610,14 @@ export function AdventureSetup({ onAdventureLoaded, onCampaignLoaded, onQuestLog
                 className="px-2 py-1 text-xs bg-secondary border border-border text-secondary-foreground hover:bg-accent transition-colors"
                 title="Load Adventure"
               >
-                <FileUp className="w-3 h-3" />
+                <FileUp className="w-5 h-5" />
               </Button>
               <Button
                 onClick={() => adventureStorage.exportAdventureToFile(selectedAdventure)}
                 className="px-2 py-1 text-xs bg-secondary border border-border text-secondary-foreground hover:bg-accent transition-colors"
                 title="Export Adventure"
               >
-                <FileDown className="w-3 h-3" />
+                <FileDown className="w-5 h-5" />
               </Button>
             </div>
           )}
@@ -503,7 +641,7 @@ export function AdventureSetup({ onAdventureLoaded, onCampaignLoaded, onQuestLog
                   className="px-2 py-1 text-xs bg-primary border border-primary text-primary-foreground hover:bg-primary-hover transition-colors flex items-center gap-1"
                   title="Load Campaign (auto-loads associated adventure if different)"
                 >
-                  <FolderOpen className="w-3 h-3" />
+                  <FolderOpen className="w-5 h-5" />
                   Load Campaign
                 </Button>
                 {!currentCampaign && (
@@ -511,7 +649,7 @@ export function AdventureSetup({ onAdventureLoaded, onCampaignLoaded, onQuestLog
                     onClick={handleCreateCampaign}
                     className="px-2 py-1 text-xs bg-primary border border-primary text-primary-foreground hover:bg-primary-hover transition-colors flex items-center gap-1"
                   >
-                    <Plus className="w-3 h-3" />
+                    <Plus className="w-5 h-5" />
                     New Campaign
                   </Button>
                 )}
@@ -524,7 +662,7 @@ export function AdventureSetup({ onAdventureLoaded, onCampaignLoaded, onQuestLog
                       className="px-2 py-1 text-xs bg-secondary border border-border text-secondary-foreground hover:bg-accent transition-colors"
                       title="Export Campaign"
                     >
-                      <FileDown className="w-3 h-3" />
+                      <FileDown className="w-5 h-5" />
                     </Button>
                     <Button
                       onClick={() => {
@@ -539,7 +677,7 @@ export function AdventureSetup({ onAdventureLoaded, onCampaignLoaded, onQuestLog
                       className="px-2 py-1 text-xs bg-secondary border border-border text-secondary-foreground hover:bg-accent transition-colors"
                       title="Clear Campaign"
                     >
-                      <X className="w-3 h-3" />
+                      <X className="w-5 h-5" />
                     </Button>
                   </>
                 )}
@@ -562,7 +700,7 @@ export function AdventureSetup({ onAdventureLoaded, onCampaignLoaded, onQuestLog
                 {/* Campaign Summary */}
                 <div className="bg-card border border-border p-2">
                   <div className="flex items-center gap-1.5 mb-1">
-                    <FileText className="w-3 h-3 text-muted-foreground" />
+                    <FileText className="w-5 h-5 text-muted-foreground" />
                     <h4 className="text-xs font-semibold text-foreground">Summary</h4>
                   </div>
                   <div className="text-[10px] text-muted-foreground whitespace-pre-wrap leading-relaxed">
@@ -574,16 +712,16 @@ export function AdventureSetup({ onAdventureLoaded, onCampaignLoaded, onQuestLog
                 <div className="bg-card border border-border p-2">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-1.5">
-                      <History className="w-3 h-3 text-muted-foreground" />
+                      <History className="w-5 h-5 text-muted-foreground" />
                       <h4 className="text-xs font-semibold text-foreground">Quest Log</h4>
                       <span className="text-[9px] text-muted-foreground">({currentCampaign.questLog.length})</span>
                     </div>
                     <Button
                       onClick={() => setIsCreatingQuest(true)}
-                      className="px-1.5 py-0.5 text-[9px] bg-primary border border-primary text-primary-foreground hover:bg-primary-hover transition-colors"
+                      className="px-2 py-1 text-xs bg-primary border border-primary text-primary-foreground hover:bg-primary-hover transition-colors flex items-center gap-1"
                     >
-                      <Plus className="w-2.5 h-2.5" />
-                      Add Quest
+                      <Plus className="w-5 h-5" />
+                      Entry
                     </Button>
                   </div>
 
@@ -652,9 +790,9 @@ export function AdventureSetup({ onAdventureLoaded, onCampaignLoaded, onQuestLog
                               }}
                             >
                               {isExpanded ? (
-                                <ChevronDown className="w-3 h-3 text-muted-foreground flex-shrink-0 mt-0.5" />
+                                <ChevronDown className="w-5 h-5 text-muted-foreground flex-shrink-0 mt-0.5" />
                               ) : (
-                                <ChevronRight className="w-3 h-3 text-muted-foreground flex-shrink-0 mt-0.5" />
+                                <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0 mt-0.5" />
                               )}
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2">
@@ -676,20 +814,61 @@ export function AdventureSetup({ onAdventureLoaded, onCampaignLoaded, onQuestLog
                                   </div>
                                 )}
                               </div>
-                              <select
-                                value={quest.status}
-                                onChange={(e) => {
-                                  e.stopPropagation()
-                                  handleUpdateQuest({ ...quest, status: e.target.value as any, updatedAt: new Date().toISOString() })
-                                }}
-                                className="text-[9px] px-1 py-0.5 bg-background text-foreground border border-border focus:border-primary focus:outline-none"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                <option value="not_started">Not Started</option>
-                                <option value="in_progress">In Progress</option>
-                                <option value="completed">Completed</option>
-                                <option value="failed">Failed</option>
-                              </select>
+                              <div className="relative">
+                                <button
+                                  ref={(el) => {
+                                    if (el) {
+                                      statusDropdownRefs.current.set(quest.id, el)
+                                    } else {
+                                      statusDropdownRefs.current.delete(quest.id)
+                                    }
+                                  }}
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    if (openStatusDropdown === quest.id) {
+                                      setOpenStatusDropdown(null)
+                                      setDropdownPosition(null)
+                                    } else {
+                                      setOpenStatusDropdown(quest.id)
+                                    }
+                                  }}
+                                  className="retro text-[9px] px-1 py-0.5 bg-background text-foreground border border-border hover:bg-primary/10 hover:border-primary focus:outline-none flex items-center gap-1 whitespace-nowrap"
+                                  style={{ fontFamily: "'Press Start 2P', monospace" }}
+                                >
+                                  {quest.status.replace('_', ' ').toUpperCase()}
+                                  <ChevronDown className="w-3 h-3" />
+                                </button>
+                                {openStatusDropdown === quest.id && dropdownPosition && (
+                                  <div 
+                                    data-status-dropdown={quest.id}
+                                    className="fixed bg-background border border-border z-[9999] min-w-[120px] retro text-[9px]"
+                                    style={{ 
+                                      fontFamily: "'Press Start 2P', monospace",
+                                      top: `${dropdownPosition.top}px`,
+                                      left: `${dropdownPosition.left}px`
+                                    }}
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    {(['not_started', 'in_progress', 'completed', 'failed'] as const).map((status) => (
+                                      <button
+                                        key={status}
+                                        onClick={(e) => {
+                                          e.stopPropagation()
+                                          handleUpdateQuest({ ...quest, status, updatedAt: new Date().toISOString() })
+                                          setOpenStatusDropdown(null)
+                                          setDropdownPosition(null)
+                                        }}
+                                        className={`w-full text-left px-2 py-1 hover:bg-primary/20 hover:text-primary flex items-center gap-1.5 whitespace-nowrap ${
+                                          quest.status === status ? 'bg-primary/30 text-primary' : 'text-foreground'
+                                        }`}
+                                      >
+                                        {quest.status === status && <Check className="w-3 h-3 flex-shrink-0" />}
+                                        <span>{status.replace('_', ' ').toUpperCase()}</span>
+                                      </button>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
                             </div>
                             {isExpanded && (
                               <div className="ml-4 mt-1 space-y-2 p-2 bg-card/30 border border-border rounded">
@@ -775,12 +954,12 @@ export function AdventureSetup({ onAdventureLoaded, onCampaignLoaded, onQuestLog
         {selectedAdventure && (
           <div className="bg-background border border-border p-2">
             <label className="text-[10px] font-semibold text-muted-foreground mb-1 block">
-              Adventure Structure/Notes (DM Reference)
+              Adventure Structure/Notes (Used by AI DM)
             </label>
             <textarea
               value={selectedAdventure.notes || selectedAdventure.description || ''}
               onChange={(e) => handleUpdateAdventure({ notes: e.target.value })}
-              placeholder="Adventure structure, DM notes, module information..."
+              placeholder="Adventure structure, module information, key details (this is sent to the AI DM in the system prompt)..."
               className="w-full px-2 py-1 text-xs bg-background text-foreground border border-border focus:border-primary focus:outline-none resize-none"
               rows={4}
             />

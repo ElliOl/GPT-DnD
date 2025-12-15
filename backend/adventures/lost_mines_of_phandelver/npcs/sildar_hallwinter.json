@@ -1,0 +1,80 @@
+{
+  "id": "sildar_hallwinter",
+  "name": "Sildar Hallwinter",
+  "race": "Human",
+  "class": "Fighter",
+  "age": "Nearly 50",
+  "alignment": "Neutral Good",
+  
+  "affiliation": "Lords' Alliance",
+  "title": "Member of griffon cavalry of Waterdeep",
+  
+  "appearance": "Kindhearted older warrior. Well-maintained chain mail. Professional soldier bearing.",
+  
+  "personality": {
+    "traits": ["Honorable", "Dedicated", "Concerned for others", "Professional"],
+    "goals": [
+      "Find Iarno Albrek (fellow Lords' Alliance member)",
+      "Help Gundren reopen Wave Echo Cave",
+      "Bring law and order to Phandalin",
+      "Restore Phandalin to civilized prosperity"
+    ],
+    "values": "Security through action. Mutual protection. Civilization vs chaos."
+  },
+  
+  "background": "Member of Lords' Alliance, political organization uniting free cities of the North for mutual security and prosperity. Met Gundren in Neverwinter, agreed to escort him to Phandalin.",
+  
+  "current_situation": {
+    "part1": "Captured by goblins, held in Cragmaw Hideout Area 6. At 1 hp, been tortured.",
+    "part2": "After rescue, stays at Townmaster's Hall. Investigates Iarno's disappearance.",
+    "part3": "Continues investigation, offers quests",
+    "part4": "Grateful if Gundren rescued"
+  },
+  
+  "key_information": [
+    "Three Rockseeker brothers found entrance to Wave Echo Cave",
+    "Wave Echo Cave = site of Phandelver's Pact mines (see Background)",
+    "Klarg had orders to waylay Gundren from 'Black Spider'",
+    "Gundren had map to Wave Echo Cave - goblins took it",
+    "Map and Gundren sent to Cragmaw Castle (doesn't know location)",
+    "Iarno Albrek came to Phandalin 2 months ago to establish order - disappeared",
+    "Iarno is human wizard, short, dark beard, 30s"
+  ],
+  
+  "quests_given": {
+    "escort_to_phandalin": {
+      "reward": "50 gp (loan from Barthen)",
+      "timing": "After rescue from Cragmaw Hideout"
+    },
+    "find_cragmaw_castle": {
+      "objective": "Locate and clear Cragmaw Castle, defeat/drive off King Grol",
+      "reward": "500 gp",
+      "timing": "Part 2-3"
+    },
+    "find_iarno": {
+      "objective": "Investigate Tresendar Manor area, find Iarno",
+      "reward": "200 gp for eliminating Redbrand threat",
+      "preference": "Wants Iarno captured alive for trial in Neverwinter",
+      "timing": "Part 2"
+    }
+  },
+  
+  "reactions": {
+    "iarno_revelation": "Shocked and disappointed that fellow Alliance member turned traitor",
+    "gundren_rescued": "Deeply grateful, increases party reputation",
+    "redbrands_eliminated": "Relieved, sees hope for Phandalin",
+    "faction_recruitment": "Offers Lords' Alliance membership (title: Cloak) if party eliminates Cragmaw threat OR exposes Iarno's treachery"
+  },
+  
+  "dialogue_examples": [
+    "\"My friends, let us secure lodgings. I'm told the local inn is very quaint.\"",
+    "\"Gundren spoke highly of Wave Echo Cave. If we can secure it, Phandalin's future is bright.\"",
+    "\"Iarno was a good man... or so I thought. I cannot believe he would betray the Alliance.\"",
+    "\"The Cragmaws are a menace. Find their castle, and you'll find Gundren - I'm certain of it.\""
+  ],
+  
+  "combat_role": "If accompanying party: supportive fighter, not aggressive. Helps stabilize dying, guards prisoners, assists with strength checks. Doesn't take leadership role.",
+  
+  "stat_block": "See Appendix B - Sildar Hallwinter",
+  "gear": "Longsword, heavy crossbow, chain mail (in Cragmaw Hideout storage if rescued there)"
+}

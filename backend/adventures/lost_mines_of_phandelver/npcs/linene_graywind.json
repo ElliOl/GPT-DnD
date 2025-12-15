@@ -1,0 +1,29 @@
+{
+  "id": "linene_graywind",
+  "name": "Linene Graywind",
+  "race": "Human",
+  "class": "Commoner (Merchant)",
+  "alignment": "Neutral",
+  "location": "Lionshield Coster (Phandalin)",
+  "personality": {
+    "traits": [
+      "Sharp-tongued",
+      "No-nonsense (35 years)",
+      "Suspicious",
+      "Principled"
+    ],
+    "goals": [
+      "Protect inventory",
+      "Recover stolen goods",
+      "Refuse to arm Redbrands"
+    ],
+    "mannerisms": "Arms crossed, direct gaze, won't suffer fools"
+  },
+  "role": "Master of Lionshield Coster outpost. Manages weapons/armor sales.",
+  "company": "Lionshields based in Yartar (100+ miles east). Ship finished goods to frontier settlements.",
+  "problem": "Recent caravan never arrived (captured by Cragmaw goblins, goods in Cragmaw Hideout area 8)",
+  "scruples": "Won't sell to Redbrands or anyone who might threaten town",
+  "quest_reward": "If party returns stolen goods from Cragmaw Hideout: 50 gp + promises to help however she can",
+  "inventory": "Weapons and armor (back room). See PHB prices.",
+  "treasure": "50 gp reward for goods"
+}

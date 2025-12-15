@@ -626,7 +626,7 @@ Always use tools for game mechanics - never guess or simulate dice rolls yoursel
         Build enhanced system prompt with adventure and session context
         
         Args:
-            adventure_context: Adventure metadata (name, description, etc.)
+            adventure_context: Adventure metadata or modular adventure context string
             session_state: Session state (quest log, world state, location, etc.)
         
         Returns:
@@ -636,16 +636,22 @@ Always use tools for game mechanics - never guess or simulate dice rolls yoursel
         
         # Add adventure context
         if adventure_context:
-            prompt_parts.append("\n## ADVENTURE CONTEXT:")
-            
-            if adventure_context.get("name"):
-                prompt_parts.append(f"\n**Adventure:** {adventure_context['name']}")
-            
-            if adventure_context.get("description"):
-                prompt_parts.append(f"\n**Description:** {adventure_context['description']}")
-            
-            if adventure_context.get("notes"):
-                prompt_parts.append(f"\n**Notes:** {adventure_context['notes']}")
+            # Check if this is a modular adventure context string (from AdventureContext)
+            if isinstance(adventure_context, str):
+                prompt_parts.append("\n## CURRENT ADVENTURE:")
+                prompt_parts.append(adventure_context)
+            elif isinstance(adventure_context, dict):
+                # Legacy format - simple adventure metadata
+                prompt_parts.append("\n## ADVENTURE CONTEXT:")
+                
+                if adventure_context.get("name"):
+                    prompt_parts.append(f"\n**Adventure:** {adventure_context['name']}")
+                
+                if adventure_context.get("description"):
+                    prompt_parts.append(f"\n**Description:** {adventure_context['description']}")
+                
+                if adventure_context.get("notes"):
+                    prompt_parts.append(f"\n**Notes:** {adventure_context['notes']}")
         
         # Add session state context
         if session_state:

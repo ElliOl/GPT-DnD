@@ -1,0 +1,35 @@
+{
+  "id": "hamun_kost",
+  "name": "Hamun Kost",
+  "race": "Human",
+  "class": "Red Wizard (Necromancer)",
+  "alignment": "Lawful Evil",
+  "location": "Old Owl Well ruins",
+  "personality": {
+    "traits": [
+      "Stout",
+      "Scholarly",
+      "Arrogant",
+      "Pragmatic"
+    ],
+    "goals": [
+      "Uncover Netheril secrets",
+      "Advance in Red Wizard hierarchy",
+      "Complete research undisturbed"
+    ],
+    "appearance": "Red robes, shaved scalp, black necromantic tattoo on forehead",
+    "mannerisms": "Dismissive of interruptions, but willing to deal if mutually beneficial"
+  },
+  "background": "Red Wizard of Thay (far east land). Tattooed flesh indicates school of magic (his = necromancy).",
+  "mission": "Exploring Old Owl Well for arcane lore from Netheril builders. Has made progress.",
+  "guards": "12 zombies patrol ruins",
+  "tactics": "Not aggressive unless provoked. Willing to negotiate and trade information.",
+  "deals": {
+    "wyvern_tor": "Wants orcs removed (they've scouted his camp). Will share info if party does this.",
+    "agatha_question": "Wants to ask Agatha: 'What is the name of the wizard who built the tower at Old Owl Well?' Too afraid to risk banshee's anger himself. Will trade info for asking.",
+    "both": "Can provide Cragmaw Castle location or Wave Echo Cave clues"
+  },
+  "tight_lipped": "Won't reveal why he's really here",
+  "treasure": "See old_owl_well.json",
+  "xp": "800 if defeated with zombies, 200 if parleys and reports back to Daran"
+}

@@ -1,0 +1,33 @@
+{
+  "id": "venomfang",
+  "name": "Venomfang",
+  "race": "Young Green Dragon",
+  "class": "Dragon",
+  "alignment": "Lawful Evil",
+  "location": "Thundertree ruins - Dragon's Tower (area 7)",
+  "personality": {
+    "traits": [
+      "Cunning",
+      "Proud",
+      "Territorial",
+      "Patient hunter"
+    ],
+    "goals": [
+      "Claim territory",
+      "Build hoard",
+      "Assert dominance"
+    ],
+    "tactics": "Smart enough to retreat when outmatched. Will remember party for future revenge."
+  },
+  "arrival": "Recently claimed tower while searching Neverwinter Wood for lair. Killed 2 giant spiders that lived there.",
+  "lair": "Tower with partially collapsed roof (allows entry/exit). Former wizard's library, 40 ft high ceiling.",
+  "cottage": "Adjacent cottage (dusty furniture in webbing, nothing valuable)",
+  "tactics": {
+    "discovery": "Lurks near west end of bridges. Listens to intruders.",
+    "combat": "Uses breath weapon, then melee. Strategic positioning.",
+    "retreat": "If reduced to half HP (68), climbs to tower top and flies away. Will return for revenge later (DM choice)."
+  },
+  "treasure": "Old wooden chest: 800 sp, 150 gp, 4 silver goblets with moonstones (60 gp each), scroll misty step, scroll lightning bolt, +1 battleaxe 'Hew' (deals max damage vs plants/wood objects, rusty-looking, inscribed 'Hew' in Dwarvish, hilt = bird of prey, wielder uneasy in forests)",
+  "stats": "HP 136, AC 18, Poison Breath 42 (12d6) damage",
+  "xp": "2000 if driven off, 3900 if slain (unlikely at level 3)"
+}

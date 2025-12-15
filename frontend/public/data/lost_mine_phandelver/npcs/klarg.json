@@ -1,0 +1,29 @@
+{
+  "id": "klarg",
+  "name": "Klarg",
+  "race": "Bugbear",
+  "class": "Warrior",
+  "alignment": "Chaotic Evil",
+  "personality": {
+    "traits": [
+      "Delusional",
+      "Grandiose",
+      "Not entirely sane",
+      "Self-aggrandizing"
+    ],
+    "goals": [
+      "Become mighty warlord",
+      "Build throne from enemies' bones",
+      "Conquer the region"
+    ],
+    "speech": "Refers to self in third person: 'Who dares defy Klarg?', 'Klarg will crush puny ones!'",
+    "mannerisms": "Pounds chest, roars dramatically, treats minor victories as epic conquests"
+  },
+  "role": "Leader of Cragmaw Hideout band. Takes orders from King Grol.",
+  "mission": "Waylay dwarf Gundren Rockseeker and anyone with him. Send dwarf + possessions to Cragmaw Castle.",
+  "lair": "Cragmaw Hideout area 8",
+  "companions": "Ripper (mangy wolf), 2 goblins",
+  "tactics": "If alerted, hides with wolf behind stalagmites. Goblins take cover behind supplies. If wolf dies, attempts to flee down chimney to area 3.",
+  "treasure": "Chest under bed: 600 cp, 110 sp, 2 potions healing, jade frog statuette with gold eyes (40 gp)",
+  "defeat": "Goblins may rebel without strong leader"
+}

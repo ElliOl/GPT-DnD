@@ -1,0 +1,35 @@
+{
+  "id": "mormesk_wraith",
+  "name": "Mormesk the Wraith",
+  "race": "Wraith (Undead)",
+  "class": "Undead",
+  "alignment": "Neutral Evil",
+  "location": "Wave Echo Cave area 14 (Wizards Quarters)",
+  "personality": {
+    "traits": [
+      "Hate-filled",
+      "Vengeful",
+      "Greedy for treasure he can't touch",
+      "Ancient"
+    ],
+    "goals": [
+      "Guard treasure",
+      "Punish living",
+      "Kill spectator in Forge"
+    ],
+    "speech": "Grave whispers. 'Your presence is offensive to me, your life forfeit. My treasures are mine alone, not yours to plunder!'",
+    "appearance": "Rises from floor. Ghostly wizard form."
+  },
+  "background": "Powerful mage. Died in spell battle when orcs attacked. Centuries of anger poisoned soul into wraith.",
+  "role": "Leads undead in Wave Echo Cave. Can't leave his treasure room (obsession).",
+  "treasure": "Scorched chest: 1100 cp, 160 sp, 50 ep, 3 diamonds (100 gp each), wooden pipe with platinum filigree (150 gp)",
+  "books": "Magically preserved tomes (mostly histories). One has map sewn in cover (DC 12 Investigation). Map shows location of dungeon of DM's creation (future adventure hook).",
+  "negotiation": {
+    "rude": "If harmed or property seized, attacks immediately",
+    "polite": "If respectful and offer magic item/scrolls/spellbook/arcane knowledge, makes DC 10 Persuasion check",
+    "deal": "Won't give up pipe, but will trade coins/gems if party kills spectator in Forge of Spells (area 15)",
+    "books": "If given gift, allows party to read books and keep secret map"
+  },
+  "stats": "HP 45, AC 13",
+  "xp": 700
+}

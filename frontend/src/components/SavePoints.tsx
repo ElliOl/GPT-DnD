@@ -32,7 +32,7 @@ export function SavePoints({ currentAdventure, onLoadSavePoint }: SavePointsProp
                   onClick={() => onLoadSavePoint(savePoint.id)}
                   className="px-1.5 py-0.5 text-[9px] bg-primary border border-primary text-primary-foreground hover:bg-primary-hover transition-colors flex items-center gap-1 whitespace-nowrap flex-shrink-0"
                 >
-                  <RotateCcw className="w-2.5 h-2.5" />
+                  <RotateCcw className="w-4 h-4" />
                   Load
                 </Button>
               )}
