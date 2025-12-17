@@ -6,6 +6,7 @@
 
 @layer base {
   :root {
+    --font-press-start-2p: 'Press Start 2P', monospace;
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
@@ -69,7 +70,17 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: 'Press Start 2P', monospace;
+    font-family: var(--font-press-start-2p);
+  }
+  
+  /* Hide scrollbars but maintain scroll functionality */
+  * {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+  }
+  
+  *::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
   }
   select.retro {
     font-family: 'Press Start 2P', monospace !important;
