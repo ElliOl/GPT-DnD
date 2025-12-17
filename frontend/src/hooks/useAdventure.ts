@@ -28,6 +28,7 @@ export function useAdventure() {
     return currentAdventure.conversationHistory.map(msg => ({
       role: msg.role,
       content: msg.content,
+      audio: msg.audio,
     }))
   }
 

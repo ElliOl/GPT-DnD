@@ -6,9 +6,16 @@ All /api/audio/* and /api/tts/* endpoints
 
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
+from pydantic import BaseModel
 from .dependencies import get_tts_service
 
 router = APIRouter(tags=["audio"])
+
+
+class TTSRequest(BaseModel):
+    text: str
+    voice: str = None  # Optional, uses service default if not provided
+    force_regenerate: bool = False  # If True, regenerate even if cached
 
 
 @router.get("/api/audio/{filename}")
@@ -29,6 +36,33 @@ async def get_audio(filename: str):
         media_type="audio/mpeg",
         headers={"Content-Disposition": f"inline; filename={filename}"},
     )
+
+
+@router.post("/api/tts/generate")
+async def generate_tts(request: TTSRequest):
+    """
+    Generate TTS audio for text
+    
+    Only generates if cached audio doesn't exist (unless force_regenerate=True).
+    Returns the audio URL if successful.
+    """
+    tts_service = get_tts_service()
+    
+    if not tts_service.enabled:
+        raise HTTPException(status_code=503, detail="TTS service is not enabled")
+    
+    # Generate audio (will use cache if exists, unless force_regenerate)
+    use_cache = not request.force_regenerate
+    audio_url = await tts_service.generate(
+        text=request.text,
+        voice=request.voice,
+        use_cache=use_cache
+    )
+    
+    if not audio_url:
+        raise HTTPException(status_code=500, detail="Failed to generate audio")
+    
+    return {"audio_url": audio_url}
 
 
 @router.post("/api/tts/clear-cache")

@@ -114,6 +114,12 @@ LEVEL UP RULES:
   * Level 3 → 4: After Part 3 (Cragmaw Castle or significant exploration)
   * Level 4 → 5: After Part 4 (Wave Echo Cave completed)
 
+PROACTIVE LEVEL UP NOTIFICATIONS:
+- IMPORTANT: After significant progress (defeating major encounters, completing quests, discovering important locations), call the 'check_level_up_status' tool
+- If players are eligible for a level up, inform them: "You feel like you've grown stronger from your recent adventures. When you take your next long rest, you'll be able to level up to level X!"
+- This helps players know when to rest and level up
+- Don't wait for players to ask - be proactive about informing them
+
 WHEN PLAYERS TAKE A LONG REST:
 1. Call the 'long_rest' tool - it automatically checks for level up eligibility
 2. The tool will restore HP and check progression

@@ -122,6 +122,22 @@ class AnthropicClient(BaseAIClient):
             # Message is a Pydantic model, access attributes directly
             content = msg.content
             
+            # Check if content is empty (Anthropic API doesn't allow empty messages)
+            is_empty = False
+            if isinstance(content, str):
+                is_empty = not content or not content.strip()
+            elif isinstance(content, (dict, list)):
+                # For complex content, check if it's empty
+                is_empty = len(content) == 0
+            else:
+                # Fallback: convert to string and check
+                content_str = str(content) if content else ""
+                is_empty = not content_str or not content_str.strip()
+            
+            if is_empty:
+                print(f"⚠️  Skipping {msg.role} message with empty content in Anthropic client")
+                continue
+            
             # If content is already a dict/list (tool results), use it directly
             # Otherwise, use string content as-is
             if isinstance(content, (dict, list)):

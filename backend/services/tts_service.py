@@ -36,17 +36,28 @@ class TTSService:
         # Initialize TTS client
         if provider == "openai":
             api_key = os.getenv("OPENAI_API_KEY")
+            print(f"🔍 TTS Debug: Checking API key...")
+            print(f"   API key exists: {api_key is not None}")
+            print(f"   API key length: {len(api_key) if api_key else 0}")
+            print(f"   API key starts with sk-: {api_key.startswith('sk-') if api_key else False}")
+            print(f"   API key is placeholder: {api_key in ['your-key-here', 'your_api_key_here', ''] if api_key else True}")
+            
             # Check if API key is valid (not a placeholder)
             if api_key and api_key not in ["your-key-here", "your_api_key_here", ""]:
                 try:
+                    print(f"🔍 TTS Debug: Creating AsyncOpenAI client...")
                     self.client = AsyncOpenAI(api_key=api_key)
                     self.enabled = True
-                except Exception:
+                    print(f"✅ TTS: OpenAI TTS enabled with voice '{voice}'")
+                except Exception as e:
                     self.enabled = False
-                    print("⚠️  TTS: OpenAI API key invalid, TTS disabled")
+                    print(f"⚠️  TTS: OpenAI API key invalid, TTS disabled. Error: {e}")
+                    import traceback
+                    traceback.print_exc()
             else:
                 self.enabled = False
-                print("⚠️  TTS: OpenAI API key not configured, TTS disabled")
+                print(f"⚠️  TTS: OpenAI API key not configured, TTS disabled")
+                print(f"   API key value: {api_key[:10] + '...' if api_key and len(api_key) > 10 else api_key}")
         else:
             raise ValueError(f"Unsupported TTS provider: {provider}")
 
@@ -75,6 +86,7 @@ class TTSService:
         """
         # Return None if TTS is not enabled
         if not self.enabled:
+            print(f"⚠️  TTS: Attempted to generate audio but TTS is disabled (enabled={self.enabled})")
             return None
 
         voice = voice or self.voice
@@ -100,6 +112,8 @@ class TTSService:
         except Exception as e:
             # If TTS generation fails, return None (silent failure)
             print(f"⚠️  TTS generation failed: {e}")
+            import traceback
+            traceback.print_exc()
             return None
 
     async def _generate_openai(self, text: str, voice: str) -> bytes:

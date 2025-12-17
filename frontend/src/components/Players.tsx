@@ -157,6 +157,11 @@ export function Players({ characters, onCharactersChange }: PlayersProps) {
   }
 
   const characterEntries = Object.entries(characters)
+  
+  // Helper to get first name from full name
+  const getFirstName = (fullName: string): string => {
+    return fullName.split(' ')[0] || fullName
+  }
 
   // Load from localStorage on mount, or load default party
   useEffect(() => {
@@ -264,8 +269,11 @@ export function Players({ characters, onCharactersChange }: PlayersProps) {
     console.log('Updating character:', name, 'with:', updates)
     console.log('Updated character:', updated[name])
     
+    // CRITICAL: Always save to partyStorage first, then update state
+    // This ensures characters are immediately available for tool execution
     partyStorage.saveParty(updated)
     onCharactersChange(updated)
+    console.log(`💾 Saved updated character "${name}" to partyStorage`)
   }
 
   if (characterEntries.length === 0) {
@@ -339,8 +347,9 @@ export function Players({ characters, onCharactersChange }: PlayersProps) {
                     style={{
                       borderBottomColor: selectedCharacter === name ? 'hsl(var(--primary))' : 'transparent',
                     }}
+                    title={name} // Show full name on hover
                   >
-                    {name}
+                    {getFirstName(name)}
                   </Tabs.Tab>
                 ))}
                 </Tabs.List>
@@ -354,14 +363,14 @@ export function Players({ characters, onCharactersChange }: PlayersProps) {
                   />
                   <Button
                     onClick={handleLoadClick}
-                    className="px-2 py-1 text-xs bg-secondary border border-border text-secondary-foreground hover:bg-accent hover:text-accent-foreground transition-colors flex items-center gap-1"
+                    className="p-1 text-muted-foreground hover:text-foreground hover:bg-accent transition-colors border-0 bg-transparent"
                     title="Load party file"
                   >
                     <Upload className="w-5 h-5" />
                   </Button>
                   <Button
                     onClick={handleExport}
-                    className="px-2 py-1 text-xs bg-secondary border border-border text-secondary-foreground hover:bg-accent hover:text-accent-foreground transition-colors flex items-center gap-1"
+                    className="p-1 text-muted-foreground hover:text-foreground hover:bg-accent transition-colors border-0 bg-transparent"
                     title="Export party file"
                   >
                     <Download className="w-5 h-5" />
@@ -371,7 +380,7 @@ export function Players({ characters, onCharactersChange }: PlayersProps) {
 
               {characterEntries.map(([name, char]) => (
                 <Tabs.Panel key={name} value={name} className="p-3">
-                  <div className="bg-background border border-border p-2 space-y-2">
+                  <div className="bg-background border border-border p-2 space-y-2 relative">
                     <div className="flex items-center justify-between">
                       <h3 className="text-xs font-semibold text-foreground">
                         {char.name}
@@ -380,7 +389,7 @@ export function Players({ characters, onCharactersChange }: PlayersProps) {
                         {isEditing && selectedCharacter === name && (
                           <Button
                             onClick={() => handleDeleteCharacter(name)}
-                            className="px-1.5 py-0.5 text-[10px] bg-destructive border border-destructive text-destructive-foreground hover:bg-destructive/80 transition-colors flex items-center gap-1"
+                            className="p-1 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors border-0 bg-transparent"
                             title="Delete character"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -393,10 +402,10 @@ export function Players({ characters, onCharactersChange }: PlayersProps) {
                               setSelectedCharacter(name)
                             }
                           }}
-                          className="px-1.5 py-0.5 text-[10px] bg-secondary border border-border text-secondary-foreground hover:bg-accent transition-colors flex items-center gap-1"
+                          className="p-1 text-muted-foreground hover:text-foreground hover:bg-accent transition-colors border-0 bg-transparent"
+                          title={isEditing && selectedCharacter === name ? 'Done editing' : 'Edit character'}
                         >
-                          <Edit2 className="w-5 h-5" />
-                          {isEditing && selectedCharacter === name ? 'Done' : 'Edit'}
+                          <Edit2 className="w-4 h-4" />
                         </Button>
                       </div>
                     </div>

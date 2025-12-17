@@ -24,6 +24,15 @@ export function DMSettings({ onRestoreChat }: DMSettingsProps) {
     loadArchivedChats()
   }, [])
 
+  // Reload archived chats when component becomes visible (in case they were updated)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      loadArchivedChats()
+    }, 5000) // Check every 5 seconds for updates
+
+    return () => clearInterval(interval)
+  }, [])
+
   const loadArchivedChats = () => {
     const archives = chatArchive.getAllArchives()
     // Sort by timestamp, newest first

@@ -21,6 +21,14 @@ export interface DMResponse {
     input_tokens: number
     output_tokens: number
   }
+  quest_updates?: Array<{
+    action: 'create' | 'update' | 'complete' | 'fail'
+    quest_id?: string
+    name: string
+    description?: string
+    status: string
+    notes?: string
+  }>
 }
 
 export interface Character {
@@ -177,6 +185,21 @@ export const api = {
     })
     if (!response.ok) {
       throw new Error(`API error: ${response.statusText}`)
+    }
+  },
+
+  /**
+   * Restore conversation history to the DM agent
+   */
+  async restoreConversation(messages: Array<{ role: string; content: string }>): Promise<void> {
+    const response = await fetch(`${API_BASE}/restore-conversation`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages }),
+    })
+    if (!response.ok) {
+      const errorText = await response.text()
+      throw new Error(`API error: ${response.statusText} - ${errorText}`)
     }
   },
 
@@ -353,6 +376,27 @@ export const api = {
     const response = await fetch(`${API_BASE}/adventures/npcs`)
     if (!response.ok) {
       throw new Error(`API error: ${response.statusText}`)
+    }
+    return response.json()
+  },
+
+  /**
+   * Generate TTS audio for text
+   * Only generates if cached audio doesn't exist
+   */
+  async generateTTS(text: string, voice?: string, forceRegenerate: boolean = false): Promise<{ audio_url: string }> {
+    const response = await fetch(`${API_BASE}/tts/generate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        text,
+        voice,
+        force_regenerate: forceRegenerate,
+      }),
+    })
+    if (!response.ok) {
+      const errorText = await response.text()
+      throw new Error(`API error: ${response.statusText} - ${errorText}`)
     }
     return response.json()
   },

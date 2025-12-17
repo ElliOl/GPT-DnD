@@ -7,7 +7,7 @@ All /api/adventures/* endpoints
 import json
 import traceback
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List, Dict, Any
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
@@ -70,6 +70,10 @@ async def load_adventure(request: dict):
         current_adventure = AdventureContext(adventure_id)
         context_manager = ContextManager(current_adventure)
         
+        # Save as last played adventure for auto-loading
+        from backend.utils.adventure_config import save_last_adventure
+        save_last_adventure(adventure_id)
+        
         # Update DM agent with adventure context
         from backend.routers.dependencies import get_dm_agent
         try:
@@ -93,7 +97,36 @@ async def load_adventure(request: dict):
 
 @router.get("/current")
 async def get_current_adventure():
-    """Get currently loaded adventure info"""
+    """
+    Get currently loaded adventure info
+    If no adventure is loaded, attempts to auto-load the last played adventure
+    """
+    global current_adventure, context_manager
+    
+    # If no adventure loaded, try to auto-load the last played one
+    if not current_adventure:
+        from backend.utils.adventure_config import get_last_adventure
+        last_adventure_id = get_last_adventure()
+        
+        if last_adventure_id:
+            try:
+                print(f"🔄 Auto-loading last played adventure: {last_adventure_id}")
+                current_adventure = AdventureContext(last_adventure_id)
+                context_manager = ContextManager(current_adventure)
+                
+                # Update DM agent with adventure context
+                from backend.routers.dependencies import get_dm_agent
+                try:
+                    dm_agent = get_dm_agent()
+                    dm_agent.adventure_context = current_adventure
+                except:
+                    pass  # DM agent not initialized yet
+                
+                print(f"✅ Auto-loaded adventure: {current_adventure.metadata['name']}")
+            except Exception as e:
+                print(f"⚠️  Failed to auto-load last adventure '{last_adventure_id}': {e}")
+                return {"loaded": False, "auto_load_failed": True, "last_adventure_id": last_adventure_id}
+    
     if not current_adventure:
         return {"loaded": False}
     
@@ -312,4 +345,48 @@ async def list_npcs():
     """List all available NPCs in current adventure"""
     adventure = get_adventure()
     return {"npcs": adventure.list_available_npcs()}
+
+
+class QuestLogUpdateRequest(BaseModel):
+    narrative: str
+    current_quests: List[Dict[str, Any]]
+
+
+@router.post("/analyze-quest-updates")
+async def analyze_quest_updates(request: QuestLogUpdateRequest):
+    """
+    Analyze DM narrative for quest updates
+    
+    Request body:
+        {
+            "narrative": "DM's narrative response",
+            "current_quests": [{"id": "...", "name": "...", "status": "...", ...}]
+        }
+    
+    Returns:
+        {
+            "updates": [
+                {
+                    "action": "create" | "update" | "complete" | "fail",
+                    "quest_id": Optional[str],
+                    "name": str,
+                    "description": Optional[str],
+                    "status": str,
+                    "notes": Optional[str]
+                }
+            ]
+        }
+    """
+    from backend.services.quest_log_analyzer import extract_quest_updates_from_narrative
+    
+    try:
+        updates = extract_quest_updates_from_narrative(
+            request.narrative,
+            request.current_quests
+        )
+        return {"updates": updates}
+    except Exception as e:
+        error_detail = f"Failed to analyze quest updates: {str(e)}\n{traceback.format_exc()}"
+        print(f"❌ {error_detail}")
+        raise HTTPException(status_code=500, detail=error_detail)
 

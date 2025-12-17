@@ -1,13 +1,12 @@
 import { useState, useRef, useEffect } from 'react'
-import { BookOpen, Upload, Download, Plus, Trash2, Save, FolderOpen, ChevronDown, ChevronRight, FileDown, FileUp, History, FileText, X, Check, Loader2 } from 'lucide-react'
+import { BookOpen, Upload, Download, Plus, Trash2, Save, FolderOpen, ChevronDown, ChevronRight, FileDown, FileUp, History, FileText, X, Check, Loader2, RotateCcw, CheckCircle2 } from 'lucide-react'
 import { Button } from '@base-ui/react/button'
 import { Input } from '@base-ui/react/input'
-import { adventureStorage, type Adventure } from '../services/adventureStorage'
 import { campaignStorage, type Campaign, type QuestLogEntry } from '../services/campaignStorage'
+import { sessionStorage } from '../services/sessionStorage'
 import { useModularAdventure } from '../hooks/useModularAdventure'
 
 interface AdventureSetupProps {
-  onAdventureLoaded?: (adventure: Adventure) => void
   onCampaignLoaded?: (campaign: Campaign) => void
   onQuestLogUpdated?: (questLog: QuestLogEntry[]) => void
 }
@@ -23,16 +22,11 @@ export function AdventureSetup({ onAdventureLoaded, onCampaignLoaded, onQuestLog
     error: modularError,
   } = useModularAdventure()
 
-  // Legacy Adventure System (LocalStorage)
-  const [adventures, setAdventures] = useState<Adventure[]>([])
-  const [selectedAdventure, setSelectedAdventure] = useState<Adventure | null>(null)
+  // Campaign System
   const [currentCampaign, setCurrentCampaign] = useState<Campaign | null>(null)
-  const [isCreating, setIsCreating] = useState(false)
-  const [newAdventureName, setNewAdventureName] = useState('')
   const [isCreatingQuest, setIsCreatingQuest] = useState(false)
   const [newQuestName, setNewQuestName] = useState('')
   const [newQuestDescription, setNewQuestDescription] = useState('')
-  const adventureFileInputRef = useRef<HTMLInputElement>(null)
   const campaignFileInputRef = useRef<HTMLInputElement>(null)
   const [expandedQuests, setExpandedQuests] = useState<Set<string>>(new Set())
   const [editingQuestNotes, setEditingQuestNotes] = useState<Set<string>>(new Set())
@@ -81,154 +75,75 @@ export function AdventureSetup({ onAdventureLoaded, onCampaignLoaded, onQuestLog
     }
   }, [openStatusDropdown])
 
+  // Load current campaign on mount and sync with session state
   useEffect(() => {
-    const loaded = adventureStorage.loadAdventures()
-    
-    // Try to load default adventure file if none exist
-    if (loaded.length === 0) {
-      fetch('/data/adventure_lost_mines.json')
-        .then(res => res.json())
-        .then(data => {
-          if (!data.id || !data.name) {
-            throw new Error('Invalid adventure file format')
+    const campaign = campaignStorage.getCurrentCampaign()
+    if (campaign) {
+      // Sync with current session state to ensure location and quest log are up to date
+      const sessionState = sessionStorage.loadSession()
+      if (sessionState) {
+        campaignStorage.syncWithSessionState(sessionState)
+        const syncedCampaign = campaignStorage.getCurrentCampaign()
+        if (syncedCampaign) {
+          setCurrentCampaign(syncedCampaign)
+          if (onCampaignLoaded) {
+            onCampaignLoaded(syncedCampaign)
           }
-          
-          const adventures = adventureStorage.loadAdventures()
-          const existingIndex = adventures.findIndex(a => a.id === data.id)
-          
-          if (existingIndex >= 0) {
-            adventures[existingIndex] = data
-          } else {
-            adventures.push(data)
+          if (onQuestLogUpdated) {
+            onQuestLogUpdated(syncedCampaign.questLog)
           }
-          
-          adventureStorage.saveAdventures(adventures)
-          setAdventures(adventures)
-          setSelectedAdventure(data)
-          adventureStorage.setCurrentAdventure(data.id)
-          
-          // Try to load default campaign file
-          loadDefaultCampaign(data.id)
-        })
-        .catch(err => {
-          console.log('Default adventure file not found, starting empty:', err)
-          setAdventures([])
-        })
-    } else {
-      setAdventures(loaded)
+          return
+        }
+      }
       
-      const current = adventureStorage.getCurrentAdventure()
-      if (current) {
-        setSelectedAdventure(current)
-        loadCampaignForAdventure(current.id)
-      } else if (loaded.length > 0) {
-        setSelectedAdventure(loaded[0])
-        adventureStorage.setCurrentAdventure(loaded[0].id)
-        loadCampaignForAdventure(loaded[0].id)
+      setCurrentCampaign(campaign)
+      if (onCampaignLoaded) {
+        onCampaignLoaded(campaign)
+      }
+      if (onQuestLogUpdated) {
+        onQuestLogUpdated(campaign.questLog)
       }
     }
   }, [])
 
-  const loadDefaultCampaign = async (adventureId: string) => {
-    // First check if there's already a campaign for this adventure
-    const existingCampaign = campaignStorage.getCampaignForAdventure(adventureId)
-    if (existingCampaign) {
-      setCurrentCampaign(existingCampaign)
-      campaignStorage.setCurrentCampaign(existingCampaign.id)
-      if (onCampaignLoaded) {
-        onCampaignLoaded(existingCampaign)
-      }
-      if (onQuestLogUpdated) {
-        onQuestLogUpdated(existingCampaign.questLog)
-      }
-      return
-    }
-
-    // Try to load default campaign file
-    try {
-      const response = await fetch('/data/campaign_lost_mines.json')
-      if (!response.ok) {
-        console.log('No default campaign file found')
-        return
-      }
-      
-      const campaignData = await response.json()
-      
-      // Validate it's a campaign for this adventure
-      if (campaignData.adventureId === adventureId) {
-        const campaign: Campaign = {
-          ...campaignData,
-          lastPlayed: new Date().toISOString(),
-        }
-        
-        campaignStorage.saveCampaign(campaign)
-        setCurrentCampaign(campaign)
-        campaignStorage.setCurrentCampaign(campaign.id)
-        
-        if (onCampaignLoaded) {
-          onCampaignLoaded(campaign)
-        }
-        if (onQuestLogUpdated) {
-          onQuestLogUpdated(campaign.questLog)
+  // Listen for session state changes and sync campaign
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const campaign = campaignStorage.getCurrentCampaign()
+      if (campaign) {
+        const sessionState = sessionStorage.loadSession()
+        if (sessionState) {
+          campaignStorage.syncWithSessionState(sessionState)
+          const syncedCampaign = campaignStorage.getCurrentCampaign()
+          if (syncedCampaign) {
+            setCurrentCampaign(syncedCampaign)
+            if (onCampaignLoaded) {
+              onCampaignLoaded(syncedCampaign)
+            }
+            if (onQuestLogUpdated) {
+              onQuestLogUpdated(syncedCampaign.questLog)
+            }
+          }
         }
       }
-    } catch (error) {
-      console.log('Failed to load default campaign file:', error)
-    }
-  }
-
-  const loadCampaignForAdventure = (adventureId: string) => {
-    const campaign = campaignStorage.getCampaignForAdventure(adventureId)
-    setCurrentCampaign(campaign)
-    campaignStorage.setCurrentCampaign(campaign?.id || null)
-    if (campaign && onCampaignLoaded) {
-      onCampaignLoaded(campaign)
-    }
-    if (campaign && onQuestLogUpdated) {
-      onQuestLogUpdated(campaign.questLog)
-    }
-  }
-
-  const handleSelectAdventure = (adventure: Adventure) => {
-    // If switching adventures and there's a current campaign, clear it (don't delete)
-    if (selectedAdventure && selectedAdventure.id !== adventure.id && currentCampaign) {
-      if (confirm(`Switch to "${adventure.name}"? This will clear the current campaign (not deleted, can be reloaded).`)) {
-        setCurrentCampaign(null)
-        campaignStorage.setCurrentCampaign(null)
-      } else {
-        return // User cancelled
-      }
     }
 
-    setSelectedAdventure(adventure)
-    adventureStorage.setCurrentAdventure(adventure.id)
-    loadCampaignForAdventure(adventure.id)
+    // Listen for localStorage changes (session state updates)
+    window.addEventListener('storage', handleStorageChange)
     
-    if (onAdventureLoaded) {
-      onAdventureLoaded(adventure)
-    }
-  }
+    // Also check periodically (for same-tab updates)
+    const interval = setInterval(() => {
+      handleStorageChange()
+    }, 2000) // Check every 2 seconds
 
-  const handleLoadAdventureFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) return
-
-    try {
-      const imported = await adventureStorage.importAdventureFromFile(file)
-      const updated = adventureStorage.loadAdventures()
-      setAdventures(updated)
-      handleSelectAdventure(imported)
-    } catch (error) {
-      console.error('Failed to load adventure file:', error)
-      alert('Failed to load adventure file. Please check the file format.')
+    return () => {
+      window.removeEventListener('storage', handleStorageChange)
+      clearInterval(interval)
     }
-    
-    if (adventureFileInputRef.current) {
-      adventureFileInputRef.current.value = ''
-    }
-  }
+  }, [onCampaignLoaded, onQuestLogUpdated])
 
-  const handleLoadCampaignFile = async (event: React.ChangeEvent<HTMLInputElement>, adventureId?: string) => {
+
+  const handleLoadCampaignFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (!file) return
 
@@ -237,69 +152,23 @@ export function AdventureSetup({ onAdventureLoaded, onCampaignLoaded, onQuestLog
       const fileText = await file.text()
       const campaignData = JSON.parse(fileText)
 
-      // Get or determine the adventure ID
-      let targetAdventureId = adventureId || campaignData.adventureId
+      // Get or determine the adventure ID from modular adventure or campaign data
+      let targetAdventureId = campaignData.adventureId
+      
+      if (!targetAdventureId && modularAdventure?.loaded) {
+        // Use current modular adventure if available
+        targetAdventureId = modularAdventure.adventure_info?.id
+      }
       
       if (!targetAdventureId) {
-        alert('Campaign file must specify an adventureId, or an adventure must be selected.')
+        alert('Campaign file must specify an adventureId, or a modular adventure must be loaded.')
         return
-      }
-
-      // Find or load the adventure
-      let adventure = adventures.find(a => a.id === targetAdventureId)
-      
-      if (!adventure) {
-        // Try to load the adventure file
-        try {
-          const advResponse = await fetch(`/data/adventure_${targetAdventureId.replace('adv-', '')}.json`)
-          if (advResponse.ok) {
-            const advData = await advResponse.json()
-            adventure = advData
-            // Add to adventures list
-            const updated = [...adventures, adventure]
-            adventureStorage.saveAdventures(updated)
-            setAdventures(updated)
-          } else {
-            // Create a basic adventure if not found
-            adventure = {
-              id: targetAdventureId,
-              name: campaignData.campaignName?.replace(/ - Session \d+$/, '') || 'Unknown Adventure',
-              description: '',
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-            }
-            adventureStorage.addAdventure({
-              name: adventure.name,
-              description: adventure.description || '',
-            })
-            const updated = adventureStorage.loadAdventures()
-            setAdventures(updated)
-            // Get the newly created adventure with its ID
-            adventure = updated.find(a => a.name === adventure!.name) || adventure
-          }
-        } catch (err) {
-          // Create a basic adventure
-          adventure = {
-            id: targetAdventureId,
-            name: campaignData.campaignName?.replace(/ - Session \d+$/, '') || 'Unknown Adventure',
-            description: '',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          }
-          const newAdv = adventureStorage.addAdventure({
-            name: adventure.name,
-            description: adventure.description || '',
-          })
-          adventure = newAdv
-          const updated = adventureStorage.loadAdventures()
-          setAdventures(updated)
-        }
       }
 
       // Ensure campaign has proper structure
       const campaign: Campaign = {
         id: campaignData.id || `campaign-${Date.now()}`,
-        adventureId: adventure.id,
+        adventureId: targetAdventureId,
         campaignName: campaignData.campaignName || 'Imported Campaign',
         sessionNumber: campaignData.sessionNumber || 1,
         dateStarted: campaignData.dateStarted || new Date().toISOString().split('T')[0],
@@ -324,9 +193,8 @@ export function AdventureSetup({ onAdventureLoaded, onCampaignLoaded, onQuestLog
         conversationHistory: campaignData.conversationHistory,
       }
 
-      // Save campaign and switch to its adventure
+      // Save campaign
       campaignStorage.saveCampaign(campaign)
-      handleSelectAdventure(adventure)
       setCurrentCampaign(campaign)
       campaignStorage.setCurrentCampaign(campaign.id)
       
@@ -335,9 +203,6 @@ export function AdventureSetup({ onAdventureLoaded, onCampaignLoaded, onQuestLog
       }
       if (onQuestLogUpdated) {
         onQuestLogUpdated(campaign.questLog)
-      }
-      if (onAdventureLoaded) {
-        onAdventureLoaded(adventure)
       }
     } catch (error) {
       console.error('Failed to load campaign file:', error)
@@ -349,26 +214,18 @@ export function AdventureSetup({ onAdventureLoaded, onCampaignLoaded, onQuestLog
     }
   }
 
-  const handleCreateAdventure = () => {
-    if (!newAdventureName.trim()) return
-    
-    const newAdventure = adventureStorage.addAdventure({
-      name: newAdventureName,
-      description: '',
-    })
-    setAdventures([...adventures, newAdventure])
-    handleSelectAdventure(newAdventure)
-    setNewAdventureName('')
-    setIsCreating(false)
-  }
-
   const handleCreateCampaign = () => {
-    if (!selectedAdventure) return
+    if (!modularAdventure?.loaded) {
+      alert('Please load a modular adventure first.')
+      return
+    }
     
-    const campaignName = prompt('Campaign name:', `${selectedAdventure.name} - Campaign 1`)
+    const adventureName = modularAdventure.adventure_info?.name || 'Adventure'
+    const campaignName = prompt('Campaign name:', `${adventureName} - Campaign 1`)
     if (!campaignName) return
 
-    const campaign = campaignStorage.createCampaign(selectedAdventure.id, campaignName)
+    const adventureId = modularAdventure.adventure_info?.id || 'unknown'
+    const campaign = campaignStorage.createCampaign(adventureId, campaignName)
     setCurrentCampaign(campaign)
     campaignStorage.setCurrentCampaign(campaign.id)
     
@@ -376,6 +233,7 @@ export function AdventureSetup({ onAdventureLoaded, onCampaignLoaded, onQuestLog
       onCampaignLoaded(campaign)
     }
   }
+
 
   const handleCreateQuest = () => {
     if (!currentCampaign || !newQuestName.trim()) return
@@ -390,7 +248,9 @@ export function AdventureSetup({ onAdventureLoaded, onCampaignLoaded, onQuestLog
     }
 
     campaignStorage.updateQuestLog(currentCampaign.id, quest)
-    const updated = campaignStorage.getCampaignForAdventure(selectedAdventure!.id)
+    // Reload the campaign to get updated quest log
+    const campaigns = campaignStorage.loadCampaigns()
+    const updated = campaigns.find(c => c.id === currentCampaign.id)
     if (updated) {
       setCurrentCampaign(updated)
       if (onQuestLogUpdated) {
@@ -406,23 +266,15 @@ export function AdventureSetup({ onAdventureLoaded, onCampaignLoaded, onQuestLog
   const handleUpdateQuest = (quest: QuestLogEntry) => {
     if (!currentCampaign) return
     campaignStorage.updateQuestLog(currentCampaign.id, quest)
-    const updated = campaignStorage.getCampaignForAdventure(selectedAdventure!.id)
+    // Reload the campaign to get updated quest log
+    const campaigns = campaignStorage.loadCampaigns()
+    const updated = campaigns.find(c => c.id === currentCampaign.id)
     if (updated) {
       setCurrentCampaign(updated)
       if (onQuestLogUpdated) {
         onQuestLogUpdated(updated.questLog)
       }
     }
-  }
-
-  const handleUpdateAdventure = (updates: Partial<Adventure>) => {
-    if (!selectedAdventure) return
-    adventureStorage.updateAdventure(selectedAdventure.id, updates)
-    const updated = adventures.map(a => 
-      a.id === selectedAdventure.id ? { ...a, ...updates } : a
-    )
-    setAdventures(updated)
-    setSelectedAdventure({ ...selectedAdventure, ...updates })
   }
 
   // Generate summary from quest log
@@ -510,7 +362,10 @@ export function AdventureSetup({ onAdventureLoaded, onCampaignLoaded, onQuestLog
                     {loadingCurrent ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
                     ) : modularAdventure?.loaded && modularAdventure.adventure_info?.id === adv.id ? (
-                      '✓ Loaded'
+                      <span className="flex items-center gap-1">
+                        <CheckCircle2 className="w-4 h-4" />
+                        Loaded
+                      </span>
                     ) : (
                       'Load'
                     )}
@@ -540,91 +395,8 @@ export function AdventureSetup({ onAdventureLoaded, onCampaignLoaded, onQuestLog
           )}
         </div>
 
-        {/* Legacy Adventure Selector */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <label className="text-[10px] font-semibold text-muted-foreground">Legacy Adventures (LocalStorage)</label>
-            <Button
-              onClick={() => setIsCreating(true)}
-              className="px-2 py-1 text-xs bg-primary border border-primary text-primary-foreground hover:bg-primary-hover transition-colors flex items-center gap-1"
-            >
-              <Plus className="w-5 h-5" />
-              New
-            </Button>
-          </div>
-
-          {isCreating && (
-            <div className="bg-background border border-border p-2 space-y-2">
-              <Input
-                value={newAdventureName}
-                onChange={(e) => setNewAdventureName(e.target.value)}
-                placeholder="Adventure name..."
-                className="w-full px-2 py-1 text-xs bg-background text-foreground border border-border focus:border-primary focus:outline-none"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault()
-                    handleCreateAdventure()
-                  } else if (e.key === 'Escape') {
-                    setIsCreating(false)
-                    setNewAdventureName('')
-                  }
-                }}
-              />
-              <div className="flex gap-2">
-                <Button
-                  onClick={handleCreateAdventure}
-                  className="px-2 py-1 text-xs bg-primary border border-primary text-primary-foreground hover:bg-primary-hover transition-colors"
-                >
-                  Create
-                </Button>
-                <Button
-                  onClick={() => {
-                    setIsCreating(false)
-                    setNewAdventureName('')
-                  }}
-                  className="px-2 py-1 text-xs bg-secondary border border-border text-secondary-foreground hover:bg-accent transition-colors"
-                >
-                  Cancel
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {selectedAdventure && (
-            <div className="flex gap-2">
-              <Input
-                value={selectedAdventure.name}
-                onChange={(e) => handleUpdateAdventure({ name: e.target.value })}
-                className="flex-1 px-2 py-1.5 text-xs bg-background text-foreground border border-border focus:border-primary focus:outline-none"
-                placeholder="Adventure name..."
-              />
-              <input
-                ref={adventureFileInputRef}
-                type="file"
-                accept=".json,application/json,text/json"
-                onChange={handleLoadAdventureFile}
-                className="hidden"
-              />
-              <Button
-                onClick={() => adventureFileInputRef.current?.click()}
-                className="px-2 py-1 text-xs bg-secondary border border-border text-secondary-foreground hover:bg-accent transition-colors"
-                title="Load Adventure"
-              >
-                <FileUp className="w-5 h-5" />
-              </Button>
-              <Button
-                onClick={() => adventureStorage.exportAdventureToFile(selectedAdventure)}
-                className="px-2 py-1 text-xs bg-secondary border border-border text-secondary-foreground hover:bg-accent transition-colors"
-                title="Export Adventure"
-              >
-                <FileDown className="w-5 h-5" />
-              </Button>
-            </div>
-          )}
-        </div>
-
         {/* Campaign Section */}
-        {selectedAdventure && (
+        {modularAdventure?.loaded && (
           <div className="bg-background border border-border p-2 space-y-2">
             <div className="flex items-center justify-between">
               <label className="text-[10px] font-semibold text-muted-foreground">Campaign (Save State)</label>
@@ -633,7 +405,7 @@ export function AdventureSetup({ onAdventureLoaded, onCampaignLoaded, onQuestLog
                   ref={campaignFileInputRef}
                   type="file"
                   accept=".json,application/json,text/json"
-                  onChange={(e) => handleLoadCampaignFile(e, selectedAdventure.id)}
+                  onChange={handleLoadCampaignFile}
                   className="hidden"
                 />
                 <Button
@@ -657,9 +429,35 @@ export function AdventureSetup({ onAdventureLoaded, onCampaignLoaded, onQuestLog
                   <>
                     <Button
                       onClick={() => {
+                        if (confirm(`Start a new session? This will increment the session number from ${currentCampaign.sessionNumber} to ${currentCampaign.sessionNumber + 1}.`)) {
+                          const updated = campaignStorage.startNewSession()
+                          if (updated) {
+                            setCurrentCampaign(updated)
+                            // Also update session state
+                            const sessionState = sessionStorage.loadSession()
+                            if (sessionState) {
+                              sessionStorage.saveSession({
+                                ...sessionState,
+                                session_number: updated.sessionNumber,
+                              })
+                            }
+                            if (onCampaignLoaded) {
+                              onCampaignLoaded(updated)
+                            }
+                          }
+                        }
+                      }}
+                      className="px-2 py-1 text-xs bg-primary border border-primary text-primary-foreground hover:bg-primary-hover transition-colors flex items-center gap-1"
+                      title="Start a new session (increments session number)"
+                    >
+                      <Plus className="w-5 h-5" />
+                      New Session
+                    </Button>
+                    <Button
+                      onClick={() => {
                         if (currentCampaign) campaignStorage.exportToFile(currentCampaign)
                       }}
-                      className="px-2 py-1 text-xs bg-secondary border border-border text-secondary-foreground hover:bg-accent transition-colors"
+                      className="px-2 py-1 text-xs bg-secondary border border-border text-secondary-foreground hover:bg-accent transition-colors flex items-center gap-1"
                       title="Export Campaign"
                     >
                       <FileDown className="w-5 h-5" />
@@ -674,7 +472,7 @@ export function AdventureSetup({ onAdventureLoaded, onCampaignLoaded, onQuestLog
                           }
                         }
                       }}
-                      className="px-2 py-1 text-xs bg-secondary border border-border text-secondary-foreground hover:bg-accent transition-colors"
+                      className="px-2 py-1 text-xs bg-secondary border border-border text-secondary-foreground hover:bg-accent transition-colors flex items-center gap-1"
                       title="Clear Campaign"
                     >
                       <X className="w-5 h-5" />
@@ -950,21 +748,6 @@ export function AdventureSetup({ onAdventureLoaded, onCampaignLoaded, onQuestLog
           </div>
         )}
 
-        {/* Adventure Description/Structure */}
-        {selectedAdventure && (
-          <div className="bg-background border border-border p-2">
-            <label className="text-[10px] font-semibold text-muted-foreground mb-1 block">
-              Adventure Structure/Notes (Used by AI DM)
-            </label>
-            <textarea
-              value={selectedAdventure.notes || selectedAdventure.description || ''}
-              onChange={(e) => handleUpdateAdventure({ notes: e.target.value })}
-              placeholder="Adventure structure, module information, key details (this is sent to the AI DM in the system prompt)..."
-              className="w-full px-2 py-1 text-xs bg-background text-foreground border border-border focus:border-primary focus:outline-none resize-none"
-              rows={4}
-            />
-          </div>
-        )}
       </div>
     </div>
   )

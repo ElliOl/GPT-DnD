@@ -78,3 +78,4 @@ class DMResponse(BaseModel):
     game_state: GameState
     tool_results: List[Dict[str, Any]] = []
     cost: Optional[Dict[str, int]] = None  # Token usage for transparency
+    quest_updates: Optional[List[Dict[str, Any]]] = []  # Automatic quest log updates from narrative

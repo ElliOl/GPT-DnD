@@ -6,6 +6,7 @@ Main game endpoints: /api/action, /api/game-state, /api/reset, /api/additional-r
 
 import traceback
 from pathlib import Path
+from typing import List, Dict, Any
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
@@ -44,11 +45,29 @@ async def player_action(action: PlayerAction):
             session_state=action.session_state,
         )
         
+        # Automatically analyze quest updates from DM response
+        quest_updates = []
+        if response.get("narrative") and action.session_state:
+            try:
+                from backend.services.quest_log_analyzer import extract_quest_updates_from_narrative
+                current_quests = action.session_state.get("quest_log", [])
+                quest_updates = extract_quest_updates_from_narrative(
+                    response["narrative"],
+                    current_quests
+                )
+            except Exception as e:
+                # Don't fail the request if quest analysis fails
+                print(f"⚠️  Quest log analysis failed: {e}")
+        
+        # Include quest updates in response
+        response["quest_updates"] = quest_updates
+        
         return DMResponse(
             narrative=response["narrative"],
             audio_url=response.get("audio_url"),
             game_state=response["game_state"],
             tool_results=response.get("tool_results", []),
+            quest_updates=quest_updates,
         )
     
     except Exception as e:
@@ -71,6 +90,23 @@ async def reset_session():
     dm_agent = get_dm_agent()
     dm_agent.reset_conversation()
     return {"message": "Session reset"}
+
+
+class RestoreConversationRequest(BaseModel):
+    messages: List[Dict[str, Any]]
+
+
+@router.post("/api/restore-conversation")
+async def restore_conversation(request: RestoreConversationRequest):
+    """Restore conversation history to the DM agent"""
+    dm_agent = get_dm_agent()
+    try:
+        dm_agent.restore_conversation_history(request.messages)
+        return {"message": f"Restored {len(request.messages)} messages to conversation history"}
+    except Exception as e:
+        error_detail = f"Error restoring conversation: {str(e)}\n{traceback.format_exc()}"
+        print(f"❌ {error_detail}")
+        raise HTTPException(status_code=500, detail=error_detail)
 
 
 class RulesRequest(BaseModel):

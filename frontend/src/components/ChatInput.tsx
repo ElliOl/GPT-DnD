@@ -55,10 +55,10 @@ export function ChatInput({
         />
         <Button
           onClick={toggleListening}
-          className={`w-[52px] h-[52px] flex items-center justify-center border transition-colors ${
+          className={`w-[52px] h-[52px] flex items-center justify-center transition-colors border-0 bg-transparent ${
             isListening
-              ? 'bg-destructive border-destructive text-destructive-foreground'
-              : 'bg-card border-border text-foreground hover:bg-accent'
+              ? 'text-destructive hover:bg-destructive/10'
+              : 'text-muted-foreground hover:text-foreground hover:bg-accent'
           }`}
           title="Voice input"
         >
@@ -70,10 +70,10 @@ export function ChatInput({
         </Button>
         <Button
           onClick={() => setVoiceEnabled(!voiceEnabled)}
-          className={`w-[52px] h-[52px] flex items-center justify-center border transition-colors ${
+          className={`w-[52px] h-[52px] flex items-center justify-center transition-colors border-0 bg-transparent ${
             voiceEnabled
-              ? 'bg-primary border-primary text-primary-foreground'
-              : 'bg-card border-border text-foreground hover:bg-accent'
+              ? 'text-primary hover:bg-primary/10'
+              : 'text-muted-foreground hover:text-foreground hover:bg-accent'
           }`}
           title="Voice narration"
         >

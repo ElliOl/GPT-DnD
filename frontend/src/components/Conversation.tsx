@@ -13,6 +13,7 @@ interface ConversationProps {
   loading: boolean
   currentAdventure?: Adventure | null
   onArchiveChat?: () => void
+  onReplayAudio?: (message: Message) => void
 }
 
 export function Conversation({ 
@@ -20,7 +21,25 @@ export function Conversation({
   loading, 
   currentAdventure,
   onArchiveChat,
+  onReplayAudio,
 }: ConversationProps) {
+  
+  const handleAudioClick = (message: Message) => {
+    if (message.audio) {
+      // Play cached audio
+      const audio = new Audio(message.audio)
+      audio.play().catch((err) => {
+        console.error('Audio playback failed:', err)
+        // If playback fails, try to regenerate
+        if (onReplayAudio) {
+          onReplayAudio(message)
+        }
+      })
+    } else if (onReplayAudio) {
+      // Generate audio if it doesn't exist
+      onReplayAudio(message)
+    }
+  }
 
   return (
     <div className="h-[500px] overflow-y-auto p-3 space-y-2 text-xs">
@@ -56,32 +75,31 @@ export function Conversation({
       {messages.map((msg, idx) => (
         <div
           key={idx}
-          className={`flex ${
+          className={`flex items-start gap-1.5 ${
             msg.role === 'user' ? 'justify-end' : 'justify-start'
           }`}
         >
+          {/* Audio button for assistant messages */}
+          {msg.role === 'assistant' && (
+            <Button
+              onClick={() => handleAudioClick(msg)}
+              className="flex-shrink-0 w-5 h-5 p-0 bg-transparent text-foreground hover:text-primary transition-colors flex items-center justify-center"
+              title="Play audio"
+            >
+              <AudioWaveform className="w-4 h-4" />
+            </Button>
+          )}
+          
           <div
             className={`max-w-[85%] px-2 py-1.5 ${
               msg.role === 'user'
                 ? 'bg-primary text-primary-foreground'
                 : msg.role === 'system'
                 ? 'bg-destructive text-destructive-foreground'
-                : 'bg-card text-foreground border border-border'
+                : 'bg-card text-foreground'
             }`}
           >
             <p className="whitespace-pre-wrap leading-relaxed">{msg.content}</p>
-            {msg.audio && (
-              <Button
-                onClick={() => {
-                  const audio = new Audio(msg.audio)
-                  audio.play()
-                }}
-                className="mt-1.5 flex items-center gap-1 text-[10px] text-primary hover:text-primary-hover transition-colors bg-transparent border-0 p-0"
-              >
-                <AudioWaveform className="w-5 h-5" />
-                Play audio
-              </Button>
-            )}
           </div>
         </div>
       ))}
