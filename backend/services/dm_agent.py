@@ -27,10 +27,12 @@ class DMAgent:
         game_engine,
         tts_service,
         system_prompt: Optional[str] = None,
+        adventure_context=None,
     ):
         self.ai_client = ai_client
         self.game_engine = game_engine
         self.tts_service = tts_service
+        self.adventure_context = adventure_context
         self.conversation_history: List[Message] = []
 
         # Load system prompt (DM personality and rules)
@@ -296,6 +298,29 @@ Always use tools for game mechanics - never guess or simulate dice rolls yoursel
                     "required": ["character", "item"],
                 },
             ),
+            ToolDefinition(
+                name="check_level_up_status",
+                description="Check if the party is eligible for a level up. Call this after significant progress (defeating encounters, completing quests, discovering important locations) to see if players can level up on their next rest. This helps you inform players proactively.",
+                input_schema={
+                    "type": "object",
+                    "properties": {},
+                    "required": [],
+                },
+            ),
+            ToolDefinition(
+                name="long_rest",
+                description="Process a long rest for the party. Restores HP, spell slots, and checks for level up eligibility. Call this when players take a long rest (8 hours of rest).",
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "description": {
+                            "type": "string",
+                            "description": "Brief description of where/how they're resting"
+                        }
+                    },
+                    "required": [],
+                },
+            ),
         ]
 
     async def process_player_input(
@@ -344,9 +369,19 @@ Always use tools for game mechanics - never guess or simulate dice rolls yoursel
         is_ollama = type(self.ai_client).__name__ == "OllamaClient"
         
         # For Anthropic, use context-aware token limits and pass game state
+        # Filter out empty messages before sending (Anthropic API requirement)
+        filtered_history = [
+            msg for msg in self.conversation_history
+            if msg.content and (
+                (isinstance(msg.content, str) and msg.content.strip()) or
+                (isinstance(msg.content, (dict, list)) and len(msg.content) > 0) or
+                (not isinstance(msg.content, (str, dict, list)) and str(msg.content).strip())
+            )
+        ]
+        
         if type(self.ai_client).__name__ == "AnthropicClient":
             response = await self.ai_client.create_message(
-                messages=self.conversation_history,
+                messages=filtered_history,
                 tools=self.tools,
                 system_prompt=enhanced_system_prompt,
                 temperature=0.7,
@@ -368,14 +403,28 @@ Always use tools for game mechanics - never guess or simulate dice rolls yoursel
         tool_results = []
         if response.tool_calls:
             for tool_call in response.tool_calls:
-                result = await self._execute_tool(tool_call.name, tool_call.parameters)
-                tool_results.append(
-                    {
-                        "tool": tool_call.name,
-                        "parameters": tool_call.parameters,
-                        "result": result,
-                    }
-                )
+                try:
+                    result = await self._execute_tool(tool_call.name, tool_call.parameters)
+                    tool_results.append(
+                        {
+                            "tool": tool_call.name,
+                            "parameters": tool_call.parameters,
+                            "result": result,
+                        }
+                    )
+                except Exception as e:
+                    # Tool execution failed - log error and include error in result
+                    error_msg = f"Tool '{tool_call.name}' failed: {str(e)}"
+                    print(f"❌ {error_msg}")
+                    import traceback
+                    traceback.print_exc()
+                    tool_results.append(
+                        {
+                            "tool": tool_call.name,
+                            "parameters": tool_call.parameters,
+                            "result": {"error": error_msg, "success": False},
+                        }
+                    )
 
             # Add tool results to conversation and get final narration
             # (AI needs to see tool results to narrate the outcome)
@@ -533,15 +582,25 @@ Always use tools for game mechanics - never guess or simulate dice rolls yoursel
 
         # Add narrative to conversation history
         self.conversation_history.append(Message(role="assistant", content=narrative))
+        
+        # Trim conversation history if it gets too long (prevents token bloat)
+        self._trim_conversation_history(max_messages=50)
 
         # Generate TTS if requested (will return None if TTS is disabled/failed)
         audio_url = None
-        if voice and narrative:
+        if voice and narrative and self.tts_service:
             try:
+                print(f"🎤 Generating TTS audio for narrative (length: {len(narrative)} chars)")
                 audio_url = await self.tts_service.generate(narrative)
+                if audio_url:
+                    print(f"✅ TTS audio generated: {audio_url}")
+                else:
+                    print(f"⚠️  TTS returned None (service may be disabled)")
             except Exception as e:
                 # TTS failed, continue without audio
                 print(f"⚠️  TTS generation failed: {e}")
+                import traceback
+                traceback.print_exc()
                 audio_url = None
 
         return {
@@ -602,7 +661,16 @@ Always use tools for game mechanics - never guess or simulate dice rolls yoursel
             return self.game_engine.start_combat(get_param("participants"))
 
         elif tool_name == "end_combat":
-            return self.game_engine.end_combat()
+            result = self.game_engine.end_combat()
+            # Track combat encounter completion for leveling
+            if self.adventure_context and hasattr(self.adventure_context, 'leveling'):
+                # Try to identify the encounter from combat state
+                combat_state = self.game_engine.combat_state
+                if combat_state.get("active") == False and combat_state.get("round", 0) > 0:
+                    # Combat just ended - track it
+                    encounter_id = f"encounter_{combat_state.get('round', 0)}"
+                    self.adventure_context.leveling.track_combat_encounter(encounter_id)
+            return result
 
         elif tool_name == "get_character_info":
             return self.game_engine.get_character(get_param("character"))
@@ -613,6 +681,63 @@ Always use tools for game mechanics - never guess or simulate dice rolls yoursel
                 item=get_param("item"),
                 quantity=parameters.get("quantity", 1),
             )
+
+        elif tool_name == "check_level_up_status":
+            # Check if party is eligible for level up (without actually leveling)
+            if not self.adventure_context:
+                return {"error": "No adventure loaded. Cannot check level up status."}
+            
+            try:
+                current_state = self.adventure_context.metadata.get("current_state", {})
+                current_level = current_state.get("party_level", 1)
+                
+                # Check eligibility without processing rest
+                result = self.adventure_context.leveling.check_level_up_eligibility(current_level)
+                
+                return {
+                    "eligible": result.get("eligible", False),
+                    "current_level": current_level,
+                    "new_level": result.get("new_level", current_level),
+                    "reason": result.get("reason", ""),
+                    "progress_summary": result.get("progress_summary", {}),
+                    "message": f"You are eligible to level up to level {result.get('new_level', current_level)} on your next long rest!" if result.get("eligible") else f"Not yet eligible for level up. {result.get('reason', '')}"
+                }
+            except Exception as e:
+                import traceback
+                return {"error": f"Error checking level up status: {str(e)}", "traceback": traceback.format_exc()}
+
+        elif tool_name == "long_rest":
+            # Process long rest and check for level up
+            if not self.adventure_context:
+                return {"error": "No adventure loaded. Cannot process long rest."}
+            
+            try:
+                current_state = self.adventure_context.metadata.get("current_state", {})
+                current_level = current_state.get("party_level", 1)
+                
+                # Process long rest through leveling system
+                result = self.adventure_context.leveling.process_long_rest(current_level)
+                
+                # Restore HP for all characters (long rest restores all HP)
+                if self.game_engine:
+                    for char_name in self.game_engine.characters.keys():
+                        char = self.game_engine.characters[char_name]
+                        if "max_hp" in char:
+                            char["hp"] = char["max_hp"]
+                            char["current_hp"] = char["max_hp"]
+                
+                return {
+                    "rest_complete": True,
+                    "hp_restored": True,
+                    "level_up": result.get("level_up", False),
+                    "old_level": result.get("old_level", current_level),
+                    "new_level": result.get("new_level", current_level),
+                    "reason": result.get("reason", ""),
+                    "message": f"Level up to {result.get('new_level', current_level)}!" if result.get("level_up") else "Rest complete. No level up."
+                }
+            except Exception as e:
+                import traceback
+                return {"error": f"Error processing long rest: {str(e)}", "traceback": traceback.format_exc()}
 
         else:
             return {"error": f"Unknown tool: {tool_name}"}
@@ -626,26 +751,41 @@ Always use tools for game mechanics - never guess or simulate dice rolls yoursel
         Build enhanced system prompt with adventure and session context
         
         Args:
-            adventure_context: Adventure metadata (name, description, etc.)
+            adventure_context: Adventure metadata or modular adventure context string
             session_state: Session state (quest log, world state, location, etc.)
         
         Returns:
             Enhanced system prompt string
         """
+        # Debug logging for session_state
+        if session_state:
+            party_members = session_state.get("party_members")
+            print(f"🔍 DEBUG: Building system prompt with session_state")
+            print(f"   - party_members present: {party_members is not None}")
+            print(f"   - party_members count: {len(party_members) if party_members else 0}")
+            if party_members:
+                print(f"   - party_members names: {[m.get('name', 'Unknown') if isinstance(m, dict) else str(m) for m in party_members]}")
+        
         prompt_parts = [self.system_prompt]
         
         # Add adventure context
         if adventure_context:
-            prompt_parts.append("\n## ADVENTURE CONTEXT:")
-            
-            if adventure_context.get("name"):
-                prompt_parts.append(f"\n**Adventure:** {adventure_context['name']}")
-            
-            if adventure_context.get("description"):
-                prompt_parts.append(f"\n**Description:** {adventure_context['description']}")
-            
-            if adventure_context.get("notes"):
-                prompt_parts.append(f"\n**Notes:** {adventure_context['notes']}")
+            # Check if this is a modular adventure context string (from AdventureContext)
+            if isinstance(adventure_context, str):
+                prompt_parts.append("\n## CURRENT ADVENTURE:")
+                prompt_parts.append(adventure_context)
+            elif isinstance(adventure_context, dict):
+                # Legacy format - simple adventure metadata
+                prompt_parts.append("\n## ADVENTURE CONTEXT:")
+                
+                if adventure_context.get("name"):
+                    prompt_parts.append(f"\n**Adventure:** {adventure_context['name']}")
+                
+                if adventure_context.get("description"):
+                    prompt_parts.append(f"\n**Description:** {adventure_context['description']}")
+                
+                if adventure_context.get("notes"):
+                    prompt_parts.append(f"\n**Notes:** {adventure_context['notes']}")
         
         # Add session state context
         if session_state:
@@ -662,6 +802,36 @@ Always use tools for game mechanics - never guess or simulate dice rolls yoursel
             
             if session_state.get("active_encounter"):
                 prompt_parts.append(f"\n**Active Encounter:** {session_state['active_encounter']}")
+            
+            # Add party/character information
+            if session_state.get("party_members"):
+                party_members = session_state["party_members"]
+                print(f"✅ DEBUG: Found party_members in session_state: {len(party_members) if party_members else 0} members")
+                if party_members and len(party_members) > 0:
+                    prompt_parts.append("\n**Party Members:**")
+                    for member in party_members:
+                        if isinstance(member, dict):
+                            name = member.get("name", "Unknown")
+                            char_class = member.get("char_class") or member.get("class", "Unknown")
+                            level = member.get("level", "?")
+                            hp = member.get("current_hp") or member.get("hp", "?")
+                            max_hp = member.get("max_hp", "?")
+                            member_str = f"  - {name} ({char_class} Level {level}, HP: {hp}/{max_hp})"
+                            prompt_parts.append(member_str)
+                            print(f"   Added to prompt: {member_str}")
+                        else:
+                            prompt_parts.append(f"  - {member}")
+                            print(f"   Added to prompt (non-dict): {member}")
+                else:
+                    print(f"⚠️  DEBUG: party_members is empty or None")
+            elif session_state.get("party"):
+                # Fallback to party array (just names)
+                print(f"⚠️  DEBUG: No party_members, using party array fallback")
+                party = session_state["party"]
+                if isinstance(party, list) and len(party) > 0:
+                    prompt_parts.append(f"\n**Party:** {', '.join(str(p) for p in party)}")
+            else:
+                print(f"⚠️  DEBUG: No party_members or party in session_state. Available keys: {list(session_state.keys()) if session_state else 'None'}")
             
             # Quest log
             if session_state.get("quest_log") and len(session_state["quest_log"]) > 0:
@@ -705,3 +875,41 @@ Always use tools for game mechanics - never guess or simulate dice rolls yoursel
     def reset_conversation(self):
         """Clear conversation history (start fresh session)"""
         self.conversation_history = []
+    
+    def restore_conversation_history(self, messages: List[Dict[str, Any]]):
+        """
+        Restore conversation history from archived messages
+        
+        Args:
+            messages: List of message dicts with 'role' and 'content' keys
+        """
+        self.conversation_history = []
+        for msg in messages:
+            # Convert dict to Message object
+            role = msg.get("role", "user")
+            content = msg.get("content", "")
+            # Filter out messages with empty content (except system messages which can be empty)
+            # Anthropic API requires all messages except the final assistant message to have non-empty content
+            if role in ("user", "assistant", "system"):
+                # Skip empty content messages (Anthropic doesn't allow them)
+                if not content or not content.strip():
+                    print(f"⚠️  Skipping {role} message with empty content")
+                    continue
+                self.conversation_history.append(Message(role=role, content=content))
+    
+    def _trim_conversation_history(self, max_messages: int = 50):
+        """
+        Trim conversation history to keep only recent messages
+        
+        Keeps the most recent messages to prevent token bloat in long sessions.
+        Always keeps at least the last 2 messages (player + DM) for context.
+        
+        Args:
+            max_messages: Maximum number of messages to keep (default: 50)
+        """
+        if len(self.conversation_history) <= max_messages:
+            return  # No trimming needed
+        
+        # Keep the most recent messages
+        # This preserves recent context while removing older messages
+        self.conversation_history = self.conversation_history[-max_messages:]

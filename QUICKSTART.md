@@ -1,5 +1,18 @@
 # Quick Start Guide
 
+If everything is installed:
+
+```bash
+Backend:
+cd backend
+source venv/bin/activate
+venv/bin/python3 main.py
+```
+```bash
+Frontend:
+cd frontend
+npm run dev
+```
 Get up and running in 5 minutes!
 
 ## Step 1: Clone and Setup Backend
@@ -35,7 +48,7 @@ Get API keys:
 
 ```bash
 cd backend
-python main.py
+python3 main.py
 ```
 
 You should see:

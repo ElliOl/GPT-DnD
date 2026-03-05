@@ -11,6 +11,11 @@ export function CharacterPanel({ characters }: CharacterPanelProps) {
   const [selectedTab, setSelectedTab] = useState<string | null>(null)
 
   const characterEntries = Object.entries(characters)
+  
+  // Helper to get first name from full name
+  const getFirstName = (fullName: string): string => {
+    return fullName.split(' ')[0] || fullName
+  }
 
   // Set default tab when characters load
   useEffect(() => {
@@ -21,38 +26,12 @@ export function CharacterPanel({ characters }: CharacterPanelProps) {
     }
   }, [characterEntries.length, selectedTab])
 
-  const handleLoadParty = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) return
-
-    try {
-      const importedCharacters = await partyStorage.importFromFile(file)
-      partyStorage.saveParty(importedCharacters)
-      onCharactersChange?.(importedCharacters)
-      if (Object.keys(importedCharacters).length > 0) {
-        setSelectedTab(Object.keys(importedCharacters)[0])
-      }
-    } catch (error) {
-      console.error('Failed to load party file:', error)
-      alert('Failed to load party file. Please check the file format.')
-    }
-    
-    // Reset file input
-    if (fileInputRef.current) {
-      fileInputRef.current.value = ''
-    }
-  }
-
-  const handleLoadClick = () => {
-    fileInputRef.current?.click()
-  }
-
   if (characterEntries.length === 0) {
     return (
       <div className="bg-card border border-border">
         <div className="p-3 border-b border-border">
           <h2 className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-            <Users className="w-3 h-3" />
+            <Users className="w-5 h-5" />
             Party
           </h2>
         </div>
@@ -91,8 +70,9 @@ export function CharacterPanel({ characters }: CharacterPanelProps) {
               style={{
                 borderBottomColor: selectedTab === name ? 'hsl(var(--primary))' : 'transparent',
               }}
+              title={name} // Show full name on hover
             >
-              {name}
+              {getFirstName(name)}
             </Tabs.Tab>
           ))}
         </Tabs.List>

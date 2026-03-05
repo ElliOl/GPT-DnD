@@ -1,0 +1,21 @@
+{
+  "id": "agathas_lair",
+  "name": "Agatha's Lair",
+  "type": "lair",
+  "part": 3,
+  "description": "Dome of woven branches in Neverwinter Wood. Home of banshee Agatha. Once beautiful elf now hateful spirit.",
+  "atmosphere": "Dark, cold forest. Heavy vines and moss. Air grows colder. Unnatural stillness.",
+  "entrance": "Screen of woven branches, low doorway",
+  "interior": "Sparse furnishings: chests, shelves, table, reclined couch. All old elven craft.",
+  "agatha": "Manifests as pale spectral elf with hateful expression",
+  "negotiation": "DC 15 Persuasion (advantage if roleplayed well). Auto-succeed with Sister Garaele's silver comb gift.",
+  "answer": "Will answer ONE question if treated respectfully",
+  "questions": [
+    "Bowgentle's spellbook -> traded to Tsernoth of Iriaebor 100+ years ago",
+    "Location of Cragmaw Castle",
+    "Location of Wave Echo Cave",
+    "Identity of Black Spider",
+    "Hamun Kost's question (name of Old Owl Well wizard = Arthindol)"
+  ],
+  "treasure": "Silver comb gift from Sister Garaele (if used)"
+}

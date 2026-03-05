@@ -1,0 +1,148 @@
+{
+  "id": "part2_phandalin",
+  "name": "Part 2: Phandalin",
+  "level_range": "2-3",
+  "estimated_sessions": "2-3",
+  
+  "overview": "Party arrives in Phandalin, a frontier town terrorized by the Redbrand ruffians. Multiple side quests available from townsfolk. Main quest: eliminate the Redbrands and their leader Glasstaff (Iarno Albrek) in Tresendar Manor.",
+  
+  "key_locations": [
+    "phandalin_town",
+    "stonehill_inn",
+    "barthens_provisions",
+    "lionshield_coster",
+    "townmasters_hall",
+    "shrine_of_luck",
+    "edermath_orchard",
+    "alderleaf_farm",
+    "miners_exchange",
+    "sleeping_giant",
+    "tresendar_manor",
+    "redbrand_hideout"
+  ],
+  
+  "key_npcs": [
+    "sildar_hallwinter",
+    "elmar_barthen",
+    "toblen_stonehill",
+    "linene_graywind",
+    "halia_thornton",
+    "sister_garaele",
+    "daran_edermath",
+    "qelline_alderleaf",
+    "carp_alderleaf",
+    "harbin_wester",
+    "iarno_glasstaff"
+  ],
+  
+  "objectives": [
+    {
+      "id": "deliver_supplies",
+      "description": "Deliver wagon to Barthen's Provisions",
+      "reward": "10 gp each",
+      "required": true
+    },
+    {
+      "id": "confront_redbrands",
+      "description": "Fight Redbrand ruffians in street",
+      "xp": 400,
+      "required": true
+    },
+    {
+      "id": "clear_redbrand_hideout",
+      "description": "Eliminate Redbrands and capture/kill Glasstaff",
+      "xp": "varies by encounters",
+      "required": true
+    },
+    {
+      "id": "rescue_dendrar_family",
+      "description": "Save Mirna, Nars, and Nilsa Dendrar",
+      "xp": 100,
+      "required": false
+    }
+  ],
+  
+  "side_quests": [
+    {
+      "id": "old_owl_well",
+      "name": "Old Owl Trouble",
+      "giver": "Daran Edermath",
+      "reward": "Order of Gauntlet membership",
+      "location": "old_owl_well",
+      "part": 3
+    },
+    {
+      "id": "agatha_banshee",
+      "name": "The Banshee's Bargain",
+      "giver": "Sister Garaele",
+      "reward": "3 potions of healing + Harper membership",
+      "location": "conyberry",
+      "part": 3
+    },
+    {
+      "id": "orc_trouble",
+      "name": "Orc Trouble at Wyvern Tor",
+      "giver": "Harbin Wester",
+      "reward": "100 gp",
+      "location": "wyvern_tor",
+      "part": 3
+    },
+    {
+      "id": "reidoth_druid",
+      "name": "Find Reidoth the Druid",
+      "giver": "Qelline Alderleaf",
+      "reward": "Directions to Cragmaw Castle or Wave Echo Cave",
+      "location": "thundertree",
+      "part": 3
+    },
+    {
+      "id": "mirna_heirloom",
+      "name": "Mirna's Heirloom",
+      "giver": "Mirna Dendrar",
+      "reward": "Emerald necklace (200 gp) or keep it",
+      "location": "thundertree",
+      "part": 3
+    },
+    {
+      "id": "find_cragmaw_castle",
+      "name": "Find Cragmaw Castle",
+      "giver": "Sildar Hallwinter",
+      "reward": "500 gp",
+      "location": "cragmaw_castle",
+      "part": 3
+    },
+    {
+      "id": "find_iarno",
+      "name": "Find Iarno Albrek",
+      "giver": "Sildar Hallwinter",
+      "reward": "200 gp",
+      "status": "revealed in hideout",
+      "part": 2
+    },
+    {
+      "id": "kill_glasstaff",
+      "name": "Halia's Job Offer",
+      "giver": "Halia Thornton",
+      "reward": "100 gp + Zhentarim membership",
+      "note": "Wants Glasstaff's correspondence",
+      "part": 2
+    }
+  ],
+  
+  "major_treasure": [
+    "Scroll of charm person, scroll of fireball (Glasstaff's chest)",
+    "Staff of defense (Glasstaff)",
+    "+1 longsword 'Talon' (nothic's hoard)",
+    "Emerald necklace (200 gp) - Mirna's family heirloom in Thundertree"
+  ],
+  
+  "plot_developments": [
+    "Iarno Albrek = Glasstaff, traitor to Lords' Alliance",
+    "Black Spider controls Redbrands and Cragmaws",
+    "Black Spider wants adventurers dead",
+    "Gundren and map taken to Cragmaw Castle",
+    "Multiple paths to discover Cragmaw Castle location"
+  ],
+  
+  "next_part": "part3_spiders_web"
+}

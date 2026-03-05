@@ -1,0 +1,30 @@
+{
+  "id": "king_grol",
+  "name": "King Grol",
+  "race": "Bugbear",
+  "class": "Warrior",
+  "alignment": "Chaotic Evil",
+  "personality": {
+    "traits": [
+      "Fierce",
+      "Old but agile",
+      "Vindictive",
+      "Demanding",
+      "Intimidating"
+    ],
+    "goals": [
+      "Rule Cragmaw tribe through fear",
+      "Profit from Black Spider deal",
+      "Kill anything that defies him"
+    ],
+    "mannerisms": "Stooped shoulders, hunched back (age). Surprisingly strong and quick despite this."
+  },
+  "role": "Supreme chief of all Cragmaw goblins. Grudgingly recognized by all Cragmaw bands.",
+  "lair": "Cragmaw Castle area 14",
+  "companions": "Snarl (wolf, 18 HP), Vyerith (doppelganger disguised as drow)",
+  "current_situation": "Negotiating with 'Black Spider messenger' (actually doppelganger). Wants to sell Gundren's map instead of surrendering it.",
+  "tactics": "If warned of attack, holds Gundren hostage. 'Back off or dwarf dies!' Fights to death. No surrender.",
+  "stats": "HP 45 (above average bugbear)",
+  "treasure": "Under bed: 220 sp, 160 ep, 3 potions healing, MAP TO WAVE ECHO CAVE",
+  "defeat": "Hobgoblins might see party as liberators. Targor could take over tribe."
+}

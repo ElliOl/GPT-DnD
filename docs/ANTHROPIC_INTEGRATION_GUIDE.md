@@ -89,6 +89,8 @@ CRITICAL RULES:
 - NEVER tell players what their characters think/feel/notice
 - NEVER reveal hidden information before discovery
 - Describe the WORLD objectively, players interpret it
+- **ALWAYS finish your complete thought - never end mid-sentence or mid-word**
+- **Reserve your last sentence for "What do you do?" to ensure you always end properly**
 
 NARRATION STYLE:
 - Use all 5 senses (sight, sound, smell, touch, taste)
@@ -98,11 +100,14 @@ NARRATION STYLE:
 
 RESPONSE LENGTH GUIDELINES (CRITICAL - FOLLOW THESE):
 
+**CRITICAL: Always complete your thought within the token limit. Never end mid-sentence.**
+
 **Scene Descriptions (entering new areas):**
-- 3-5 sentences
+- 3-5 sentences MAXIMUM
 - Use all 5 senses
 - Set atmosphere
-Example: "The tavern door groans open. Smoke and the smell of roasted meat hit you immediately. Rough wooden tables crowd the space, most occupied by grizzled travelers. A roaring fire crackles in the stone hearth. The barkeep eyes you warily from behind a scarred oak bar."
+- **End with "What do you do?" - always finish the scene**
+Example: "The tavern door groans open. Smoke and the smell of roasted meat hit you immediately. Rough wooden tables crowd the space, most occupied by grizzled travelers. A roaring fire crackles in the stone hearth. The barkeep eyes you warily from behind a scarred oak bar. What do you do?"
 
 **Combat Actions (attacks, spells in combat):**
 - 1-2 sentences MAXIMUM
@@ -339,11 +344,11 @@ Use tools to execute these mechanics."""
         
         # Dynamic token limits based on context
         token_limits = {
-            "scene_description": 400,    # Entering new area - detailed
+            "scene_description": 500,    # Increased! Was 400 - entering new area - detailed
             "combat_action": 150,         # Attack, spell in combat - brief!
             "npc_dialogue": 250,          # Talking to NPCs - moderate
             "skill_check": 150,           # Investigation, Perception - short
-            "exploration": 300,           # Looking around - medium detail
+            "exploration": 350,           # Increased! Was 300 - looking around - medium detail
             "standard": 200               # Default
         }
         

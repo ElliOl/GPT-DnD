@@ -1,0 +1,35 @@
+{
+  "id": "toblen_stonehill",
+  "name": "Toblen Stonehill",
+  "race": "Human",
+  "class": "Commoner (Innkeeper)",
+  "alignment": "Neutral Good",
+  "location": "Stonehill Inn (Phandalin center)",
+  "personality": {
+    "traits": [
+      "Short",
+      "Friendly",
+      "Young",
+      "Worried about Redbrands"
+    ],
+    "goals": [
+      "Run successful inn",
+      "Protect family (wife Trilena, son Pip)",
+      "See Redbrands dealt with"
+    ],
+    "mannerisms": "Welcoming smile, wipes bar nervously when mentioning Redbrands"
+  },
+  "background": "From Triboar to east. Came to prospect but knew innkeeping better than mining.",
+  "role": "Innkeeper. Source of rumors and information. Hub of social activity.",
+  "family": "Trilena (wife), Pip (young son)",
+  "rooms": "6 rooms for rent. See PHB for prices.",
+  "rumors": {
+    "garaele": "Sister Garaele left town few days, returned wounded/exhausted (Narth, old farmer)",
+    "edermath": "Daran Edermath is former adventurer (Elsa, barmaid)",
+    "orcs": "Ore raiders on east end of Triboar Trail. Townmaster looking for help (Lanar, miner)",
+    "dendrar": "Thel Dendrar murdered by Redbrands tenday ago for standing up to them. Wife and kids missing (Trilena)",
+    "secret_tunnel": "Carp Alderleaf found secret tunnel, almost caught by Redbrands (Pip)",
+    "miners_exchange": "Redbrands don't hassle Miner's Exchange. Don't want trouble with Halia (Freda, weaver)"
+  },
+  "redbrand_fear": "Tries not to stir up trouble. Fears retaliation against family."
+}

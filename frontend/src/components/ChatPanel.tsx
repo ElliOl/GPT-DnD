@@ -23,6 +23,7 @@ interface ChatPanelProps {
   stopAudio: () => void
   currentAdventure?: Adventure | null
   onArchiveChat?: () => void
+  onReplayAudio?: (message: Message) => void
 }
 
 export function ChatPanel({
@@ -39,6 +40,7 @@ export function ChatPanel({
   stopAudio,
   currentAdventure,
   onArchiveChat,
+  onReplayAudio,
 }: ChatPanelProps) {
   return (
     <div className="lg:col-span-2">
@@ -48,6 +50,7 @@ export function ChatPanel({
           loading={loading}
           currentAdventure={currentAdventure}
           onArchiveChat={onArchiveChat}
+          onReplayAudio={onReplayAudio}
         />
         <ChatInput
           message={message}

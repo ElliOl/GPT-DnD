@@ -1,0 +1,118 @@
+{
+  "id": "part3_spiders_web",
+  "name": "Part 3: The Spider's Web",
+  "level_range": "3-4",
+  "estimated_sessions": "3-5",
+  
+  "overview": "Non-linear exploration phase. Party pursues multiple leads around the region to find Cragmaw Castle and learn about Wave Echo Cave. Can tackle locations in any order.",
+  
+  "key_locations": [
+    "triboar_trail",
+    "conyberry",
+    "agathas_lair",
+    "old_owl_well",
+    "thundertree",
+    "wyvern_tor",
+    "cragmaw_castle"
+  ],
+  
+  "key_npcs": [
+    "agatha_banshee",
+    "hamun_kost",
+    "reidoth",
+    "venomfang",
+    "dragon_cultists",
+    "king_grol",
+    "gundren_rockseeker"
+  ],
+  
+  "wilderness_encounters": {
+    "check_frequency": "Once during day, once at night",
+    "dc": 17,
+    "table": [
+      "Stirges (1d8+2)",
+      "Ghouls (1d4+1)",
+      "Ogre (1)",
+      "Goblins (1d6+3) - know Cragmaw Castle location",
+      "Hobgoblins (1d4+2) - have bounty sketch from Black Spider",
+      "Orcs (1d4+2)",
+      "Wolves (1d4+2)",
+      "Owlbear (1)"
+    ]
+  },
+  
+  "locations_detail": {
+    "conyberry": {
+      "description": "Ruined town, abandoned years ago",
+      "encounter": "Agatha the banshee",
+      "quest": "Ask about Bowgentle's spellbook",
+      "reward": "Answer to one question",
+      "danger_level": "Low if respectful"
+    },
+    "old_owl_well": {
+      "description": "Ancient watchtower ruins",
+      "encounter": "Hamun Kost (Red Wizard) + 12 zombies",
+      "quest": "Drive off orcs OR ask Agatha about tower's builder",
+      "reward": "Information/cooperation",
+      "danger_level": "Medium"
+    },
+    "thundertree": {
+      "description": "Town destroyed 30 years ago by Mount Hotenow eruption",
+      "encounters": ["Twig blights", "Ash zombies", "Giant spiders", "Venomfang (young green dragon)", "Dragon cultists"],
+      "quest": "Find Reidoth, get Mirna's heirloom",
+      "reward": "Directions to Cragmaw Castle/Wave Echo Cave, emerald necklace",
+      "danger_level": "High (dragon!)"
+    },
+    "wyvern_tor": {
+      "description": "Rocky crag with orc camp",
+      "encounter": "Brughor Axe-Biter + 6 orcs + ogre",
+      "quest": "Clear orc threat",
+      "reward": "100 gp from Harbin",
+      "danger_level": "Medium-High"
+    },
+    "cragmaw_castle": {
+      "description": "Ruined castle, Cragmaw goblin stronghold",
+      "encounters": ["Goblins", "Hobgoblins", "Bugbears", "Owlbear", "King Grol", "Doppelganger"],
+      "objective": "Rescue Gundren, get map to Wave Echo Cave",
+      "reward": "500 gp from Sildar, map to Wave Echo Cave",
+      "danger_level": "High"
+    }
+  },
+  
+  "objectives": [
+    {
+      "id": "find_cragmaw_castle",
+      "description": "Discover location of Cragmaw Castle",
+      "methods": ["Reidoth", "Captured goblin", "Hamun Kost cooperation", "Random goblin encounter"],
+      "required": true
+    },
+    {
+      "id": "rescue_gundren",
+      "description": "Save Gundren from King Grol",
+      "xp": 200,
+      "required": true
+    },
+    {
+      "id": "get_map",
+      "description": "Recover map to Wave Echo Cave",
+      "required": true
+    }
+  ],
+  
+  "major_treasure": [
+    "Map to Wave Echo Cave (Cragmaw Castle)",
+    "3 potions of healing, 220 sp, 160 ep, jade frog, scroll of misty step, scroll of lightning bolt, +1 battleaxe 'Hew' (Venomfang's hoard)",
+    "Ring of protection (Hamun Kost's tent)",
+    "Emerald necklace 200 gp (Thundertree herbalist shop)"
+  ],
+  
+  "plot_developments": [
+    "Gundren rescued, reveals Wave Echo Cave details",
+    "Black Spider identity still unknown (drow)",
+    "Nundro and Tharden's fate unknown",
+    "Black Spider has bugbears working for him",
+    "Map recovered OR location learned from Reidoth/Agatha"
+  ],
+  
+  "next_part": "part4_wave_echo_cave"
+}

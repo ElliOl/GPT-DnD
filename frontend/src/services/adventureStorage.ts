@@ -5,6 +5,7 @@ export interface SavePoint {
   narrative: string // Last DM narrative at this point
   gameState?: any // Snapshot of game state
   dmNotes?: string // DM notes for this save point
+  conversationHistory?: Array<{ role: string; content: string; timestamp: string; audio?: string }> // Conversation history up to this point
 }
 
 export interface Adventure {
@@ -21,7 +22,7 @@ export interface Adventure {
   currentState?: any
   history?: SavePoint[] // Deprecated - use Campaign questLog instead
   currentSavePoint?: string
-  conversationHistory?: Array<{ role: string; content: string; timestamp: string }>
+  conversationHistory?: Array<{ role: string; content: string; timestamp: string; audio?: string }>
 }
 
 const ADVENTURE_STORAGE_KEY = 'dnd-adventures'
@@ -221,7 +222,13 @@ export const adventureStorage = {
   /**
    * Add a save point to an adventure
    */
-  addSavePoint(adventureId: string, description: string, narrative: string, gameState?: any): SavePoint {
+  addSavePoint(
+    adventureId: string, 
+    description: string, 
+    narrative: string, 
+    gameState?: any,
+    conversationHistory?: Array<{ role: string; content: string; timestamp: string; audio?: string }>
+  ): SavePoint {
     const adventures = this.loadAdventures()
     const adventure = adventures.find(a => a.id === adventureId)
     if (!adventure) {
@@ -232,12 +239,21 @@ export const adventureStorage = {
       adventure.history = []
     }
 
+    // If conversation history not provided, use current adventure conversation history
+    const historyToStore = conversationHistory || adventure.conversationHistory || []
+
     const savePoint: SavePoint = {
       id: `save-${Date.now()}`,
       timestamp: new Date().toISOString(),
       description,
       narrative,
       gameState,
+      conversationHistory: historyToStore.map(msg => ({
+        role: msg.role,
+        content: msg.content,
+        timestamp: msg.timestamp,
+        audio: msg.audio,
+      })),
     }
 
     adventure.history.push(savePoint)
@@ -255,7 +271,8 @@ export const adventureStorage = {
     adventureId: string,
     narrative: string,
     gameState?: any,
-    userMessage?: string
+    userMessage?: string,
+    audioUrl?: string
   ): void {
     const adventures = this.loadAdventures()
     const adventure = adventures.find(a => a.id === adventureId)
@@ -282,6 +299,7 @@ export const adventureStorage = {
       role: 'assistant',
       content: narrative,
       timestamp: new Date().toISOString(),
+      audio: audioUrl,
     })
 
     // Update latest save point narrative if exists
@@ -309,6 +327,42 @@ export const adventureStorage = {
     const savePoint = adventure.history.find(sp => sp.id === savePointId)
     if (savePoint) {
       savePoint.dmNotes = notes
+      adventure.updatedAt = new Date().toISOString()
+      this.saveAdventures(adventures)
+    }
+  },
+
+  /**
+   * Update description for a save point
+   */
+  updateSavePointDescription(adventureId: string, savePointId: string, description: string): void {
+    const adventures = this.loadAdventures()
+    const adventure = adventures.find(a => a.id === adventureId)
+    if (!adventure || !adventure.history) return
+
+    const savePoint = adventure.history.find(sp => sp.id === savePointId)
+    if (savePoint) {
+      savePoint.description = description.trim()
+      adventure.updatedAt = new Date().toISOString()
+      this.saveAdventures(adventures)
+    }
+  },
+
+  /**
+   * Delete a save point
+   */
+  deleteSavePoint(adventureId: string, savePointId: string): void {
+    const adventures = this.loadAdventures()
+    const adventure = adventures.find(a => a.id === adventureId)
+    if (!adventure || !adventure.history) return
+
+    const index = adventure.history.findIndex(sp => sp.id === savePointId)
+    if (index >= 0) {
+      adventure.history.splice(index, 1)
+      // If this was the current save point, clear it
+      if (adventure.currentSavePoint === savePointId) {
+        adventure.currentSavePoint = undefined
+      }
       adventure.updatedAt = new Date().toISOString()
       this.saveAdventures(adventures)
     }

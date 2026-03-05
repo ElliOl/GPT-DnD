@@ -1,0 +1,38 @@
+{
+  "id": "agatha",
+  "name": "Agatha",
+  "race": "Banshee (Undead Elf)",
+  "class": "Undead Spirit",
+  "alignment": "Chaotic Evil",
+  "location": "Woven branch dome in Neverwinter Wood (NW of Conyberry)",
+  "personality": {
+    "traits": [
+      "Hateful",
+      "Vain",
+      "Ancient",
+      "Cold",
+      "Once beautiful"
+    ],
+    "goals": [
+      "Punish the living for disturbing her",
+      "Maintain her isolation",
+      "Collect tributes"
+    ],
+    "appearance": "Cold pale light coalescing into spectral female elf. Hair and robes wave in spectral wind. Hateful expression twists once-beautiful features.",
+    "speech": "Icy disdain. 'Foolish mortals. What do you want here? Do you not know it is death to seek me out?'"
+  },
+  "lair": "Dome of woven branches. Sparsely furnished: chests, shelves, table, reclined couch. Old elven craft.",
+  "manifestation": "Senses intruders. Appears when they enter her home.",
+  "negotiation": "DC 15 Persuasion (advantage if well roleplayed). Auto-success with Sister Garaele's silver comb as gift.",
+  "reaction_rude": "If disrespected, scowls and disappears. Won't return. Doesn't attack.",
+  "reaction_polite": "Smiles with cold amusement. 'Very well. Ask me one question, and I will give you an answer.'",
+  "knowledge": "Knows nearly anything about region. Well-informed diviner. Can answer any one question pertaining to adventure.",
+  "answers": {
+    "bowgentle": "Traded spellbook to Tsernoth of Iriaebor 100+ years ago. Doesn't know what happened after.",
+    "cragmaw_castle": "Can divine location",
+    "wave_echo_cave": "Can divine location",
+    "black_spider": "Can divine identity",
+    "old_owl_well": "Wizard's name was Arthindol (if asked for Hamun Kost)"
+  },
+  "xp_reward": 200
+}

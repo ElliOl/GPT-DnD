@@ -1,0 +1,128 @@
+{
+  "id": "redbrand_hideout",
+  "name": "Redbrand Hideout (Under Tresendar Manor)",
+  "type": "dungeon",
+  "part": 2,
+  
+  "description": "Secret hideout beneath the ruined Tresendar Manor. Cellars and crypts converted into gang headquarters with slave pens, workshops, barracks.",
+  
+  "atmosphere": "Damp underground. Mix of worked stone and natural caves. Western end lower than eastern. Redbrand thugs prowl corridors. Undead lurk in old crypts.",
+  
+  "general_features": {
+    "ceilings": "10 ft passages, 20 ft chambers",
+    "doors": "Wood with iron, unlocked unless noted. DC 10 thieves tools or DC 20 Str to break",
+    "secret_doors": "Blend with walls. Passive Perception 15 to spot, DC 10 Perception if searching",
+    "light": "Oil lamps in most areas (bright)"
+  },
+  
+  "areas": {
+    "1_cellar": {
+      "description": "5-ft landing 15 ft above large cellar. Stone steps down. Door under stairs. Stone cistern on west side. Kegs and barrels line walls.",
+      "features": ["Cistern (10 ft deep, 2 ft rim)", "Fresh provisions in barrels", "Door to area 2"],
+      "enemies": null,
+      "secret": "Waterproof satchel in cistern (DC 15 Perception or probing): potion healing, potion invisibility, 50 gp, travel clothes",
+      "treasure": "Iarno's emergency kit in cistern"
+    },
+    
+    "2_barracks": {
+      "description": "Storeroom converted to barracks. 2 double bunks near door. Barrels and crates fill south half.",
+      "enemies": "3 Redbrand ruffians (resting)",
+      "tactics": "If hear noise in area 1, prepare ambush. If not warned, can be surprised via chimney from area 3.",
+      "treasure": "Belt pouches: 16 sp + 7 gp, 12 sp + 5 gp, 15 ep + 2 garnets (10 gp each). 3 scarlet cloaks."
+    },
+    
+    "3_trapped_hall": {
+      "description": "Thick dust on flagstones. Faux columns every 10 ft. Copper-plated double doors at west end with angel relief.",
+      "trap": "Pit trap in middle (DC 15 Perception). False floor collapses under 100+ lbs. DC 15 Dex save or fall 20 ft for 2d6 damage. Can skirt on ledges with DC 10 Acrobatics.",
+      "features": ["Narrow ledges north/south of pit", "Copper doors to area 4"],
+      "enemies": null
+    },
+    
+    "4_tresendar_crypts": {
+      "description": "3 stone sarcophagi. Skeletons in rusty mail propped against each. False columns carved as oak trees. Tarnished copper doors to SE.",
+      "enemies": "3 skeletons (animate if approach area 5 or 6 doors without password 'Illefarn' or red cloak)",
+      "treasure": "Platinum signet ring in each sarcophagus (50 gp each)",
+      "features": ["Sarcophagi with noble dwarven carvings", "Doors to area 5 (chained) and area 6"]
+    },
+    
+    "5_slave_pens": {
+      "description": "Iron bars divide into 3 sections. Filthy straw in cells. Women in south cell, boy in north. Iron collars on prisoners. Pile of clothing against far wall.",
+      "enemies": "2 Redbrand ruffians (guards)",
+      "prisoners": "Mirna Dendrar, Nilsa (18), Nars (13) - kidnapped after Redbrands killed husband Thel",
+      "tactics": "Guards wait by door to surprise intruders",
+      "doors": "Chains and padlocks (DC 10 thieves tools or DC 22 Str)",
+      "treasure": "Clothing pile from ~12 past prisoners"
+    },
+    
+    "6_armory": {
+      "description": "Weapon racks line walls: spears, swords, crossbows, bolts. Dozen dirty red cloaks hang by door.",
+      "locked": "Door locked from outside",
+      "inventory": "12 spears, 6 shortswords, 4 longswords, 6 light crossbows, 8 quivers (20 bolts each)",
+      "enemies": null,
+      "secret_door": "To area 7"
+    },
+    
+    "7_storeroom": {
+      "description": "North end of natural cavern finished with stone blocks. Barrels, crates, packing materials. Cavern continues south with passages and deep pit/crevasse visible.",
+      "features": ["Storage supplies", "Passages to south", "Secret doors to area 6 and 12"],
+      "treasure": "30 beaver pelts (2 gp each) - looted from Triboar Trail caravan",
+      "enemies": null
+    },
+    
+    "8_crevasse": {
+      "description": "Natural cavern with 10-20 ft deep crevasse dividing it. 2 wooden plank bridges (no rails) span chasm. Cold breeze, faint smell of decay.",
+      "features": ["Stream enters west, falls into crevasse, exits north", "Ropes tied to stalagmites descend into crevasse", "South bridge rigged to collapse"],
+      "enemies": "1 nothic (lurks in crevasse, uses Weird Insight)",
+      "tactics": "Nothic stalks party, attacks lone targets. Can negotiate - knows everything Redbrands know.",
+      "trap": "South bridge collapses if 50+ lbs. DC 15 Investigation to notice faulty construction.",
+      "crevasse": "20 ft deep, rough walls (easy climb). Thel Dendrar's corpse at bottom.",
+      "treasure": "Chest in cubbyhole under north bridge: 160 sp, 120 gp, 5 malachite (15 gp each), 2 potions healing, scroll augury, +1 longsword 'Talon' with bird-of-prey hilt",
+      "magic": "Crevasse has faint necromantic aura - organic matter ages/decomposes at half rate"
+    },
+    
+    "9_guard_barracks": {
+      "description": "4 wooden bunks. Heaps of blankets, dirty dishes. Strong smell of unwashed bodies and rotten meat. Loud gruff voices in Goblin.",
+      "enemies": "3 bugbears, 1 goblin (Droop)",
+      "tactics": "Bugbears bully Droop. Goblin faints when party appears. If wearing red cloaks, bugbears assume party serves Iarno.",
+      "roleplaying": "Droop is coward, helpful if rescued. Knows hideout layout, Cragmaw patrol routes.",
+      "treasure": "Mosk (leader) has 33 sp, jeweled eye patch (50 gp), iron key (unlocks all doors)"
+    },
+    
+    "10_common_room": {
+      "description": "Steep escarpments divide into 3 levels. Carved stairs to ledges. 2 large tables in middle with braziers. Smaller table on east ledge. Skeletal warriors everywhere.",
+      "enemies": "7 ghouls (on west ledge, hidden in shadows)",
+      "tactics": "Ghouls smell/hear activity, bound down to attack",
+      "features": ["10 ft escarpments (DC 12 Athletics)", "1d6 damage if fall from ledge"],
+      "treasure": null
+    },
+    
+    "11_wizards_workshop": {
+      "description": "Alembics, retorts, distillation equipment bubbling away. Bookshelves with parchment and tomes. Rat scurries under worktable.",
+      "features": ["Alchemy setup for brewing potions of invisibility (not successful yet)", "Iarno's rat familiar"],
+      "rat": "Shares telepathic bond with Iarno in area 12. Sends warning when detects intruders. AC 10, 1 hp, speed 20.",
+      "books": "Dwarvish journal of Urmon describing Lost Mine history, Forge of Spells, mace Lightbringer",
+      "treasure": "3 bottles rare reagents: mercury, dragon bile, powdered nightshade (25 gp each)"
+    },
+    
+    "12_glasstaff_quarters": {
+      "description": "Scarlet drapes on walls. Writing desk with chair, bed, wooden chest at foot of bed.",
+      "enemies": "Iarno 'Glasstaff' Albrek (evil mage) if present",
+      "escape": "If rat warns him, Iarno grabs staff + scrolls, flees through NE secret door to area 7, then area 8, then area 1 cistern for emergency kit, uses invisibility potion to escape.",
+      "letter": "From Black Spider ordering capture/kill of strangers, delivery of dwarven maps",
+      "treasure": "Chest (unlocked): 180 sp, 130 gp, silk pouch with 5 carnelians (10 gp), 2 peridots (15 gp), 1 pearl (100 gp), scroll charm person, scroll fireball",
+      "magic_item": "Staff of defense (Iarno wields)"
+    }
+  },
+  
+  "special_npcs": ["iarno_glasstaff", "mirna_dendrar", "droop", "nothic"],
+  
+  "key_info": {
+    "secret_entrance": "Carp Alderleaf knows tunnel through thicket to area 8",
+    "main_entrance": "Through Tresendar Manor cellar to area 1",
+    "boss": "Iarno Albrek = Glasstaff, traitor to Lords Alliance",
+    "connection": "Works for Black Spider, controls Phandalin for him"
+  },
+  
+  "total_xp": "~2000+ depending on encounters",
+  "advancement": "Should be level 3 after clearing hideout"
+}

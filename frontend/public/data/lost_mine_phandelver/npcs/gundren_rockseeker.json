@@ -1,0 +1,36 @@
+{
+  "id": "gundren_rockseeker",
+  "name": "Gundren Rockseeker",
+  "race": "Dwarf (mountain)",
+  "class": "Commoner",
+  "alignment": "Lawful Good",
+  "personality": {
+    "traits": [
+      "Enthusiastic",
+      "Secretive about discoveries",
+      "Loyal to brothers",
+      "Eager"
+    ],
+    "goals": [
+      "Reopen Wave Echo Cave",
+      "Restore Phandelver's Pact",
+      "Make family wealthy"
+    ],
+    "mannerisms": "Energetic speech, taps fingers when excited, protective of maps and documents"
+  },
+  "background": "One of three Rockseeker brothers. Discovered entrance to Wave Echo Cave after months of searching. Hired party to transport supplies while he went ahead with Sildar.",
+  "status_by_part": {
+    "part1": "Captured by Cragmaws in ambush, taken to Cragmaw Castle",
+    "part2": "Prisoner at Cragmaw Castle, being interrogated",
+    "part3": "Held by King Grol at Cragmaw Castle area 14, badly beaten",
+    "part4": "If rescued, wants party to find his brothers and clear Wave Echo Cave"
+  },
+  "relationships": {
+    "brothers": "Tharden (killed at Wave Echo entrance), Nundro (prisoner in Wave Echo area 20)",
+    "allies": "Sildar Hallwinter (escort), party (hired help -> friends)",
+    "enemies": "Black Spider, King Grol, Cragmaw tribe"
+  },
+  "reward": "25 gp per character after rescue + 10% share of Wave Echo Cave profits once operational",
+  "location": "Cragmaw Castle area 14 (part 3), then Phandalin if rescued",
+  "key_possession": "Map to Wave Echo Cave (held by King Grol after capture)"
+}

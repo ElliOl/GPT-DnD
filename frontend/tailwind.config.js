@@ -14,6 +14,10 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ['Press Start 2P', 'monospace'],
+        mono: ['Press Start 2P', 'monospace'],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

@@ -1,0 +1,29 @@
+{
+  "id": "daran_edermath",
+  "name": "Daran Edermath",
+  "race": "Half-Elf",
+  "class": "Retired Fighter",
+  "alignment": "Lawful Good",
+  "location": "Edermath Orchard (Phandalin)",
+  "personality": {
+    "traits": [
+      "Fit despite age (100+)",
+      "Honorable",
+      "Vigilant",
+      "Wise"
+    ],
+    "goals": [
+      "Protect innocent",
+      "See justice done",
+      "Teach Redbrands lesson"
+    ],
+    "mannerisms": "Stands straight despite age, polishes old medal, shares war stories"
+  },
+  "background": "Former marshal and herald in Dragon Coast. Served Order of the Gauntlet. Retired to Neverwinter region (original home).",
+  "role": "Watchful retired adventurer. Keeps eye on Phandalin happenings.",
+  "quest": "Investigate Old Owl Well ruins. Undead chasing prospectors, someone digging around. Concerned about dormant Netheril magic.",
+  "information": "Knows Redbrands HQ is under Tresendar Manor. Leader is Glasstaff. Hang out at Sleeping Giant tavern.",
+  "order_of_gauntlet": "Devout vigilant group protecting others from evildoers. Always ready to smite evil, enforce justice, enact retribution.",
+  "recruitment": "If party deals with Redbrands AND investigates Old Owl Well, approaches members exemplifying honor/vigilance. Awards title of 'Chevall'.",
+  "treasure": "None to give, but offers wisdom and advice"
+}

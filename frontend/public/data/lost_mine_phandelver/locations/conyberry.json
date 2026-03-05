@@ -1,0 +1,13 @@
+{
+  "id": "conyberry",
+  "name": "Conyberry (Ruins)",
+  "type": "ruins",
+  "part": 3,
+  "description": "Ruined town sacked by barbarians years ago. Triboar Trail runs through it. Just rubble and memories.",
+  "atmosphere": "Ghost town. Empty shells of buildings. Overgrown.",
+  "function": "Landmark to find Agatha's Lair",
+  "features": [
+    "Ruins mark location",
+    "Trail heads NW into Neverwinter Wood to Agatha"
+  ]
+}

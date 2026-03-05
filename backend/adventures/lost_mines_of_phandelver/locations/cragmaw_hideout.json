@@ -1,0 +1,100 @@
+{
+  "id": "cragmaw_hideout",
+  "name": "Cragmaw Hideout",
+  "type": "dungeon",
+  "part": 1,
+  
+  "description": "Cave complex in hillside 5 miles from goblin ambush site. Cragmaw tribe hideout led by bugbear Klarg. Stream flows out of cave mouth screened by briar thickets.",
+  
+  "atmosphere": "Damp cave, sound of running water. Steep upward slope. Stalactite-covered vaults 20-30 ft high. Goblins have fortified with crude traps.",
+  
+  "general_features": {
+    "ceilings": "20-30 ft vaulted with stalactites",
+    "light": "Dark except areas 1-2 (outside)",
+    "stream": "2 ft deep, cold, slow - easily wadeable",
+    "sound": "Water muffles noise - DC 15 Perception to hear nearby areas"
+  },
+  
+  "areas": {
+    "1_cave_mouth": {
+      "description": "Stream flows from cave screened by dense briars. Narrow dry path on right side.",
+      "features": ["Briar thickets (impassable from west)", "Stream exit", "Dry path entrance"],
+      "enemies": null,
+      "tactics": "Goblins in Area 2 should be watching but are lazy"
+    },
+    
+    "2_goblin_blind": {
+      "description": "Hollowed-out lookout in briar thickets on east side. Wooden planks flatten briars.",
+      "features": ["Half cover from thickets", "View of approach"],
+      "enemies": "2 goblins",
+      "tactics": "Shoot through thickets if spot intruders. Shout alarm to Areas 4 and 6 if attacked."
+    },
+    
+    "3_kennel": {
+      "description": "Small dank chamber up stone steps from main passage. Filled with animal stench.",
+      "features": ["Iron rods in stalagmites", "Narrow fissure to Area 8 (DC 10 Athletics to climb)"],
+      "enemies": "3 wolves (chained)",
+      "tactics": "Attack anyone except goblins entering room. Can be calmed DC 15 Animal Handling (DC 10 if fed).",
+      "trap": "If provoked but unreachable, wolves make DC 15 Str checks each round. First success loosens (DC drops to 10), second success frees them."
+    },
+    
+    "4_steep_passage": {
+      "description": "Main passage climbs steeply. Stream splashes down west side.",
+      "features": ["Bridge visible ahead at Area 5", "Western rubble passage to Area 5"],
+      "enemies": null,
+      "secret": "Goblin on bridge (Area 5) may spot party - contested Stealth vs Perception"
+    },
+    
+    "5_overpass": {
+      "description": "High tunnel crosses main cavern. Rickety wood/rope bridge spans passage 20 ft above stream.",
+      "features": ["Waterfall sounds from ahead", "Bridge 20 ft high", "Ropes from iron stakes"],
+      "enemies": "1 goblin (hiding)",
+      "tactics": "If spots party, signals Area 7 to release flood, then throws javelins down.",
+      "bridge_stats": "AC 5, 10 hp. Destroyed = DC 10 Dex save or fall 20 ft for 2d6 damage",
+      "flood_trigger": "Goblin signals Area 7 - see Flood! event"
+    },
+    
+    "6_goblin_den": {
+      "description": "Large cave divided by 10-ft escarpment. Cooking fire smoke, stench of hides and unwashed goblins.",
+      "features": ["Natural stairs between levels", "Cooking fire below", "Sildar bound on upper ledge"],
+      "enemies": "6 goblins (5 regular + Yeemik leader with 12 hp)",
+      "sildar_status": "Bound, 1 hp, been tortured",
+      "tactics": "Yeemik grabs Sildar, threatens to kill. Wants party to kill Klarg in Area 8. Will betray party even if they agree. If refused, shoves Sildar off ledge (1d6 damage = death).",
+      "treasure": "Yeemik has 3 gold teeth (1 gp each) + 15 sp"
+    },
+    
+    "7_twin_pools": {
+      "description": "Half-filled with two large pools fed by waterfall in east wall. Drains west to stream. Low fieldstone dams.",
+      "features": ["Waterfall (loud)", "Two dammed pools", "Wide south exit", "Two west passages"],
+      "enemies": "3 goblins",
+      "tactics": "If alerted, one flees to warn Area 8. Others fight.",
+      "flood_mechanism": "Goblins can knock away dam supports. Next round, water floods down to Area 1. All in tunnel: DC 10 Dex save to reach Area 3/4 safe spots or DC 15 Str save to hold on, else swept to Area 1 for 1d6 damage."
+    },
+    
+    "8_klargs_cave": {
+      "description": "Sacks and crates piled south end. Floor slopes to dark opening west. Large fire pit in center (hot coals).",
+      "features": ["Supply pile (half cover)", "Fire pit (1 or 1d6 fire damage)", "Natural chimney down to Area 3", "Stone steps north"],
+      "enemies": "Klarg (bugbear, 45 hp), Ripper (wolf, 18 hp), 2 goblins",
+      "tactics": "If warned, Klarg and wolf hide behind stalagmites, goblins behind supplies for ambush. If wolf dies, Klarg flees down chimney to Area 3.",
+      "treasure": "Chest under bed: 600 cp, 110 sp, 2 potions of healing, jade frog statuette (40 gp). Supplies marked with blue lion = Lionshield Coster (50 gp reward in Phandalin)."
+    }
+  },
+  
+  "special_events": {
+    "flood": {
+      "trigger": "Goblin in Area 5 or 7 releases dam",
+      "timing": "Signaled one round, floods next round",
+      "effect": "All in main tunnel DC 10 Dex to reach safety or DC 15 Str to hold on, else knocked prone and washed to Area 1 for 1d6 damage",
+      "uses": "Can be done twice (two pools)"
+    }
+  },
+  
+  "key_npcs_here": ["sildar_hallwinter", "klarg", "yeemik"],
+  
+  "total_xp": "~275 + 200 for Sildar rescue = Advancement to Level 2",
+  
+  "exit_paths": [
+    "Return to trail, continue to Phandalin",
+    "Sildar offers 50 gp escort to Phandalin"
+  ]
+}

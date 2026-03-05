@@ -1,0 +1,35 @@
+{
+  "id": "reidoth",
+  "name": "Reidoth",
+  "race": "Human",
+  "class": "Druid",
+  "alignment": "Neutral Good",
+  "location": "Thundertree ruins (area 4 - Druid's Watch)",
+  "personality": {
+    "traits": [
+      "Gaunt",
+      "White-bearded",
+      "Taciturn",
+      "Territorial but hospitable"
+    ],
+    "goals": [
+      "Preserve natural order",
+      "Eliminate threats to wilderness",
+      "Help Emerald Enclave"
+    ],
+    "speech": "Doesn't use two words when one will do. Direct. No flowery language.",
+    "mannerisms": "Watches birds, checks plants, speaks to animals more than people"
+  },
+  "emerald_enclave": "Wilderness survivalists preserving natural order. Root out threats. Help others survive perils of wilds.",
+  "knowledge": "Knows every inch of region. Can provide directions to Cragmaw Castle or Wave Echo Cave.",
+  "current_concern": "Young green dragon Venomfang moved into Thundertree tower (area 7). Threatens delicate balance.",
+  "deal": "Will guide party to Wave Echo Cave IF they drive off Venomfang. Won't enter mine himself.",
+  "warnings": {
+    "zombies": "Ash zombies throughout ruins",
+    "plants": "Mutated twig blights, dangerous",
+    "spiders": "Giant spiders lurk in ruins at base of hill",
+    "cultists": "'Folk in black masks and cloaks' skulking around (area 13)"
+  },
+  "tactics": "If attacked, wildshapes into gray squirrel, escapes through crack in wall, waits for hostiles to leave",
+  "recruitment": "If party drives off Venomfang, approaches members who exemplify protecting natural order. Offers Emerald Enclave membership, title 'Springwarden'."
+}

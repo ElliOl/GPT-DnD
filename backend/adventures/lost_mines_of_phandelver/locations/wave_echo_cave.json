@@ -1,0 +1,219 @@
+{
+  "id": "wave_echo_cave",
+  "name": "Wave Echo Cave",
+  "type": "dungeon",
+  "part": 4,
+  "description": "Lost mine of the Phandelver's Pact, destroyed 500 years ago by orc invasion. Rich in silver, gold, platinum. Home to legendary Forge of Spells where magical items were enchanted.",
+  "atmosphere": "Cold, damp, drafty. Rhythmic BOOMING echoes every 2 minutes from underground hot spring. Makes stone shiver underfoot. Ancient dwarven stonework, 30ft caverns with stalactites, natural passages.",
+  
+  "general_features": {
+    "ceilings": "Tunnels 10ft, rooms 20ft, caverns 30ft with stalactites",
+    "doors": "6ft tall, 4ft wide, stone slabs, iron fittings (dwarf-sized)",
+    "walls": "Hewn stone, some dressed blocks (areas 14,15,19,20)",
+    "floors": "Smooth natural stone",
+    "light": "None (pitch black)",
+    "wandering_monsters": "Roll d20 if party lingers, 17-20 = encounter (d12: 1-3 stirges 2d4, 4-5 ghouls 1d4, 6 gricks 1d4, 7-8 bugbears 1d4, 9 skeletons 1d6, 10 zombies 1d6, 11-12 ochre jelly)"
+  },
+  
+  "areas": {
+    "1_cave_entrance": {
+      "name": "Cave Entrance",
+      "description": "Large cavern with natural rock pillar, 3 stalagmites. Rockseeker camp with bedrolls and mining supplies. Tharden's corpse among supplies (dead 1 week, killed by Black Spider).",
+      "features": ["10x20ft pit with rope ladder", "Tunnel northwest to area 2", "Tunnel east to area 3"],
+      "climbing": "DC 15 Athletics or use rope, fall 20ft = 2d6 damage",
+      "treasure": "Tharden wears boots of striding and springing (Nezznar overlooked them)",
+      "notes": "Nundro (youngest brother) is prisoner in area 20"
+    },
+    
+    "2_mine_tunnels": {
+      "name": "Mine Tunnels",
+      "description": "Maze of intersecting passages. 6ft ceilings. Dead-ends where miners gave up.",
+      "encounters": "1 ochre jelly stalks party patiently, waits for lone target",
+      "tactics": "Jelly follows party through tunnels, attacks isolated character"
+    },
+    
+    "3_old_entrance": {
+      "name": "Old Entrance",
+      "description": "30ft cavern. Ancient battle site - 2 dozen skeletons (dwarves, gnomes, orcs) litter floor. Walls carved with reliefs of miners working. 6 brass lanterns (unlit) in niches.",
+      "encounters": "10 stirges cling to ceiling like bats",
+      "surprise": "Stirges attack if party looks down at skeletons. Passive Perception vs Stealth check to avoid surprise"
+    },
+    
+    "4_old_guardroom": {
+      "name": "Old Guardroom",
+      "description": "Splintered stone benches, heaps of rubble from partial ceiling collapse. Ruined bunks, toppled weapon racks. Dwarf and orc bones.",
+      "encounters": "9 skeletons animate 1 round after living creature enters",
+      "tactics": "Bones stir and knit together, fight until destroyed"
+    },
+    
+    "5_assayers_office": {
+      "name": "Assayers' Office",
+      "description": "Stone counter bisects room. 3 dusty iron balance scales. Cubbyholes with disintegrating paper scraps (Dwarvish weigh-in records). Corpses of gnomes and orcs on floor.",
+      "treasure": "Locked strongbox behind counter (DC 20 Dexterity thieves' tools): 600 cp, 180 sp, 90 ep, 60 gp",
+      "notes": "Pay chest overlooked during battle"
+    },
+    
+    "6_south_barracks": {
+      "name": "South Barracks",
+      "description": "Stone bunks in rows. Corroded brazier with old coals. Bones of dwarves and orcs in armor scraps.",
+      "encounters": "3 ghouls gnawing bones, eager for fresh meal",
+      "listen": "DC 10 Perception hears crunching/splintering at door",
+      "notes": "Part of pack from area 9"
+    },
+    
+    "7_ruined_storeroom": {
+      "name": "Ruined Storeroom",
+      "description": "Eastern wall collapsed to rubble. North door ajar to intact storeroom with cracked, empty kegs.",
+      "notes": "Secure resting place - monsters don't come here. Door can be barricaded from inside",
+      "safe_haven": true
+    },
+    
+    "8_fungi_cavern": {
+      "name": "Fungi Cavern",
+      "description": "Dense carpets of weird fungi: 1ft puffballs, shelf fungus on stalagmites, 5ft tall stalks. Some puff balls glow eerie green (provides light without darkvision).",
+      "hazard": "POISON GAS - crossing cavern releases gas. DC 11 Constitution save or 3d6 poison damage + poisoned 10 minutes. Gas disperses after 1 minute, but repeat save each turn in area.",
+      "blocks": "Path to Forge of Spells - Nezznar reluctant to risk crossing",
+      "tactics": "Sprint through quickly or wait for gas to disperse"
+    },
+    
+    "9_great_cavern": {
+      "name": "Great Cavern",
+      "description": "Banquet hall and mead hall for miners. Divided by 10ft escarpments with carved stairs. 2 large tables in middle, small table on east ledge. Braziers. Dozens of skeletal warriors (dwarves, gnomes, orcs, ogres).",
+      "encounters": "7 ghouls lurk on western ledge, attack on sight",
+      "escarpments": "10ft high, DC 12 Athletics to climb, fall = 1d6 + prone"
+    },
+    
+    "10_dark_pool": {
+      "name": "Dark Pool",
+      "description": "Still dark pool 20ft deep. Shore of broken pale mussel shells, fishy odor. Passage south, steps up east, stream flows northeast to area 18 (3ft deep, 2-3ft ceiling clearance).",
+      "treasure": "Skeleton on pool bottom (10ft from shore, 10ft underwater): human wizard with orc arrows in ribs. Wears 2 platinum rings (75 gp each), clutches wand of magic missiles",
+      "notes": "Wizard died defending mine 500 years ago"
+    },
+    
+    "11_north_barracks": {
+      "name": "North Barracks",
+      "description": "Stone bunks, glowing iron brazier for heat and light. Eastern door barricaded with table remains (DC 20 Strength to force).",
+      "encounters": "5 bugbears - Nezznar's loyal minions, prevent undead from reaching area 19",
+      "listen": "DC 10 Perception hears gruff Goblin voices 'so hungry'",
+      "treasure": "Largest bugbear: pouch with 15 cp, 13 ep, potion of vitality",
+      "notes": "Removed corpses, built barricade, frontline defense"
+    },
+    
+    "12_smelter_cavern": {
+      "name": "Smelter Cavern",
+      "description": "Heart of mining operation. Blast furnace (cold/dark), mechanical waterwheel (dry), heaps of coal, carts of ore. 10ft channel (5ft below floor, exits north/east with 5ft ceiling). Dozen corpses in armor.",
+      "encounters": "1 flameskull (floating skull in green flames) + 8 zombies",
+      "flameskull": "Ancient guardian, continues orders to block intruders. Intelligent undead.",
+      "zombies": "Rise when living enters, pursue 1 round max outside area",
+      "channel": "Former stream path from area 18, powered waterwheel for bellows",
+      "notes": "Blocks path to Forge - Nezznar formulating plan to bypass"
+    },
+    
+    "13_starry_cavern": {
+      "name": "Starry Cavern",
+      "description": "Glittering minerals in ceiling like starry night sky (pretty but not valuable). Dozens of crushed skeletons under debris. Divided by escarpment with stairs. 2 freestanding human-sized stone buildings (areas 14, 15) with blackened walls, scorched doors.",
+      "magic_aura": "DC Arcana proficiency or detect magic - subtle aura, stronger near north building (area 15 Forge)",
+      "notes": "Site of ancient spell battle, destructive magic damaged everything"
+    },
+    
+    "14_wizards_quarters": {
+      "name": "Wizards' Quarters",
+      "description": "Guesthouse for visiting human wizards. Fire-damaged: charred furniture (tables, chairs, bookshelves, beds), blackened walls, sagging ceiling. Scorched iron chest at bed foot. Doors cracked, hinges melted (DC 15 Strength to force).",
+      "encounters": "Mormesk the wraith - restless spirit, rises from floor when entered",
+      "mormesk_personality": "Grave whispers. 'Your presence offensive, life forfeit. MY treasures!' Irrevocably evil but listens if not attacked.",
+      "negotiation": "Values magic items, scrolls, spellbooks, arcane knowledge. DC 10 Persuasion to convince gift acceptable. Will NOT give up wooden pipe. Gives coins/gems if party kills spectator (area 15). Allows browsing books for secret map.",
+      "treasure": "Unlocked chest: 1,100 cp, 160 sp, 50 ep, 3 diamonds (100 gp each), platinum-filigree wooden pipe (150 gp). Bookshelves: secret map sewn in book cover (DC 12 Investigation) - leads to your next adventure",
+      "notes": "Mormesk leads undead in Wave Echo Cave, can't touch treasure in death"
+    },
+    
+    "15_forge_of_spells": {
+      "name": "Forge of Spells - THE HEART OF THE MINE",
+      "description": "Legendary workshop where Phandelver's Pact enchanted magic items. Large damaged room: scorched worktables in corners, burned plaster off walls. CENTER: stone pedestal with brazier of EERIE GREEN FLAME (untouched by destruction).",
+      "encounters": "1 spectator (4ft sphere, 4 eyestalks, telepathic 'Hello') - deranged guardian",
+      "spectator_behavior": "Summoned centuries ago, now insane. Believes mine still operational. Ignores undead 'workers'. ATTACKS if items removed. Disappears if blinded or 'fired' via DC 15 Deception (convince it's a wizard/owner terminating employment).",
+      "brazier_green_flame": "DC 15 Arcana - source of cavern's fading magic. Can no longer PERMANENTLY enchant. Bathing weapon/armor 1 minute = +1 for 1d12 hours. CANNOT be removed.",
+      "north_room": "Finishing workshop for items pre-enchantment. Almost destroyed.",
+      "treasure": "Worktable SE corner: LIGHTBRINGER (+1 mace, brass sunburst head, glows on command, +1d6 radiant vs undead for Lathander clerics) + DRAGONGUARD (+1 breastplate, gold dragon motif, advantage on dragon breath saves, made for Tergon of Neverwinter)",
+      "tactics": "Mormesk wants spectator dead. Spectator has defeated Mormesk's undead easily. Can negotiate or fight.",
+      "notes": "MOST IMPORTANT LOCATION - reason Nezznar came here"
+    },
+    
+    "16_booming_cavern": {
+      "name": "Booming Cavern - Source of Wave Echo",
+      "description": "Water-filled cavern. Narrow ledge 15ft above water on south wall. Rhythmic BOOMING loudest here. Every 2 minutes surge slams against wall, raising water +10ft for 1 minute (then drops to normal 20ft depth).",
+      "hazard": "Underground hot spring boils over → surge through narrow funnel → sound like breaking surf",
+      "notes": "This is what gives Wave Echo Cave its name. One arm of larger cavern to northeast."
+    },
+    
+    "17_old_streambed": {
+      "name": "Old Streambed",
+      "description": "Barely 4ft high passage obstructed by rounded boulders/pebbles. No water flows now.",
+      "history": "Originally stream from area 10 → area 16. Dwarves diverted to area 12 channel for waterwheel. Earthquake from spell battle collapsed area 18 floor, rerouted stream again.",
+      "secret_path": "Circumvents undead in area 12 - Nezznar hasn't discovered",
+      "tactical": "Low crawl, difficult terrain, but avoids flameskull fight"
+    },
+    
+    "18_collapsed_cavern": {
+      "name": "Collapsed Cavern",
+      "description": "Wide rift fills east half. Stream pours from west wall, tumbles into rift, flows out north. Ropes on iron stakes lead down rift.",
+      "encounters": "3 bugbears (2 clearing rubble in rift, 1 guard) + 1 doppelganger (Vhalak, disguised as male drow, supervises)",
+      "rift": "20ft deep, DC 10 Athletics to climb without rope, fall = 1d6/10ft + prone",
+      "doppelganger_tactics": "If 2+ bugbears killed, retreats to area 19 to warn Nezznar",
+      "treasure": "Rift bottom buried in rubble: crushed dwarf skeleton wearing gauntlets of ogre power (DC 20 Perception, 1 check/hour searching)",
+      "notes": "Nezznar's divinations led him here - treasure confirmed accurate"
+    },
+    
+    "19_temple_of_dumathoin": {
+      "name": "Temple of Dumathoin - NEZZNAR'S HQ",
+      "description": "6 cracked marble pillars. North end: 9ft statue of dwarf on throne with stone warhammer, LARGE EMERALDS in eyes (FAKE - worthless glass, DC 15 Investigation). Campsite: bedrolls, packs, fire pit, wooden table with Nezznar's notes.",
+      "boss_fight": "NEZZNAR THE BLACK SPIDER (drow evil mage with spider staff) + 4 giant spiders",
+      "nezznar_tactics": "If warned: spiders hide behind pillars (Stealth check), Nezznar casts invisibility, stands by table. Spiders web first, then melee. Nezznar joins round 2.",
+      "nezznar_personality": "Curious, quizzes party about identities/goals. Admits being Black Spider. Promises cooperation but betrays instantly. Uses Cragmaws/Redbrands as pawns.",
+      "doppelganger_trick": "If area 18 doppelganger fled here, disguises as Nundro for leverage (won't actually harm it)",
+      "statue_trap": "Removing either emerald eye (DC 10 Strength) → pillars crack → ceiling collapse. DC 15 Dexterity save or 4d10 bludgeoning + prone (half on save)",
+      "treasure": "Nezznar: potion of healing, spider staff, iron key (area 20). Table sack: 190 ep, 130 gp, 15 pp, 9 gems (10 gp each), dwarven electrum ale mug (100 gp)",
+      "xp_bonus": "DOUBLE XP if Nezznar captured alive and delivered to Sildar/Harbin",
+      "betrayal": "If captured without guards, Halia Thornton breaks him out, gives to Zhentarim",
+      "reinforcements": "Area 18 creatures hear combat, arrive round 4 if still alive"
+    },
+    
+    "20_priests_quarters": {
+      "name": "Priests' Quarters - Nundro's Prison",
+      "description": "Dusty draperies, bed, brazier. NUNDRO ROCKSEEKER bound unconscious on floor - badly beaten, disheveled.",
+      "door": "Locked (DC 15 Dexterity thieves' tools or Nezznar's key from area 19)",
+      "nundro": "Youngest brother, interrogated harshly 1-2x daily by Nezznar. Grateful if rescued, offers to join party but knows no more than them about layout.",
+      "development": "Safe resting spot after Nezznar defeated",
+      "xp": "200 XP if Nundro rescued and survives",
+      "notes": "Former priest's quarters for temple (area 19), repurposed as cell"
+    }
+  },
+  
+  "conclusion": {
+    "victory": "Black Spider defeated, Redbrands eliminated, mine reclaimed. Deeds remembered in Sword Coast. Mine brought back into production.",
+    "rewards": "Gundren + Nundro give party 10% mine profits",
+    "options": "Stay in Phandalin (restore Tresendar Manor, establish homes) or move on to next adventure",
+    "advancement": "Party should be LEVEL 5",
+    "next_adventure": "Secret map from area 14 leads to new dungeon"
+  },
+  
+  "boss": "Nezznar the Black Spider (area 19) + 4 giant spiders + bugbears",
+  "key_treasure": {
+    "forge_15": "Lightbringer +1 mace, Dragonguard +1 breastplate, green flame brazier (temp +1 enchanting)",
+    "mormesk_14": "3 diamonds (100 gp each), platinum pipe (150 gp), secret adventure map",
+    "pool_10": "Wand of magic missiles, 2 platinum rings (75 gp each)",
+    "gauntlets_18": "Gauntlets of ogre power (Str 19)",
+    "nezznar_19": "Spider staff, various coins/gems",
+    "entrance_1": "Boots of striding and springing"
+  },
+  
+  "critical_encounters": [
+    "Area 8: Fungi poison gas (blocks Forge path)",
+    "Area 12: Flameskull + 8 zombies (blocks Forge path)",
+    "Area 14: Mormesk wraith (can negotiate)",
+    "Area 15: Spectator (can trick or fight)",
+    "Area 19: NEZZNAR + 4 spiders (FINAL BOSS)"
+  ],
+  
+  "total_areas": 20,
+  "designed_for": "Level 4-5 characters (assumes 2,700+ XP per character)"
+}

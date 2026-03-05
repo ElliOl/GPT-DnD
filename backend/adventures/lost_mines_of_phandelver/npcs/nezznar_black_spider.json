@@ -1,0 +1,93 @@
+{
+  "id": "nezznar_black_spider",
+  "name": "Nezznar",
+  "alias": "The Black Spider",
+  "race": "Drow (dark elf)",
+  "class": "Evil Mage (Wizard)",
+  "alignment": "Neutral Evil",
+  
+  "appearance": "Short, sallow skin, shaved scalp, black tattoo on forehead (necromantic symbol). Black leather armor and robes. Carries glass staff with carved spider at top.",
+  
+  "personality": {
+    "traits": ["Curious", "Calculating", "Genteel surface manner", "Ruthless underneath", "Arrogant"],
+    "goals": [
+      "Find the Forge of Spells in Wave Echo Cave",
+      "Claim its secrets and power for himself",
+      "Eliminate anyone who knows about Wave Echo Cave"
+    ],
+    "mannerisms": "Addresses enemies as 'guests'. Uses polite euphemisms for violence ('unfortunate events', 'that unpleasant business'). Thuggish beneath veneer.",
+    "tactics": "Information gathering. Manipulation. Using proxies (Cragmaws, Redbrands). Direct action only when necessary."
+  },
+  
+  "background": "Drow who learned of Wave Echo Cave and Forge of Spells through unknown means. Established network of goblin and human agents to find it. Patient, methodical approach.",
+  
+  "operations": {
+    "cragmaw_tribe": "Hired King Grol and Cragmaw goblins to watch for Rockseekers, capture Gundren, steal map",
+    "redbrands": "Hired Iarno 'Glasstaff' Albrek to control Phandalin, intimidate settlers, keep area quiet",
+    "bugbears": "Sent 3 bugbears each to Cragmaw Castle and Redbrand hideout as enforcers",
+    "current_location": "Wave Echo Cave, Temple of Dumathoin (Area 19), exploring cautiously"
+  },
+  
+  "knowledge": {
+    "wave_echo_cave": "Knows general location, has begun exploration",
+    "forge_of_spells": "Knows it exists, searching for it",
+    "party": "Knows adventurers are involved with Gundren, wants them eliminated",
+    "phandelver_pact": "Understands history, seeks to claim power for himself"
+  },
+  
+  "current_status": {
+    "location": "Wave Echo Cave, Area 19 - Temple of Dumathoin",
+    "allies": "4 giant spiders, doppelganger (disguised as drow), 5 bugbears (in Area 11)",
+    "prisoners": "Nundro Rockseeker (Area 20)",
+    "progress": "Hindered by undead and monsters, proceeding carefully"
+  },
+  
+  "tactics": {
+    "combat": [
+      "Casts mage armor on self if threatened",
+      "Uses invisibility to escape if possible",
+      "Offensive spells at visible enemies",
+      "Suggestion to manipulate foes",
+      "Uses staff powers for added protection (shield)"
+    ],
+    "negotiation": "Will talk, probe for information. Promises cooperation or surrender (lies). Betrays immediately when advantageous.",
+    "surrender": "At 8 hp or less with no escape - values his life. Becomes model prisoner hoping for Black Spider rescue (won't come)."
+  },
+  
+  "interrogation_reveals": [
+    "Black Spider is himself - Nezznar",
+    "Using Cragmaws and Redbrands to secure Wave Echo Cave",
+    "Black Spider contacted Iarno through Lords' Alliance intel",
+    "Promised to share Forge of Spells secrets with Iarno in exchange for help",
+    "Three bugbears sent to reinforce Redbrands",
+    "Black Spider knows location of Wave Echo Cave (duh, he's there)",
+    "Bugbears in Area 11 know Wave Echo Cave location"
+  ],
+  
+  "information_kept_secret": "Drow are matriarchal. Nezznar is male wizard - unusual. Likely outcast or independent operator. No connection to drow cities mentioned.",
+  
+  "defeat_outcomes": {
+    "killed": "450 XP. Black Spider plot ends. Nundro rescued. Forge secured.",
+    "captured_alive": "900 XP! Sildar arranges transport to Neverwinter for trial. Halia Thornton breaks him out if no guards posted, delivers to Zhentarim (DM choice for future plot)."
+  },
+  
+  "treasure": "Spider staff, potion of healing, 190 ep, 130 gp, 15 pp, 9 small gems (10 gp each), electrum ale mug (100 gp)",
+  
+  "stat_block": "See Appendix B - Nezznar the Black Spider",
+  
+  "spells_prepared": {
+    "innate": "Dancing lights (at will), darkness (1/day), faerie fire (1/day)",
+    "cantrips": "Mage hand, ray of frost, shocking grasp",
+    "1st_level": "Mage armor, magic missile, shield",
+    "2nd_level": "Invisibility, suggestion"
+  },
+  
+  "spider_staff": "Black adamantine, spider-shaped top. 6 lbs. Requires attunement. Quarterstaff that deals +1d6 poison. 10 charges. Spider climb (1 charge) or web (2 charges, DC 15). Regains 1d6+4 charges at dusk. On last charge spent, d20: 1 = crumbles to dust.",
+  
+  "dialogue_examples": [
+    "\"It seems that I must deal with you myself. A pity it must end this way.\"",
+    "\"You are persistent, I'll grant you that. But persistence without wisdom is folly.\"",
+    "\"The Forge of Spells will be mine. Its secrets are too valuable to share with... guests such as yourselves.\"",
+    "\"Very well. You have my attention. What do you propose?\" [lies about cooperation]"
+  ]
+}

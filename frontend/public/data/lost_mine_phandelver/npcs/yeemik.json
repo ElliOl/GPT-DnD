@@ -1,0 +1,28 @@
+{
+  "id": "yeemik",
+  "name": "Yeemik",
+  "race": "Goblin",
+  "class": "Warrior",
+  "alignment": "Chaotic Evil",
+  "personality": {
+    "traits": [
+      "Ambitious",
+      "Opportunistic",
+      "Treacherous",
+      "Second-in-command syndrome"
+    ],
+    "goals": [
+      "Overthrow Klarg",
+      "Become boss of hideout",
+      "Profit from chaos"
+    ],
+    "mannerisms": "Sneering, always watching for openings, quick to betray"
+  },
+  "role": "Second-in-command at Cragmaw Hideout. Wants Klarg's job.",
+  "location": "Cragmaw Hideout area 6",
+  "hostage": "Has Sildar Hallwinter prisoner",
+  "deal": "Offers to release Sildar if party kills Klarg and brings back his head. Lies - will demand ransom even after.",
+  "tactics": "If party refuses deal, shoves Sildar off ledge (1d6 damage, drops to 0 HP). Then fights.",
+  "stats": "HP 12 (higher than normal goblin)",
+  "treasure": "Pouch: 3 gold teeth (1 gp each), 15 sp"
+}

@@ -146,6 +146,115 @@ export const campaignStorage = {
   },
 
   /**
+   * Check if a new session should start (based on date change)
+   */
+  shouldStartNewSession(campaign: Campaign): boolean {
+    if (!campaign.lastPlayed) return false
+    
+    const lastPlayedDate = new Date(campaign.lastPlayed)
+    const today = new Date()
+    
+    // Check if last played was on a different day
+    return (
+      lastPlayedDate.getFullYear() !== today.getFullYear() ||
+      lastPlayedDate.getMonth() !== today.getMonth() ||
+      lastPlayedDate.getDate() !== today.getDate()
+    )
+  },
+
+  /**
+   * Start a new session (increment session number)
+   */
+  startNewSession(): Campaign | null {
+    const currentCampaign = this.getCurrentCampaign()
+    if (!currentCampaign) return null
+
+    const updated: Campaign = {
+      ...currentCampaign,
+      sessionNumber: currentCampaign.sessionNumber + 1,
+      lastPlayed: new Date().toISOString(),
+    }
+
+    this.saveCampaign(updated)
+    return updated
+  },
+
+  /**
+   * Sync campaign with session state (location, quest log, etc.)
+   */
+  syncWithSessionState(sessionState: any): void {
+    const currentCampaign = this.getCurrentCampaign()
+    if (!currentCampaign) return
+
+    // Check if we should start a new session (different day)
+    // Use the higher of: session state session_number or campaign sessionNumber + 1 (if new day)
+    let sessionNumber = sessionState.session_number || currentCampaign.sessionNumber
+    if (this.shouldStartNewSession(currentCampaign)) {
+      // Auto-increment session number if it's a new day
+      const newSessionNumber = currentCampaign.sessionNumber + 1
+      if (newSessionNumber > sessionNumber) {
+        sessionNumber = newSessionNumber
+        console.log(`📅 New session detected! Auto-incrementing to session ${sessionNumber}`)
+      }
+    } else {
+      // Use the higher session number (in case session state has a higher number)
+      sessionNumber = Math.max(sessionState.session_number || currentCampaign.sessionNumber, currentCampaign.sessionNumber)
+    }
+
+    const updated: Campaign = {
+      ...currentCampaign,
+      currentLocation: sessionState.current_location || currentCampaign.currentLocation,
+      activeEncounter: sessionState.active_encounter || currentCampaign.activeEncounter,
+      sessionNumber: sessionNumber,
+      party: sessionState.party || currentCampaign.party,
+      worldState: { ...currentCampaign.worldState, ...(sessionState.world_state || {}) },
+      partyInventory: {
+        ...currentCampaign.partyInventory,
+        ...(sessionState.party_inventory || {}),
+        sharedItems: sessionState.party_inventory?.shared_items || currentCampaign.partyInventory.sharedItems,
+        goldPool: sessionState.party_inventory?.gold_pool || currentCampaign.partyInventory.goldPool,
+      },
+      notes: sessionState.notes || currentCampaign.notes,
+      lastPlayed: new Date().toISOString(),
+    }
+
+    // Sync quest log from session state if it exists and is different
+    if (sessionState.quest_log && Array.isArray(sessionState.quest_log)) {
+      // Merge quest log - update existing quests, add new ones
+      const sessionQuestLog = sessionState.quest_log.map((q: any) => ({
+        id: q.id || `quest-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        name: q.name,
+        status: q.status || 'in_progress',
+        description: q.description || '',
+        notes: q.notes || '',
+        timestamp: q.timestamp || new Date().toISOString(),
+        updatedAt: q.updatedAt || new Date().toISOString(),
+      }))
+
+      // Merge with existing quest log - keep campaign quest log as source of truth for notes
+      const mergedQuestLog = sessionQuestLog.map((sessionQuest: QuestLogEntry) => {
+        const existingQuest = updated.questLog.find(q => 
+          q.id === sessionQuest.id || q.name.toLowerCase() === sessionQuest.name.toLowerCase()
+        )
+        if (existingQuest) {
+          // Keep existing quest but update status and description if changed
+          return {
+            ...existingQuest,
+            status: sessionQuest.status,
+            description: sessionQuest.description || existingQuest.description,
+            updatedAt: new Date().toISOString(),
+          }
+        }
+        return sessionQuest
+      })
+
+      updated.questLog = mergedQuestLog
+    }
+
+    this.saveCampaign(updated)
+  },
+
+  /**
    * Set current active campaign
    */
   setCurrentCampaign(campaignId: string | null): void {

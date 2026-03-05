@@ -1,0 +1,27 @@
+{
+  "id": "nundro_rockseeker",
+  "name": "Nundro Rockseeker",
+  "race": "Dwarf (mountain)",
+  "class": "Commoner",
+  "alignment": "Lawful Good",
+  "location": "Wave Echo Cave area 20 (prisoner)",
+  "personality": {
+    "traits": [
+      "Youngest Rockseeker brother",
+      "Grateful",
+      "Resilient despite torture"
+    ],
+    "goals": [
+      "Survive captivity",
+      "Reunite with Gundren",
+      "Reopen mine"
+    ],
+    "condition": "Bound, badly disheveled, grateful if rescued"
+  },
+  "background": "One of three Rockseeker brothers. Captured by Nezznar when exploring Wave Echo Cave with Tharden.",
+  "status": "Tharden killed (body at cave entrance area 1). Nundro interrogated harshly by Nezznar every 1-2 days.",
+  "knowledge": "Doesn't know more about cave layout than party will discover. But knows family history of Phandelver's Pact.",
+  "if_rescued": "Wants to stay with party through Wave Echo Cave. Can use loaned weapon (no armor). See NPC Party Members rules.",
+  "reward": "200 XP if rescued alive and survives adventure",
+  "development": "After adventure, helps Gundren administer mine. Grateful to party forever."
+}

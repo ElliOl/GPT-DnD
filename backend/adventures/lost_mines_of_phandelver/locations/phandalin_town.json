@@ -1,0 +1,151 @@
+{
+  "id": "phandalin_town",
+  "name": "Phandalin",
+  "type": "town",
+  "part": 2,
+  
+  "description": "Frontier town of 40-50 log buildings, some on old fieldstone foundations. Surrounded by ruins from centuries ago when town was larger. Ruined manor on hillside. Children playing, people doing chores. Muddy main street.",
+  
+  "atmosphere": "Rough-and-tumble frontier settlement. Farmers, woodcutters, fur traders, prospectors. Terrorized by Redbrands for past 2 months. No local lord or real authority.",
+  
+  "history": "Founded centuries ago, destroyed by orcs 500 years ago when Wave Echo Cave was lost. Resettled 3-4 years ago by Neverwinter and Waterdeep folk. Now ~100-200 residents.",
+  
+  "current_problem": "Redbrand ruffians control town. Led by mysterious 'Glasstaff'. Extort businesses, bully citizens. Townmaster too intimidated to act.",
+  
+  "locations": {
+    "stonehill_inn": {
+      "owner": "Toblen Stonehill",
+      "description": "Large new roadhouse, fieldstone and timber. 6 rooms for rent. Common room full of locals.",
+      "services": "Food, drink, lodging. Social hub.",
+      "key_npcs": ["toblen_stonehill", "trilena_stonehill", "pip_stonehill"],
+      "rumors": [
+        "Sister Garaele left town wounded (from Narth)",
+        "Daran Edermath is former adventurer (from Elsa)",
+        "Orc raiders on Triboar Trail (from Lanar)",
+        "Redbrands murdered Thel Dendrar, took family (from Trilena)",
+        "Carp found secret tunnel, saw Redbrands (from Pip)",
+        "Redbrands don't hassle Miners Exchange - Halia too tough (from Freda)"
+      ]
+    },
+    
+    "barthens_provisions": {
+      "owner": "Elmar Barthen",
+      "description": "Biggest trading post. Shelves stocked with ordinary goods.",
+      "services": "General goods under 25 gp. No weapons/armor.",
+      "quest": "Pay 10 gp each for wagon delivery. Concerned about Gundren.",
+      "key_npcs": ["elmar_barthen", "ander", "thistle"]
+    },
+    
+    "edermath_orchard": {
+      "owner": "Daran Edermath",
+      "description": "Tidy cottage beside apple orchard.",
+      "key_npc": "Daran Edermath - retired adventurer, half-elf fighter, 100+ years old, Order of Gauntlet member",
+      "information": "Redbrands base under Tresendar Manor",
+      "quest": "Investigate Old Owl Well (undead reported)",
+      "reward": "Order of Gauntlet membership"
+    },
+    
+    "lionshield_coster": {
+      "owner": "Linene Graywind",
+      "description": "Trading post with blue lion sign. Armor and weapons.",
+      "services": "Weapons and armor for sale",
+      "quest": "Recover stolen goods from Cragmaw hideout",
+      "reward": "50 gp + friendship",
+      "key_npc": "Linene - sharp-tongued, age 35, won't sell to Redbrands"
+    },
+    
+    "miners_exchange": {
+      "owner": "Halia Thornton",
+      "description": "Trading post for ore weighing/payment. Unofficial records office.",
+      "key_npc": "Halia - ambitious, calculating, secret Zhentarim agent",
+      "information": "Redbrands have goblin minion who might know Cragmaw Castle location",
+      "quest": "Kill Glasstaff, bring his correspondence",
+      "reward": "100 gp + Zhentarim membership",
+      "ulterior_motive": "Wants to take over Redbrand operation herself"
+    },
+    
+    "alderleaf_farm": {
+      "owner": "Qelline Alderleaf",
+      "description": "Halfling farm. Tidy and well-kept.",
+      "key_npcs": ["qelline_alderleaf", "carp_alderleaf"],
+      "services": "Can stay in hayloft",
+      "information": "Carp found secret tunnel to Redbrand hideout (leads to Area 8)",
+      "quest": "Seek Reidoth the druid in Thundertree for help finding Cragmaw Castle",
+      "reward": "Directions from Reidoth"
+    },
+    
+    "shrine_of_luck": {
+      "deity": "Tymora (goddess of luck)",
+      "priest": "Sister Garaele",
+      "description": "Small shrine made from ruins stones.",
+      "key_npc": "Sister Garaele - zealous young elf, Harper agent",
+      "quest": "Ask Agatha the banshee about Bowgentle's spellbook",
+      "reward": "3 potions of healing + Harper membership",
+      "item": "Jeweled silver comb (gift for Agatha)"
+    },
+    
+    "townmasters_hall": {
+      "official": "Harbin Wester",
+      "description": "Stone walls, pitched roof, bell tower. Notice board outside.",
+      "key_npc": "Harbin - fat, pompous, intimidated by Redbrands",
+      "services": "2-cell jail in cellar",
+      "quest": "Clear orcs from Wyvern Tor",
+      "reward": "100 gp",
+      "sildar_base": "After rescue, Sildar stays here"
+    },
+    
+    "sleeping_giant": {
+      "owner": "Grista (surly female dwarf)",
+      "description": "Rundown tap house at east end of town.",
+      "danger": "Redbrand hangout - encounter triggers here or in street"
+    },
+    
+    "tresendar_manor": {
+      "description": "Ruined manor/castle on east hillside. 7 crumbling towers, upper floors collapsed.",
+      "entrance": "Stone steps to terrace, bronze doors (corroded, collapsed)",
+      "secret": "Redbrand hideout underneath",
+      "danger": "Redbrand base of operations"
+    }
+  },
+  
+  "key_encounters": {
+    "redbrand_ruffians": {
+      "trigger": "After visiting several locations OR confronting at Sleeping Giant",
+      "enemies": "4 Redbrand ruffians",
+      "xp": 400,
+      "tactics": "Insult party, demand they leave town or hand over gear. Attack if refused.",
+      "development": "If 1 survives, flees to Tresendar Manor. Can be captured for info."
+    }
+  },
+  
+  "key_npcs_present": [
+    "sildar_hallwinter",
+    "elmar_barthen",
+    "toblen_stonehill",
+    "linene_graywind",
+    "halia_thornton",
+    "sister_garaele",
+    "daran_edermath",
+    "qelline_alderleaf",
+    "carp_alderleaf",
+    "harbin_wester"
+  ],
+  
+  "redbrands_problem": {
+    "leader": "Glasstaff (secretly Iarno Albrek)",
+    "base": "Under Tresendar Manor",
+    "tactics": "Intimidation, extortion, violence",
+    "recent_atrocity": "Murdered Thel Dendrar, kidnapped wife and kids",
+    "connection": "Work for Black Spider"
+  },
+  
+  "services_available": {
+    "inn": "Stonehill Inn",
+    "general_goods": "Barthen's Provisions",
+    "weapons_armor": "Lionshield Coster",
+    "ore_trading": "Miners Exchange",
+    "healing": "Shrine of Luck (Sister Garaele)",
+    "local_authority": "Townmaster's Hall",
+    "rumors": "Stonehill Inn common room"
+  }
+}

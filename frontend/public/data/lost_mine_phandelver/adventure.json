@@ -1,0 +1,64 @@
+{
+  "name": "Lost Mine of Phandelver",
+  "setting": "Forgotten Realms - Sword Coast",
+  "level_range": "1-5",
+  "player_count": "4-5",
+  "current_part": "part1_goblin_arrows",
+  "current_location": "cragmaw_hideout",
+  "session_number": 1,
+  "party_level": 1,
+  "campaign_summary": "Gundren Rockseeker hired the party to escort supplies to Phandalin. He and Sildar Hallwinter rode ahead.",
+  "active_quests": [
+    {
+      "id": "deliver_supplies",
+      "name": "Deliver Wagon to Barthen's Provisions",
+      "giver": "Gundren Rockseeker",
+      "reward": "10 gp each",
+      "status": "active"
+    }
+  ],
+  "discovered_locations": [
+    "neverwinter",
+    "cragmaw_hideout"
+  ],
+  "met_npcs": [
+    "gundren_rockseeker",
+    "sildar_hallwinter"
+  ],
+  "important_events": [
+    "Party ambushed by goblins on Triboar Trail",
+    "Party ambushed by goblins"
+  ],
+  "black_spider_plot": {
+    "identity_revealed": false,
+    "true_name": "Nezznar",
+    "race": "drow",
+    "gundren_status": "captured",
+    "gundren_location": "cragmaw_castle",
+    "sildar_status": "captured",
+    "sildar_location": "cragmaw_hideout",
+    "wave_echo_location_known": false,
+    "forge_of_spells_found": false
+  },
+  "rockseeker_brothers": {
+    "gundren": {
+      "status": "captured",
+      "location": "cragmaw_castle"
+    },
+    "tharden": {
+      "status": "dead",
+      "location": "wave_echo_cave_entrance"
+    },
+    "nundro": {
+      "status": "prisoner",
+      "location": "wave_echo_cave_area20"
+    }
+  },
+  "faction_standings": {
+    "lords_alliance": 0,
+    "harpers": 0,
+    "order_of_gauntlet": 0,
+    "emerald_enclave": 0,
+    "zhentarim": 0
+  }
+}

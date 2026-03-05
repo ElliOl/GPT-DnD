@@ -1,4 +1,4 @@
-import { Mic, MicOff, Send, Volume2, Square } from 'lucide-react'
+import { Mic, MicOff, Sword, AudioWaveform, Square } from 'lucide-react'
 import { Button } from '@base-ui/react/button'
 import { Input } from '@base-ui/react/input'
 import type { SpeechRecognition } from '../types/speech-recognition'
@@ -55,36 +55,36 @@ export function ChatInput({
         />
         <Button
           onClick={toggleListening}
-          className={`w-[52px] h-[52px] flex items-center justify-center border transition-colors ${
+          className={`w-[52px] h-[52px] flex items-center justify-center transition-colors border-0 bg-transparent ${
             isListening
-              ? 'bg-destructive border-destructive text-destructive-foreground'
-              : 'bg-card border-border text-foreground hover:bg-accent'
+              ? 'text-destructive hover:bg-destructive/10'
+              : 'text-muted-foreground hover:text-foreground hover:bg-accent'
           }`}
           title="Voice input"
         >
           {isListening ? (
-            <MicOff className="w-4 h-4" />
+            <MicOff className="w-6 h-6" />
           ) : (
-            <Mic className="w-4 h-4" />
+            <Mic className="w-6 h-6" />
           )}
         </Button>
         <Button
           onClick={() => setVoiceEnabled(!voiceEnabled)}
-          className={`w-[52px] h-[52px] flex items-center justify-center border transition-colors ${
+          className={`w-[52px] h-[52px] flex items-center justify-center transition-colors border-0 bg-transparent ${
             voiceEnabled
-              ? 'bg-primary border-primary text-primary-foreground'
-              : 'bg-card border-border text-foreground hover:bg-accent'
+              ? 'text-primary hover:bg-primary/10'
+              : 'text-muted-foreground hover:text-foreground hover:bg-accent'
           }`}
           title="Voice narration"
         >
-          <Volume2 className="w-4 h-4" />
+          <AudioWaveform className="w-6 h-6" />
         </Button>
         <Button
           onClick={onSend}
           disabled={loading || !message.trim()}
-          className="w-[52px] h-[52px] flex items-center justify-center bg-primary border-primary text-primary-foreground hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="w-[52px] h-[52px] flex items-center justify-center bg-primary border-primary text-primary-foreground hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-none"
         >
-          <Send className="w-4 h-4" />
+          <Sword className="w-6 h-6" />
         </Button>
       </div>
 
@@ -94,7 +94,7 @@ export function ChatInput({
             onClick={stopAudio}
             className="flex items-center gap-1 text-[10px] text-destructive hover:text-destructive/80 transition-colors bg-transparent border-0 p-0"
           >
-            <Square className="w-3 h-3" />
+            <Square className="w-5 h-5" />
             Stop audio
           </Button>
         </div>
