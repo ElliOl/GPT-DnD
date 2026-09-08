@@ -18,6 +18,7 @@ from backend.services.dm_agent import DMAgent
 from backend.services.ai_factory import AIClientFactory
 from backend.services.tts_service import TTSService
 from backend.routers import (
+    admin,
     adventures,
     characters,
     game,
@@ -50,6 +51,12 @@ async def lifespan(app: FastAPI):
     
     # Import dependencies module to set globals
     import backend.routers.dependencies as deps
+
+    # Mechanical state lives in the database from here on; content stays in JSON.
+    # Creating the tables is idempotent, so this is safe on every boot.
+    from backend.state.db import database_url, init_db
+    init_db()
+    print(f"✅ State database ready: {database_url()}")
     
     # Initialize game engine
     deps.game_engine = GameEngine(data_dir="data")
@@ -129,6 +136,7 @@ app.include_router(characters.router)
 app.include_router(game.router)
 app.include_router(audio.router)
 app.include_router(config.router)
+app.include_router(admin.router)
 
 
 # ============================================================================

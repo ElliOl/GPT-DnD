@@ -50,3 +50,9 @@ audio_cache/
 *.pyc
 *.egg-info/
 .eggs/
+
+# State database (mechanical state; content stays in JSON under backend/adventures/)
+data/*.db
+data/*.db-journal
+data/*.db-wal
+backend/content/generated/
