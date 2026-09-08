@@ -24,6 +24,7 @@ from backend.routers import (
     game,
     audio,
     config,
+    session,
 )
 from game_engine.engine import GameEngine
 
@@ -137,6 +138,7 @@ app.include_router(game.router)
 app.include_router(audio.router)
 app.include_router(config.router)
 app.include_router(admin.router)
+app.include_router(session.router)
 
 
 # ============================================================================

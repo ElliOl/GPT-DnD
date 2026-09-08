@@ -76,5 +76,73 @@
     "knows_gundren_captured": false,
     "knows_about_black_spider": false,
     "knows_about_redbrands": false
+  },
+  "state_bindings": {
+    "_comment": "Optional. Tells the runtime which of this module's own flags mean something mechanically. Read by backend/content/module.py; no engine code knows this adventure exists.",
+    "npcs": [
+      {
+        "npc": "gundren_rockseeker",
+        "field": "status",
+        "flag": "rockseeker_brothers.gundren.status"
+      },
+      {
+        "npc": "gundren_rockseeker",
+        "field": "location_id",
+        "flag": "rockseeker_brothers.gundren.location"
+      },
+      {
+        "npc": "gundren_rockseeker",
+        "field": "importance",
+        "default": 3
+      },
+      {
+        "npc": "nundro_rockseeker",
+        "field": "status",
+        "flag": "rockseeker_brothers.nundro.status"
+      },
+      {
+        "npc": "nundro_rockseeker",
+        "field": "location_id",
+        "flag": "rockseeker_brothers.nundro.location"
+      },
+      {
+        "npc": "sildar_hallwinter",
+        "field": "status",
+        "flag": "black_spider_plot.sildar_status"
+      },
+      {
+        "npc": "sildar_hallwinter",
+        "field": "location_id",
+        "flag": "black_spider_plot.sildar_location"
+      },
+      {
+        "npc": "sildar_hallwinter",
+        "field": "importance",
+        "default": 3
+      },
+      {
+        "npc": "nezznar_black_spider",
+        "field": "importance",
+        "default": 3
+      }
+    ],
+    "canon": [
+      {
+        "flag": "black_spider_plot.true_name",
+        "text": "The Black Spider's true name is {value}.",
+        "entities": [
+          "nezznar_black_spider",
+          "black_spider"
+        ]
+      },
+      {
+        "flag": "rockseeker_brothers.tharden.status",
+        "text": "Tharden Rockseeker is {value}.",
+        "entities": [
+          "tharden_rockseeker"
+        ]
+      }
+    ],
+    "clocks": []
   }
 }

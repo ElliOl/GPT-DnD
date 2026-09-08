@@ -1,26 +1,36 @@
 # Multi-Agent DM — implementation status
 
 Tracks [`MULTI_AGENT_BUILD_PLAN.md`](MULTI_AGENT_BUILD_PLAN.md) against what is actually in
-the repo. Phases 0–2 are done; the game still runs exactly as before while they settle in.
+the repo. Phases 0–3 are done. The legacy game still runs unchanged alongside them.
 
 | Phase | Status | Where |
 |---|---|---|
 | 0 — Fork & scaffold, tracing | done | `backend/agents/`, `backend/orchestrator/` |
 | 1 — State layer | done | `backend/state/`, `scripts/migrate_state.py` |
 | 2 — Rules engine | done | `backend/engine/`, `backend/tests/` |
-| 3 — Intent + Scribe | not started | intent *schema* exists in `engine/intent.py` |
+| 3 — Intent + Scribe + turn loop | done | `agents/intent.py`, `agents/scribe.py`, `orchestrator/turn_loop.py` |
 | 4 — Auditor | not started | `canon_facts` + `relevant_facts()` are the substrate |
 | 5 — Loremaster + vectors | not started | `state/canon.py` has the query surface to swap |
-| 6 — Story Architect | not started | — |
+| 6 — Story Architect | not started | `content/generated/` overlay already loads |
 | 7 — NPC sim + clocks | not started | `npcs`/`clocks` tables and their events exist |
+
+Not in the plan, added because the runtime needed it: a **module contract**, so
+this plays any adventure rather than one. See
+[`MODULE_CONTRACT.md`](MODULE_CONTRACT.md).
 
 ## What changed for the running game
 
-Nothing on the request path. `/api/action` still goes through
-`services/dm_agent.py`. Two things are additive:
+Nothing on the old request path. `/api/action` still goes through
+`services/dm_agent.py` and the legacy `game_engine/`. Everything new is additive:
 
 * the state database is created on startup (`data/campaigns.db`, override with `GAME_DB_URL`);
-* `/api/admin/*` exposes the state inspector, event timeline, traces, cost, and rewind.
+* `/api/admin/*` exposes the state inspector, event timeline, traces, cost, and rewind;
+* `/api/session/*` is the new turn loop, running in parallel with the old one.
+
+Two DM stacks coexist on purpose. The new one is proven turn by turn against real
+play before the old one is retired; when `/api/session/{id}/action` is doing
+everything `/api/action` does, `services/dm_agent.py` and `game_engine/` go, in
+one deletion rather than a long half-migration.
 
 ## The three stores
 
@@ -110,9 +120,38 @@ that degrades in a fixed order — the Architect goes first, the Auditor nearly
 last, and Intent and the Narrator are never dropped. A world that stops moving is
 better than prose nobody checked.
 
+## The turn loop
+
+```
+player text
+  1. Intent      -> structured intent   (ambiguous? ask, and the turn ends)
+  2. resolve()   -> mechanical truth, deltas applied, rolls logged
+  3. packet      -> scene, present NPCs, visible clocks, top-5 canon, resolution
+  4. Narrator    -> prose
+  5. Scribe      -> deltas + canon, scheduled after the response is sent
+```
+
+Every step degrades rather than fails. No Intent agent, or a failing one, falls
+back to a keyword parser. A Scribe over budget is skipped — the engine has
+already written everything mechanical. The Narrator is the only agent the loop
+cannot proceed without.
+
+**Ambiguity is a first-class outcome.** When the Intent agent isn't sure, or names
+a target that isn't in the scene, the turn ends with the DM asking a question. An
+honest question beats a confident wrong action, and it costs one cheap call.
+
+**Scribe drift** is mitigated the way the plan suggests: the Narrator emits a
+hidden `<state_delta>` footer alongside its prose, stripped before display, and
+the Scribe extracts independently. Both go through the same validator. Where the
+two disagree, the disagreement is logged as an `audit_violation` event — not
+acted on, but kept, because that log is what tunes both prompts against real
+cases.
+
 ## Next
 
-Phase 3: the Intent agent (`engine/intent.py` already holds the verb vocabulary
-and the tool schema it fills in), then the Scribe and the turn loop that moves
-`/api/action` onto this stack. Both need a golden-transcript test set built from
-real play logs — worth collecting those now.
+Phase 4, the Auditor, slots between steps 4 and 5 — the loop is shaped for it.
+Then buffered streaming (~800ms, the plan's recommended default) on the way out.
+
+The thing worth starting now regardless: a golden-transcript set from real play.
+`GET /api/admin/campaigns/{id}/events` already gives you turns as structured
+data, so a session played through `/api/session` is a test fixture.

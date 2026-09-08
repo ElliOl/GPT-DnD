@@ -65,6 +65,7 @@ class EventType:
     LOCATION_DISCOVERED = "location_discovered"
     REST = "rest"
     CANON_ESTABLISHED = "canon_established"
+    PLAYER_INPUT = "player_input"
     NARRATION = "narration"
     SCENE_SUMMARY = "scene_summary"
     AUDIT_VIOLATION = "audit_violation"

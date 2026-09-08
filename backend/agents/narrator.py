@@ -39,6 +39,17 @@ Hard rules:
 
 Length: match the moment. Combat beats are one or two sentences. A new location
 gets three to five. Never pad.
+
+After your prose, and only if something in the world changed that the RESOLUTION
+block did not already cover, append a hidden footer. It is stripped before the
+player sees it, so write it for the machine, not for them:
+
+<state_delta>{"deltas": [{"target": "location", "id": "cellar", "op": "set",
+"field": "discovered", "value": true}], "facts": [{"text": "The cellar door is
+unlocked.", "entities": ["cellar"]}], "summary": "The party opened the cellar."}</state_delta>
+
+Never put HP, gold, XP, or spell slots in the footer — those are the engine's.
+If nothing changed, omit the footer entirely.
 """.strip()
 
 

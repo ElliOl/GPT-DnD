@@ -49,6 +49,10 @@ class Campaign(Base):
 
     id: Mapped[str] = mapped_column(String(64), primary_key=True)
     adventure_id: Mapped[str] = mapped_column(String(128))
+    # Where the module was loaded from. An id alone is not enough: a module may
+    # live outside the runtime's search paths, and a campaign must still find it
+    # on the next boot.
+    module_path: Mapped[str | None] = mapped_column(String(1024), nullable=True)
     name: Mapped[str] = mapped_column(String(255), default="")
 
     # In-world clock.
@@ -61,6 +65,12 @@ class Campaign(Base):
     # Root seed for the campaign RNG. Every roll derives from (seed, turn, index)
     # so a replayed session produces byte-identical dice.
     rng_seed: Mapped[int] = mapped_column(Integer, default=0)
+
+    # Module state the runtime doesn't interpret, kept verbatim. A module can
+    # carry any bespoke structure it likes without the engine knowing about it;
+    # `state_bindings` in its adventure.json is how it opts specific flags into
+    # mechanics. Nothing here is ever lost just because the shape was unfamiliar.
+    world_flags: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
 
     created_at: Mapped[_dt.datetime] = mapped_column(DateTime, default=_utcnow)
 
