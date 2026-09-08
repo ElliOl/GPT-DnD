@@ -50,6 +50,25 @@ class ContextPacket:
     clocks: list[str] = field(default_factory=list)
     party: list[str] = field(default_factory=list)
 
+    def to_record(self) -> dict[str, Any]:
+        """What the Narrator was shown, logged for later study.
+
+        The Auditor's job is judging a draft against the canon that was *in
+        front of the Narrator at the time*. Reconstructing that after the fact
+        is guesswork — retrieval is lossy, and canon moves. So it is recorded
+        per turn, and an eval case is exact rather than approximate.
+        """
+        return {
+            "scene": self.scene,
+            "present_npcs": self.present_npcs,
+            "party": self.party,
+            "retrieved_canon": self.canon_facts,
+            "clocks": self.clocks,
+            "resolution_facts": self.resolution_facts,
+            "invalid_reason": self.invalid_reason,
+            "recent_turns": len(self.recent_turns),
+        }
+
     def as_kwargs(self) -> dict[str, Any]:
         """Shaped for ``NarratorAgent.build_messages``."""
         scene = self.scene

@@ -159,6 +159,12 @@ plays this one from a terminal, with `/state`, `/rolls`, `/cost`, `/rewind` and
 Phase 4, the Auditor, slots between steps 4 and 5 — the loop is shaped for it.
 Then buffered streaming (~800ms, the plan's recommended default) on the way out.
 
-The thing worth starting now regardless: a golden-transcript set from real play.
-`GET /api/admin/campaigns/{id}/events` already gives you turns as structured
-data, so a session played through `/api/session` is a test fixture.
+Its eval set is collected during play, not after: `scripts/play.py` records the
+context packet the Narrator saw on every turn, and `/flag`, `/soft` and `/ok`
+capture your verdict — the one thing the logs cannot derive. `/export` writes
+turns with their context, their canon-as-of-that-turn (superseded facts
+included), their traces and their labels. `/labels` tracks progress against the
+plan's rough target of fifty cases.
+
+An export with no labels is a Scribe fixture, not an Auditor one, and the tool
+says so rather than letting you find out in phase 4.

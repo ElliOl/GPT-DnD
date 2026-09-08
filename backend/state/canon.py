@@ -31,6 +31,10 @@ class Fact:
     entities: list[str]
     established_turn: int
     source: str
+    #: Set when a later fact superseded this one. Kept rather than deleted —
+    #: a fact the world walked back is the most interesting kind for continuity
+    #: checking, and dropping it loses the case you most wanted to study.
+    contradicted_by: int | None = None
 
     @classmethod
     def from_row(cls, row: CanonFactRow) -> "Fact":
@@ -40,6 +44,7 @@ class Fact:
             entities=list(row.entities or []),
             established_turn=row.established_turn,
             source=row.source,
+            contradicted_by=row.contradicted_by,
         )
 
 

@@ -52,8 +52,17 @@ Slash commands while you play:
 | `/cost` | spend per agent, and what the budget has dropped |
 | `/events [n]` | the raw event log |
 | `/rewind N` | replay to the end of turn N — dice reproduce exactly |
-| `/export [path]` | write the session out as a transcript fixture |
+| `/export [path]` | write the session out as an eval fixture |
 | `/quit` | |
+
+And, for the phase 4 eval set:
+
+| Command | |
+|---|---|
+| `/flag [n] note` | the DM contradicted something — the last turn, or turn `n` |
+| `/soft [n] note` | a smaller slip; log it, but not worth regenerating |
+| `/ok [n] note` | that looked like a contradiction but was legitimate |
+| `/labels` | how many labelled cases you have |
 
 `--verbose` shows the parsed intent and running spend after each turn, which is
 the fastest way to see when the Intent agent is misreading you.
@@ -96,19 +105,63 @@ Expect a few cents per turn. `/cost` shows the running total and per-turn
 average; `SessionBudget` defaults to a $1.00 ceiling per session and starts
 dropping background agents at 60% — the Narrator and Intent are never dropped.
 
-## Collecting transcripts
+## Collecting the phase 4 eval set
 
-Phases 4 and 5 need real play to tune against — roughly fifty labelled cases for
-the Auditor. Every session already produces them:
+**Playing alone does not produce an Auditor eval set.** It produces a Scribe
+fixture — turns, dice, deltas, all derivable from the logs. The Auditor needs one
+thing the logs cannot derive: *whether the DM was actually wrong*. That has to
+come from you, while you play.
+
+So label as you go:
+
+```
+> I leave to the east
+You take the eastern path out of the clearing.
+
+> /flag canon says the clearing has one exit, north
+  turn 12 flagged (hard) — canon says the clearing has one exit, north
+```
+
+Three verdicts, and you want all three:
+
+* **`/flag`** — a hard contradiction. The turn should have been regenerated.
+* **`/soft`** — a slip worth logging but not worth a retry.
+* **`/ok`** — *this is the one people skip.* A turn that looked like a
+  contradiction and wasn't. The Auditor's known failure mode is false positives:
+  flagging legitimate surprises. Negative examples are what tune that out, and
+  they are the hardest kind to invent afterwards.
+
+Notice something two turns late? `/flag 12 the innkeeper died in session two`
+labels turn 12. Labelling the same turn again replaces the earlier verdict.
+
+`/labels` shows where you are against the plan's rough target of fifty.
+
+### What an export contains
 
 ```
 > /export transcripts/session-01.json
+wrote 34 turns to transcripts/session-01.json
+  9 labelled (6 violations, 3 legitimate) — the plan wants about 50
 ```
 
-That writes each turn with the player's words, the narration, the dice, what the
-engine resolved, and the deltas that were applied — which is exactly the shape a
-Scribe or Auditor test set wants. Play a few sessions, export each one, and the
-next two phases have something honest to be measured against.
+Each turn carries what a reproducible eval case needs:
+
+| Field | Why it's there |
+|---|---|
+| `player`, `narration` | the exchange |
+| `context` | **exactly what the Narrator was shown** — scene, present NPCs, the canon facts retrieval actually returned. Reconstructing this later is guesswork; retrieval is lossy and canon moves |
+| `canon_at_turn` | canon as it stood *entering* that turn — what a continuity check judges against |
+| `label` | your verdict and note |
+| `rolls`, `resolution`, `deltas` | what the engine decided |
+| `traces` | the full prompt and output of every agent call on that turn |
+| `extraction_issues` | where the Narrator's footer and the Scribe disagreed |
+
+Top-level `canon_facts` includes **superseded** facts with their
+`contradicted_by` pointer. A fact the world walked back is the most interesting
+case for continuity checking, so it is kept rather than filtered out.
+
+If you export a session with nothing labelled, the tool says so — that file is a
+Scribe fixture, not an Auditor one.
 
 ## What will feel missing
 

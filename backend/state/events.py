@@ -66,7 +66,9 @@ class EventType:
     REST = "rest"
     CANON_ESTABLISHED = "canon_established"
     PLAYER_INPUT = "player_input"
+    CONTEXT_PACKET = "context_packet"
     NARRATION = "narration"
+    TURN_LABEL = "turn_label"
     SCENE_SUMMARY = "scene_summary"
     AUDIT_VIOLATION = "audit_violation"
 

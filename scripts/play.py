@@ -18,6 +18,16 @@ Type an action and press enter. Slash commands:
     /rewind N       replay to the end of turn N (dice reproduce exactly)
     /export [path]  write the session as a transcript fixture
     /help  /quit
+
+Labelling, for the phase 4 eval set:
+
+    /flag [n] note  the DM contradicted something — the last turn, or turn n
+    /soft [n] note  a smaller slip; worth logging, not worth regenerating
+    /ok   [n] note  that looked like a contradiction but was legitimate
+    /labels         how many labelled cases you have so far
+
+Label as you play. The verdict is the one thing the logs cannot reconstruct,
+and a turn you meant to come back to is a turn you will not remember.
 """
 
 from __future__ import annotations
@@ -209,6 +219,63 @@ def show_events(campaign_id: str, limit: int = 15) -> None:
     print()
 
 
+def do_label(campaign_id: str, verdict: str, note: str, severity: str = "hard") -> None:
+    """Label a turn — the last one, or one you name.
+
+    A leading number targets that turn (``/flag 5 the innkeeper died in session
+    two``), because contradictions are usually noticed a turn or two after they
+    land. Labelling the same turn again replaces the earlier verdict.
+    """
+    from backend.orchestrator.turn_loop import label_turn
+    from backend.state.db import session_scope
+    from backend.state.models import Campaign
+
+    with session_scope() as session:
+        latest = session.get(Campaign, campaign_id).turn_no
+    if latest < 1:
+        print(_c("nothing played yet\n", YELLOW))
+        return
+
+    turn_no = latest
+    head, _, tail = note.partition(" ")
+    if head.isdigit():
+        turn_no, note = int(head), tail.strip()
+        if not 1 <= turn_no <= latest:
+            print(_c(f"turn {turn_no} hasn't been played — turns are 1..{latest}\n", YELLOW))
+            return
+
+    label_turn(campaign_id, turn_no, verdict, note, severity)
+    word = {"violation": "flagged", "ok": "marked legitimate"}[verdict]
+    detail = f" — {note}" if note else ""
+    print(_c(f"  turn {turn_no} {word} ({severity}){detail}\n", GREEN))
+
+
+def show_labels(campaign_id: str) -> None:
+    """Progress toward a usable eval set."""
+    from backend.state.db import session_scope
+    from backend.state.events import EventType, events_for
+
+    with session_scope() as session:
+        labels = events_for(session, campaign_id, types=[EventType.TURN_LABEL])
+
+    print()
+    for e in labels:
+        p = e.payload
+        colour = RED if p.get("verdict") == "violation" else GREEN
+        note = f"  {p.get('note')}" if p.get("note") else ""
+        print(f"  t{e.turn_no:<3} {_c(p.get('verdict', ''), colour):<22} "
+              f"{p.get('severity', ''):<5}{_c(note, DIM)}")
+
+    violations = sum(1 for e in labels if e.payload.get("verdict") == "violation")
+    clean = len(labels) - violations
+    print(_c(f"  {len(labels)} labelled ({violations} violations, {clean} legitimate). "
+             f"The plan suggests about 50 to tune the Auditor.", BOLD))
+    if labels and violations == 0:
+        print(_c("  no violations yet — worth flagging a few deliberately hard "
+                 "cases so the set has both sides", DIM))
+    print()
+
+
 def do_rewind(campaign_id: str, turn_no: int, loop) -> None:
     from backend.state.db import session_scope
     from backend.state.events import replay_to
@@ -220,46 +287,106 @@ def do_rewind(campaign_id: str, turn_no: int, loop) -> None:
 
 
 def export_transcript(campaign_id: str, path: Path) -> None:
-    """Write the session as a fixture: turns in, deltas and facts out.
+    """Write the session as an eval fixture.
 
-    This is the shape the Scribe and Auditor test sets want — a real transcript
-    with what the engine actually decided beside it.
+    Each turn carries three things an eval needs and a transcript alone does not:
+
+    * ``context`` — exactly what the Narrator was shown, retrieved canon
+      included, so a case is reproducible rather than reconstructed;
+    * ``label`` — your verdict, the one thing the logs cannot derive;
+    * ``canon_at_turn`` — canon as it stood *before* this turn, superseded facts
+      included, which is what a continuity check actually judges against.
     """
     from backend.state.canon import all_facts
     from backend.state.db import session_scope
     from backend.state.events import EventType, events_for
+    from backend.state.models import TraceRow
 
     with session_scope() as session:
         events = events_for(session, campaign_id)
+        # include_contradicted: a fact the world later walked back is the case
+        # you most want in the set, not the one to hide.
         facts = [
-            {"text": f.text, "turn": f.established_turn, "source": f.source}
-            for f in all_facts(session, campaign_id)
+            {"id": f.id, "text": f.text, "turn": f.established_turn, "source": f.source,
+             "entities": f.entities, "contradicted_by": f.contradicted_by}
+            for f in all_facts(session, campaign_id, include_contradicted=True)
         ]
+        traces = [
+            {"turn_no": t.turn_no, "agent": t.agent, "model": t.model,
+             "latency_ms": t.latency_ms, "cost_usd": round(t.cost_usd, 6),
+             "prompt": t.prompt, "output": t.output}
+            for t in session.query(TraceRow).filter_by(campaign_id=campaign_id).all()
+        ]
+
+    def blank(turn_no: int) -> dict:
+        return {"turn_no": turn_no, "player": "", "narration": "", "rolls": [],
+                "resolution": None, "deltas": [], "context": None, "label": None,
+                "extraction_issues": []}
 
     turns: dict[int, dict] = {}
     for e in events:
-        turn = turns.setdefault(
-            e.turn_no, {"turn_no": e.turn_no, "player": "", "narration": "",
-                        "rolls": [], "resolution": None, "deltas": []}
-        )
+        turn = turns.setdefault(e.turn_no, blank(e.turn_no))
         if e.type == EventType.PLAYER_INPUT:
             turn["player"] = e.payload.get("text", "")
         elif e.type == EventType.NARRATION:
             turn["narration"] = e.payload.get("text", "")
+            turn["clarifying"] = bool(e.payload.get("clarifying"))
+        elif e.type == EventType.CONTEXT_PACKET:
+            turn["context"] = {k: v for k, v in e.payload.items() if k != "deltas"}
         elif e.type == EventType.ROLL and e.payload.get("roll"):
             turn["rolls"].append(e.payload["roll"])
         elif e.type == EventType.RESOLUTION:
             turn["resolution"] = {k: v for k, v in e.payload.items() if k != "deltas"}
+        elif e.type == EventType.TURN_LABEL:
+            turn["label"] = {k: v for k, v in e.payload.items() if k != "deltas"}
+        elif e.type == EventType.AUDIT_VIOLATION:
+            turn["extraction_issues"].append(
+                {k: v for k, v in e.payload.items() if k != "deltas"}
+            )
         turn["deltas"].extend(e.payload.get("deltas", []))
+
+    # Canon as it stood entering each turn — what a continuity check judges against.
+    for turn_no, turn in turns.items():
+        turn["canon_at_turn"] = [
+            f for f in facts
+            if f["turn"] < turn_no
+            and (f["contradicted_by"] is None or turn_no <= _contradicted_at(facts, f))
+        ]
+        turn["traces"] = [t for t in traces if t["turn_no"] == turn_no]
+
+    ordered = [turns[k] for k in sorted(turns) if k > 0]
+    labelled = [t for t in ordered if t["label"]]
+    violations = [t for t in labelled if t["label"].get("verdict") == "violation"]
 
     payload = {
         "campaign_id": campaign_id,
         "exported_at": datetime.now(timezone.utc).isoformat(),
-        "turns": [turns[k] for k in sorted(turns)],
+        "counts": {
+            "turns": len(ordered),
+            "labelled": len(labelled),
+            "violations": len(violations),
+            "legitimate": len(labelled) - len(violations),
+        },
+        "turns": ordered,
         "canon_facts": facts,
     }
+    path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, indent=2, default=str), encoding="utf-8")
-    print(_c(f"wrote {len(payload['turns'])} turns to {path}\n", GREEN))
+
+    c = payload["counts"]
+    print(_c(f"wrote {c['turns']} turns to {path}", GREEN))
+    print(_c(f"  {c['labelled']} labelled ({c['violations']} violations, "
+             f"{c['legitimate']} legitimate) — the plan wants about 50", DIM))
+    if c["turns"] and not c["labelled"]:
+        print(_c("  nothing labelled: this is a Scribe fixture, not yet an "
+                 "Auditor one. Use /flag and /ok while you play.", YELLOW))
+    print()
+
+
+def _contradicted_at(facts: list[dict], fact: dict) -> int:
+    """The turn on which ``fact`` was superseded, or a turn beyond any played."""
+    successor = next((f for f in facts if f["id"] == fact["contradicted_by"]), None)
+    return successor["turn"] if successor else 10**9
 
 
 HELP = __doc__.split("Slash commands:")[1].strip()
@@ -304,6 +431,14 @@ async def play(args: argparse.Namespace) -> int:
                     show_cost(args.campaign_id, loop)
                 elif command == "events":
                     show_events(args.campaign_id, int(rest) if rest.isdigit() else 15)
+                elif command == "flag":
+                    do_label(args.campaign_id, "violation", rest, "hard")
+                elif command == "soft":
+                    do_label(args.campaign_id, "violation", rest, "soft")
+                elif command == "ok":
+                    do_label(args.campaign_id, "ok", rest, "soft")
+                elif command == "labels":
+                    show_labels(args.campaign_id)
                 elif command == "rewind":
                     if not rest.isdigit():
                         print(_c("usage: /rewind <turn number>\n", YELLOW))

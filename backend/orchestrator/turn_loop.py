@@ -42,6 +42,32 @@ from . import context_builder
 from .budget import SessionBudget
 
 
+def label_turn(
+    campaign_id: str, turn_no: int, verdict: str, note: str = "", severity: str = "hard"
+) -> None:
+    """Record a human judgement about a turn.
+
+    This is the only thing in the system that cannot be derived from the logs:
+    whether the DM actually got it wrong. The Auditor's known failure mode is
+    false positives — flagging legitimate surprises as contradictions — so the
+    ``ok`` verdict matters as much as ``violation``. A turn that *looked* like a
+    contradiction and wasn't is the hardest negative example to synthesise and
+    the most valuable one to have.
+
+    Verdicts: ``violation`` (the DM contradicted established canon or state) or
+    ``ok`` (it looked wrong but was legitimate). Severity is ``hard`` — the turn
+    should have been regenerated — or ``soft``, worth logging and shipping.
+    """
+    if verdict not in ("violation", "ok"):
+        raise ValueError(f"verdict must be 'violation' or 'ok', got {verdict!r}")
+    with session_scope() as session:
+        record_event(
+            session, campaign_id, EventType.TURN_LABEL,
+            {"verdict": verdict, "note": note, "severity": severity, "labels_turn": turn_no},
+            source="admin", turn_no=turn_no,
+        )
+
+
 @dataclass
 class TurnResult:
     """What the turn produced. ``narration`` is the only part players see."""
@@ -262,6 +288,10 @@ class TurnLoop:
         with session_scope() as session:
             packet = context_builder.build_packet(
                 session, campaign_id, self.module, player_message, resolution
+            )
+            record_event(
+                session, campaign_id, EventType.CONTEXT_PACKET,
+                packet.to_record(), source="engine", turn_no=turn_no,
             )
 
         raw_prose = await self.narrator.run(context, **packet.as_kwargs())
