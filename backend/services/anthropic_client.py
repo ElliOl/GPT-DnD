@@ -80,6 +80,7 @@ class AnthropicClient(BaseAIClient):
         max_tokens: int = 2000,
         context_type: Optional[str] = None,
         game_state: Optional[Dict[str, Any]] = None,
+        model: Optional[str] = None,
     ) -> AIResponse:
         """
         Create message with Claude
@@ -219,7 +220,7 @@ class AnthropicClient(BaseAIClient):
         # Call Claude
         # Build kwargs carefully - tools must be passed correctly
         kwargs = {
-            "model": self.model,
+            "model": model or self.model,
             "max_tokens": max_tokens,
             "temperature": temperature,
             "messages": anthropic_messages,

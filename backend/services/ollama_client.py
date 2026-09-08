@@ -122,6 +122,7 @@ class OllamaClient(BaseAIClient):
         system_prompt: Optional[str] = None,
         temperature: float = 0.7,
         max_tokens: int = 2000,
+        model: Optional[str] = None,
     ) -> AIResponse:
         """Create message with Ollama"""
         
@@ -143,7 +144,7 @@ class OllamaClient(BaseAIClient):
         response = await self.client.post(
             "/api/generate",
             json={
-                "model": self.model,
+                "model": model or self.model,
                 "prompt": prompt,
                 "stream": False,
                 "options": {

@@ -41,6 +41,7 @@ class OpenAIClient(BaseAIClient):
         system_prompt: Optional[str] = None,
         temperature: float = 0.7,
         max_tokens: int = 2000,
+        model: Optional[str] = None,
     ) -> AIResponse:
         """Create message with OpenAI"""
 
@@ -72,7 +73,7 @@ class OpenAIClient(BaseAIClient):
 
         # Call OpenAI
         kwargs = {
-            "model": self.model,
+            "model": model or self.model,
             "messages": openai_messages,
             "temperature": temperature,
             "max_tokens": max_tokens,

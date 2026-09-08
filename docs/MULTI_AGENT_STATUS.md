@@ -147,6 +147,13 @@ two disagree, the disagreement is logged as an `audit_violation` event — not
 acted on, but kept, because that log is what tunes both prompts against real
 cases.
 
+## Playing it
+
+`docs/PLAYING.md` covers both stacks. The short version: the web UI still plays
+the legacy DM, and `python scripts/play.py --module <id> --campaign-id <id>`
+plays this one from a terminal, with `/state`, `/rolls`, `/cost`, `/rewind` and
+`/export` while you go.
+
 ## Next
 
 Phase 4, the Auditor, slots between steps 4 and 5 — the loop is shaped for it.

@@ -18,7 +18,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Any, Generic, TypeVar
 
-from ..orchestrator.budget import AGENT_MODELS, SessionBudget
+from ..orchestrator.budget import SessionBudget, route_model
 from ..orchestrator.trace import trace
 from ..services.ai_client_base import AIResponse, BaseAIClient, Message, ToolDefinition
 
@@ -107,7 +107,18 @@ class Agent(ABC, Generic[T]):
 
     @property
     def resolved_model(self) -> str:
-        return self.model or AGENT_MODELS.get(self.name, "claude-haiku-4-5")
+        """The model this agent will actually run on.
+
+        An explicit ``model`` on the subclass or constructor wins. Otherwise the
+        per-agent assignment applies, but only where the configured provider
+        understands those names — see :func:`route_model`. Whatever this returns
+        is what gets sent *and* what the trace records, so cost figures describe
+        the call that happened rather than the one the table wanted.
+        """
+        if self.model:
+            return self.model
+        client_default = getattr(self.ai_client, "model", None)
+        return route_model(self.name, client_default) or "unknown"
 
     async def run(self, context: AgentContext | None = None, **kwargs: Any) -> T:
         """Call the model, validate the result, trace everything.
@@ -146,6 +157,7 @@ class Agent(ABC, Generic[T]):
                         system_prompt=system,
                         temperature=self.temperature,
                         max_tokens=self.max_tokens,
+                        model=self.resolved_model,
                     )
                 except Exception as exc:
                     last_error = exc

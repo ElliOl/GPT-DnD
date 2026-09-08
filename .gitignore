@@ -56,3 +56,6 @@ data/*.db
 data/*.db-journal
 data/*.db-wal
 backend/content/generated/
+
+# Play transcripts (exported fixtures may contain personal campaign content)
+transcripts/

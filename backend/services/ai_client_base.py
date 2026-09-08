@@ -63,6 +63,7 @@ class BaseAIClient(ABC):
         system_prompt: Optional[str] = None,
         temperature: float = 0.7,
         max_tokens: int = 2000,
+        model: Optional[str] = None,
     ) -> AIResponse:
         """
         Create a message with optional tool calling
@@ -73,6 +74,9 @@ class BaseAIClient(ABC):
             system_prompt: System instructions
             temperature: Randomness (0-1)
             max_tokens: Max response length
+            model: Override the client's default model for this call. Used by the
+                multi-agent stack to route cheap agents to cheap models; ignored
+                by callers that only ever want one model.
 
         Returns:
             AIResponse with text and/or tool calls

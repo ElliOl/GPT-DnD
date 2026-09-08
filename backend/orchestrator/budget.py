@@ -37,6 +37,24 @@ AGENT_MODELS: dict[str, str] = {
 DEGRADATION_ORDER = ["architect", "npc_sim", "faction", "loremaster", "scribe", "auditor"]
 
 
+def route_model(agent: str, client_model: str | None) -> str | None:
+    """Which model this agent should actually run on.
+
+    Per-agent routing only makes sense when the configured provider is one whose
+    model names we know. Point the app at Ollama or LM Studio and every agent
+    keeps the client's own model — sending ``claude-haiku-4-5`` to a local
+    llama.cpp server would just fail. Set ``AGENT_MODEL_ROUTING=off`` to run
+    everything on one model regardless.
+    """
+    import os
+
+    if os.getenv("AGENT_MODEL_ROUTING", "on").lower() in ("off", "0", "false"):
+        return client_model
+    if client_model and not client_model.startswith("claude"):
+        return client_model
+    return AGENT_MODELS.get(agent, client_model)
+
+
 def estimate_cost(model: str, input_tokens: int, output_tokens: int) -> float:
     rate_in, rate_out = PRICING.get(model, (0.0, 0.0))
     return (input_tokens * rate_in + output_tokens * rate_out) / 1_000_000
