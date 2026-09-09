@@ -256,6 +256,9 @@ class TraceRow(Base):
     latency_ms: Mapped[int] = mapped_column(Integer, default=0)
     input_tokens: Mapped[int] = mapped_column(Integer, default=0)
     output_tokens: Mapped[int] = mapped_column(Integer, default=0)
+    # Cached input is billed, and the API reports it apart from input_tokens.
+    cache_write_tokens: Mapped[int] = mapped_column(Integer, default=0)
+    cache_read_tokens: Mapped[int] = mapped_column(Integer, default=0)
     cost_usd: Mapped[float] = mapped_column(Float, default=0.0)
     prompt: Mapped[str] = mapped_column(Text, default="")
     output: Mapped[str] = mapped_column(Text, default="")

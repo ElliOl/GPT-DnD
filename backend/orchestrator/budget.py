@@ -55,9 +55,27 @@ def route_model(agent: str, client_model: str | None) -> str | None:
     return AGENT_MODELS.get(agent, client_model)
 
 
-def estimate_cost(model: str, input_tokens: int, output_tokens: int) -> float:
+#: Cached input is billed off the base input rate: writing the cache costs a
+#: premium, reading it is cheap. Ignoring both made a cached call look nearly
+#: free, which is exactly backwards for the agent with the largest prompt.
+CACHE_WRITE_MULTIPLIER = 1.25
+CACHE_READ_MULTIPLIER = 0.10
+
+
+def estimate_cost(
+    model: str,
+    input_tokens: int,
+    output_tokens: int,
+    cache_write_tokens: int = 0,
+    cache_read_tokens: int = 0,
+) -> float:
     rate_in, rate_out = PRICING.get(model, (0.0, 0.0))
-    return (input_tokens * rate_in + output_tokens * rate_out) / 1_000_000
+    return (
+        input_tokens * rate_in
+        + output_tokens * rate_out
+        + cache_write_tokens * rate_in * CACHE_WRITE_MULTIPLIER
+        + cache_read_tokens * rate_in * CACHE_READ_MULTIPLIER
+    ) / 1_000_000
 
 
 class BudgetExceeded(RuntimeError):
@@ -91,8 +109,18 @@ class SessionBudget:
     def fraction_used(self) -> float:
         return self.spent_usd / self.limit_usd if self.limit_usd else 1.0
 
-    def record(self, agent: str, model: str, input_tokens: int, output_tokens: int) -> float:
-        cost = estimate_cost(model, input_tokens, output_tokens)
+    def record(
+        self,
+        agent: str,
+        model: str,
+        input_tokens: int,
+        output_tokens: int,
+        cache_write_tokens: int = 0,
+        cache_read_tokens: int = 0,
+    ) -> float:
+        cost = estimate_cost(
+            model, input_tokens, output_tokens, cache_write_tokens, cache_read_tokens
+        )
         self.spent_usd += cost
         self.per_agent[agent] = self.per_agent.get(agent, 0.0) + cost
         return cost

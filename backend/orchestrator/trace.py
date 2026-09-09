@@ -31,13 +31,20 @@ class TraceRecord:
     output: str = ""
     input_tokens: int = 0
     output_tokens: int = 0
+    #: Billed separately from ``input_tokens`` by the API, so they have to be
+    #: carried separately here too or a cached call reads as nearly free.
+    cache_write_tokens: int = 0
+    cache_read_tokens: int = 0
     latency_ms: int = 0
     error: str | None = None
     meta: dict[str, Any] = field(default_factory=dict)
 
     @property
     def cost_usd(self) -> float:
-        return estimate_cost(self.model, self.input_tokens, self.output_tokens)
+        return estimate_cost(
+            self.model, self.input_tokens, self.output_tokens,
+            self.cache_write_tokens, self.cache_read_tokens,
+        )
 
 
 #: Kept in memory as well as on disk so the admin UI can show a live turn without
@@ -67,6 +74,8 @@ def write(record: TraceRecord, *, persist: bool = True) -> None:
                     latency_ms=record.latency_ms,
                     input_tokens=record.input_tokens,
                     output_tokens=record.output_tokens,
+                    cache_write_tokens=record.cache_write_tokens,
+                    cache_read_tokens=record.cache_read_tokens,
                     cost_usd=record.cost_usd,
                     prompt=record.prompt[:20000],
                     output=record.output[:20000],

@@ -41,6 +41,14 @@ _learned_no_sampling_models: set[str] = set()
 _SAMPLING_PARAMS = ("temperature", "top_p", "top_k")
 
 
+def _token_count(usage: Any, field: str) -> int:
+    """A usage field as an int, or 0. Older SDKs omit the cache fields
+    entirely and test doubles hand back whatever they like, so anything
+    that isn't a real number counts as none."""
+    value = getattr(usage, field, 0)
+    return value if isinstance(value, int) else 0
+
+
 def _supports_temperature(model: str) -> bool:
     return model not in _KNOWN_NO_SAMPLING_MODELS and model not in _learned_no_sampling_models
 
@@ -224,36 +232,42 @@ class AnthropicClient(BaseAIClient):
         # Build system messages with caching
         # Use provided system prompt or default to cached DM prompt
         final_system_prompt = system_prompt or self.dm_system_prompt
-        
-        # Load additional rules (user-defined rules that supplement core D&D rules)
-        additional_rules = self._load_additional_rules()
-        
-        # Combine core D&D rules with additional rules
-        combined_dnd_rules = self.dnd_rules
-        if additional_rules and additional_rules.strip():
-            combined_dnd_rules = f"{self.dnd_rules}\n\n## ADDITIONAL RULES (User-Defined):\n{additional_rules}"
-        
+
+        # The D&D rules belong to the DM persona, not to every caller. An agent
+        # that brought its own system prompt gets exactly that — the Intent
+        # parser has no use for combat rules, and appending them was both spend
+        # and a source of instructions that contradict its actual job.
+        combined_dnd_rules = ""
+        if system_prompt is None:
+            additional_rules = self._load_additional_rules()
+            combined_dnd_rules = self.dnd_rules
+            if additional_rules and additional_rules.strip():
+                combined_dnd_rules = f"{self.dnd_rules}\n\n## ADDITIONAL RULES (User-Defined):\n{additional_rules}"
+
         # Format game state if provided
         game_state_text = ""
         if game_state:
             game_state_text = f"\n\nCURRENT GAME STATE:\n{self._format_game_state(game_state)}"
         
-        # Cache DM prompt if caching enabled
-        # Note: When using tools, system as array might cause issues, so use string format
-        if self.enable_caching and not anthropic_tools:
-            # When caching without tools, use array of message blocks
+        # Cache the stable prefix. Tools used to be excluded here on the belief
+        # that an array `system` breaks alongside them; it doesn't — verified
+        # against the live API. Caching simply won't engage for prompts under
+        # the model's minimum cacheable size, which is its own affair.
+        if self.enable_caching:
+            # When caching, use array of message blocks
             system_blocks = [
                 {
                     "type": "text",
                     "text": final_system_prompt,
                     "cache_control": {"type": "ephemeral"}
-                },
-                {
+                }
+            ]
+            if combined_dnd_rules:
+                system_blocks.append({
                     "type": "text",
                     "text": combined_dnd_rules,
                     "cache_control": {"type": "ephemeral"}
-                }
-            ]
+                })
             # Add game state (don't cache - changes each turn)
             if game_state_text:
                 system_blocks.append({
@@ -262,10 +276,9 @@ class AnthropicClient(BaseAIClient):
                 })
             system_param = system_blocks
         else:
-            # No caching or using tools - combine into single string
-            # (Tools work better with string system parameter)
-            combined_prompt = f"{final_system_prompt}\n\n{combined_dnd_rules}{game_state_text}"
-            system_param = combined_prompt
+            # Caching off — one string, same content.
+            parts = [p for p in (final_system_prompt, combined_dnd_rules) if p]
+            system_param = "\n\n".join(parts) + game_state_text
 
         # Call Claude
         # Build kwargs carefully - tools must be passed correctly
@@ -320,6 +333,11 @@ class AnthropicClient(BaseAIClient):
             usage={
                 "input_tokens": response.usage.input_tokens,
                 "output_tokens": response.usage.output_tokens,
+                # Billed, and reported separately from input_tokens — dropping
+                # these made every cached call look almost free. The Narrator's
+                # whole system prefix was invisible to /cost.
+                "cache_write_tokens": _token_count(response.usage, "cache_creation_input_tokens"),
+                "cache_read_tokens": _token_count(response.usage, "cache_read_input_tokens"),
             },
         )
 

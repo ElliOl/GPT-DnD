@@ -167,12 +167,17 @@ class Agent(ABC, Generic[T]):
                 usage = response.usage or {}
                 record.input_tokens = int(usage.get("input_tokens", 0))
                 record.output_tokens = int(usage.get("output_tokens", 0))
+                cache_write = int(usage.get("cache_write_tokens", 0))
+                cache_read = int(usage.get("cache_read_tokens", 0))
+                record.cache_write_tokens = cache_write
+                record.cache_read_tokens = cache_read
                 record.output = response.text or json.dumps(
                     [c.parameters for c in response.tool_calls], default=str
                 )
                 if context.budget is not None:
                     context.budget.record(
-                        self.name, self.resolved_model, record.input_tokens, record.output_tokens
+                        self.name, self.resolved_model, record.input_tokens,
+                        record.output_tokens, cache_write, cache_read,
                     )
 
                 try:
