@@ -175,9 +175,13 @@ for tool-using agents would cut cost. Caching does work alongside tools
 Scribe's prompts are far below the model's minimum cacheable size, so it
 changes nothing for them today. Measure before promising a saving.
 
-**Unverified:** whether the `PRICING` table in `orchestrator/budget.py`
-($2/$10 Sonnet 5, $1/$5 Haiku 4.5) matches the current published rate card.
-Everything above scales with it. Check it.
+**Rates verified** against the published pricing page on 2026-09-09: Opus 5
+$5/$25, Sonnet 5 $2/$10, Haiku 4.5 $1/$5 — all three match `PRICING` exactly,
+and the cache multipliers match the published cache columns (1.25x write at the
+five-minute tier, 0.10x read). Two things to keep in view: the write premium
+rises to 2x for a one-hour cache TTL, so changing the `cache_control` TTL means
+changing the multiplier; and Fable 5 / Mythos 5 are absent from the table, so
+anything routed to them would report as free.
 
 ### The real cost lever is the bug list
 

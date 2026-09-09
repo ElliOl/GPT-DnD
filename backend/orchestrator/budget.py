@@ -11,9 +11,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-#: USD per 1M tokens, as published for the Anthropic API. Providers configured
-#: through ``services/ai_factory`` that aren't listed here cost 0 by this table —
-#: add a row rather than guessing.
+#: USD per 1M tokens (input, output), as published for the Anthropic API.
+#: Verified against the pricing page 2026-09-09. Providers configured through
+#: ``services/ai_factory`` that aren't listed here cost 0 by this table — add a
+#: row rather than guessing. Notably absent, and so silently free if anything
+#: ever routes to them: Claude Fable 5 and Mythos 5 ($10 in / $50 out).
 PRICING: dict[str, tuple[float, float]] = {
     "claude-opus-5": (5.00, 25.00),
     "claude-sonnet-5": (2.00, 10.00),
@@ -58,6 +60,10 @@ def route_model(agent: str, client_model: str | None) -> str | None:
 #: Cached input is billed off the base input rate: writing the cache costs a
 #: premium, reading it is cheap. Ignoring both made a cached call look nearly
 #: free, which is exactly backwards for the agent with the largest prompt.
+#:
+#: The write premium depends on the cache's TTL — 1.25x at five minutes, 2x at
+#: an hour. ``services/anthropic_client`` sends ``{"type": "ephemeral"}`` with
+#: no TTL, which is the five-minute tier. Change one and this must follow.
 CACHE_WRITE_MULTIPLIER = 1.25
 CACHE_READ_MULTIPLIER = 0.10
 
