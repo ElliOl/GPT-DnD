@@ -91,6 +91,7 @@ class AnthropicClient(BaseAIClient):
         context_type: Optional[str] = None,
         game_state: Optional[Dict[str, Any]] = None,
         model: Optional[str] = None,
+        force_tool: Optional[str] = None,
     ) -> AIResponse:
         """
         Create message with Claude
@@ -245,6 +246,8 @@ class AnthropicClient(BaseAIClient):
         # Add tools if provided
         if anthropic_tools:
             kwargs["tools"] = anthropic_tools
+            if force_tool:
+                kwargs["tool_choice"] = {"type": "tool", "name": force_tool}
 
         response = await self.client.messages.create(**kwargs)
 

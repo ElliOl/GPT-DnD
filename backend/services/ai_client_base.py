@@ -64,6 +64,7 @@ class BaseAIClient(ABC):
         temperature: float = 0.7,
         max_tokens: int = 2000,
         model: Optional[str] = None,
+        force_tool: Optional[str] = None,
     ) -> AIResponse:
         """
         Create a message with optional tool calling
@@ -77,6 +78,14 @@ class BaseAIClient(ABC):
             model: Override the client's default model for this call. Used by the
                 multi-agent stack to route cheap agents to cheap models; ignored
                 by callers that only ever want one model.
+            force_tool: Name of a tool in `tools` the model MUST call, rather than
+                choosing to respond with plain text instead. Used by agents whose
+                only valid output is a tool call (Intent, Scribe) — without it,
+                the model is always free to just answer conversationally, which
+                for those agents is a failure, not an alternative. Providers or
+                models that cannot force tool choice should fall back to their
+                normal "auto" behavior rather than erroring; the caller already
+                retries and degrades when a forced call still doesn't arrive.
 
         Returns:
             AIResponse with text and/or tool calls

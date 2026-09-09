@@ -42,6 +42,7 @@ class OpenAIClient(BaseAIClient):
         temperature: float = 0.7,
         max_tokens: int = 2000,
         model: Optional[str] = None,
+        force_tool: Optional[str] = None,
     ) -> AIResponse:
         """Create message with OpenAI"""
 
@@ -81,7 +82,9 @@ class OpenAIClient(BaseAIClient):
 
         if functions:
             kwargs["tools"] = functions
-            kwargs["tool_choice"] = "auto"
+            kwargs["tool_choice"] = (
+                {"type": "function", "function": {"name": force_tool}} if force_tool else "auto"
+            )
 
         response = await self.client.chat.completions.create(**kwargs)
 

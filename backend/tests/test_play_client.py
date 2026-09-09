@@ -350,3 +350,72 @@ async def test_relabelling_a_turn_replaces_the_verdict(played, tmp_path):
 async def test_labelling_a_turn_that_has_not_happened(played, capsys):
     play.do_label("hollow-1", "violation", "99 way ahead of myself")
     assert "hasn't been played" in capsys.readouterr().out
+
+
+# --------------------------------------------------------------------------
+# Forcing tool use — the model must not be free to just chat instead
+# --------------------------------------------------------------------------
+
+async def test_a_schema_required_agent_forces_its_tool():
+    """Intent and Scribe have no valid text-only output — the model must not be
+    allowed to just respond conversationally instead of calling the tool."""
+    from backend.agents.intent import IntentAgent
+
+    class Client(ScriptedClient):
+        async def create_message(self, messages, tools=None, system_prompt=None, **kwargs):
+            self.last_force_tool = kwargs.get("force_tool")
+            return await super().create_message(messages, tools, system_prompt, **kwargs)
+
+    client = Client()
+    client.queue_tool("record_intent", {"verb": "look"})
+    agent = IntentAgent(client)
+    await agent.run(player_message="look around")
+
+    assert client.last_force_tool == "record_intent"
+
+
+async def test_the_narrator_never_forces_a_tool():
+    """The Narrator has no tool_schema — prose is its only valid output."""
+    from backend.agents.narrator import NarratorAgent
+
+    class Client(ScriptedClient):
+        async def create_message(self, messages, tools=None, system_prompt=None, **kwargs):
+            self.last_force_tool = kwargs.get("force_tool")
+            return await super().create_message(messages, tools, system_prompt, **kwargs)
+
+    client = Client()
+    client.queue_text("A quiet room.")
+    agent = NarratorAgent(client)
+    await agent.run(player_message="look around")
+
+    assert client.last_force_tool is None
+
+
+def test_anthropic_client_translates_force_tool_to_tool_choice():
+    """Anthropic's forced-tool shape: {"type": "tool", "name": ...}."""
+    import inspect
+
+    from backend.services.anthropic_client import AnthropicClient
+
+    source = inspect.getsource(AnthropicClient.create_message)
+    assert '"type": "tool", "name": force_tool' in source
+
+
+def test_openai_client_translates_force_tool_to_tool_choice():
+    """OpenAI's forced-tool shape: {"type": "function", "function": {"name": ...}}."""
+    import inspect
+
+    from backend.services.openai_client import OpenAIClient
+
+    source = inspect.getsource(OpenAIClient.create_message)
+    assert '"type": "function", "function": {"name": force_tool}' in source
+
+
+async def test_ollama_accepts_force_tool_without_erroring():
+    """Ollama has no reliable forced-choice mechanism; it must not reject the
+    parameter callers now always pass for schema-required agents."""
+    from backend.services.ollama_client import OllamaClient
+
+    client = OllamaClient(model="phi3:mini")
+    sig_params = __import__("inspect").signature(client.create_message).parameters
+    assert "force_tool" in sig_params
