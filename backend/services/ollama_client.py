@@ -123,8 +123,15 @@ class OllamaClient(BaseAIClient):
         temperature: float = 0.7,
         max_tokens: int = 2000,
         model: Optional[str] = None,
+        force_tool: Optional[str] = None,
     ) -> AIResponse:
-        """Create message with Ollama"""
+        """Create message with Ollama.
+
+        force_tool is accepted for interface compatibility but not enforced —
+        Ollama's tool support varies by model and generally has no reliable
+        forced-choice mechanism. Callers already retry and degrade when a
+        forced call doesn't arrive, so this is a safe no-op rather than a gap.
+        """
         
         # Skip tool formatting for speed (tools disabled for Ollama)
         # This significantly reduces prompt size and generation time

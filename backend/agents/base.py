@@ -158,6 +158,7 @@ class Agent(ABC, Generic[T]):
                         temperature=self.temperature,
                         max_tokens=self.max_tokens,
                         model=self.resolved_model,
+                        force_tool=self.tool_schema["name"] if self.tool_schema else None,
                     )
                 except Exception as exc:
                     last_error = exc

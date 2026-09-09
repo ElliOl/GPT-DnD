@@ -163,6 +163,29 @@ case for continuity checking, so it is kept rather than filtered out.
 If you export a session with nothing labelled, the tool says so — that file is a
 Scribe fixture, not an Auditor one.
 
+## "scribe skipped" / "intent fell back to keywords"
+
+You'll see these in the terminal:
+
+```
+⚠️  scribe skipped: scribe failed after 2 attempts: scribe: expected a record_changes tool call
+⚠️  intent fell back to keywords: intent failed after 2 attempts: intent: expected a record_intent tool call
+```
+
+This means the model responded with plain conversational text instead of
+calling the required tool — most often on a compound or unusual turn (stating
+something and asking a question in the same message, an OOC aside mixed into
+in-character text). It's rarer now: the client forces tool use for any agent
+whose only valid output is structured data (Intent, Scribe), so this should
+mostly show up on genuinely ambiguous input rather than routinely.
+
+It's not silent failure. Intent falls back to a conservative keyword parser —
+worse at nuance, but it keeps the turn moving rather than guessing a mechanic.
+Scribe skipping means canon/deltas from *that turn* aren't extracted; the
+engine's own deltas (HP, dice, etc.) are unaffected, since those never went
+through the Scribe. If you're seeing it often, `--verbose` shows the parsed
+intent per turn so you can see what it fell back to.
+
 ## What will feel missing
 
 Being straight about it, since you'll notice within a turn or two:
