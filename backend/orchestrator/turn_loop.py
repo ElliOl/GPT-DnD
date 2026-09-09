@@ -139,10 +139,7 @@ class TurnLoop:
             )
             roster = context_builder.scene_roster(session, campaign_id)
             roster_status = context_builder.roster_status(session, campaign_id)
-            first_pc = session.query(CharacterRow).filter_by(
-                campaign_id=campaign_id, is_pc=True
-            ).order_by(CharacterRow.id).first()
-            default_actor = first_pc.id if first_pc else ""
+            default_actor = self._default_actor(session, campaign_id)
         return turn_no, default_actor, roster, roster_status
 
     async def _read_intent(
@@ -203,6 +200,24 @@ class TurnLoop:
         for entity in self.module.of_kind("item").values():
             catalog[entity.name.lower()] = entity.data
         return catalog
+
+    def _default_actor(self, session, campaign_id: str) -> str:
+        """Who the player probably means when they don't name anyone.
+
+        Mid-fight this is whoever's turn it actually is — "attack the goblin"
+        with no name almost always means the PC currently up in initiative,
+        not whichever PC's id happens to sort first alphabetically. Outside
+        combat it falls back to the party's first PC, same as before.
+        """
+        from ..state.snapshot import load_combat_state
+
+        combat = load_combat_state(session, campaign_id)
+        if combat.active and combat.current and combat.current.is_pc:
+            return combat.current.combatant_id
+        first_pc = session.query(CharacterRow).filter_by(
+            campaign_id=campaign_id, is_pc=True
+        ).order_by(CharacterRow.id).first()
+        return first_pc.id if first_pc else ""
 
     def _npc_kinds(self) -> dict[str, str]:
         """template_id -> race, so a materialized NPC gets Klarg's real bugbear

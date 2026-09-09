@@ -34,6 +34,12 @@ Rules:
 - Do not set a DC. Do not decide whether anything succeeds. Do not roll.
 - `talk` covers speech and social approaches; put the player's actual words in
   `dialogue`. `look` covers examining and searching without a stated skill.
+- A message often carries both dialogue AND a stated action in the same
+  breath ("Thorin yells 'Help her!' and attacks the goblin"). The verb is
+  always the action, never the dialogue that dresses it — put the spoken
+  words in `dialogue` regardless, but classify what the character *does*.
+  Don't let a quote or an exclamation pull you toward `talk` when a mechanical
+  verb is also right there in the sentence.
 - A rules question about the game rather than an action in it is `ooc: true`.
 - Prefer `narrate` over `unknown` when the player is describing something their
   character does that simply has no mechanics ("I sit down and drink").

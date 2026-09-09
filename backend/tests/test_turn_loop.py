@@ -217,6 +217,34 @@ async def test_an_unknown_actor_falls_back_to_the_party(loop, campaign):
     assert result.resolution["kind"] == "check"
 
 
+@pytest.mark.asyncio
+async def test_default_actor_mid_combat_is_whoever_is_up_not_alphabetical(loop, campaign, session):
+    """A real bug from actual play: "attack the goblin" with no name given
+    defaulted to whichever PC's id sorted first alphabetically (Elara) even
+    though it was unambiguously Thorin's turn — Elara was unconscious and
+    couldn't act at all. The default should track initiative, not the
+    alphabet."""
+    from backend.state.events import record_event
+    from backend.engine.combat import CombatState, Initiative
+
+    combat = CombatState(
+        active=True, round=1, turn_index=0,
+        order=[
+            Initiative(combatant_id="thorin", name="Thorin", score=18, dex=14, is_pc=True),
+            Initiative(combatant_id="elara", name="Elara", score=10, dex=12, is_pc=True),
+        ],
+    )
+    record_event(session, "c1", "combat_state", {"combat": combat.to_dict()}, source="engine", turn_no=1)
+    session.commit()
+
+    client = client_of(loop)
+    client.queue_tool("record_intent", {"verb": "attack", "targets": ["goblin_1"]})  # no actor_id
+    client.queue_text("Thorin swings.")
+
+    result = await loop.take_turn(campaign, "attack the goblin", defer_scribe=False)
+    assert result.intent["actor_id"] == "thorin"
+
+
 # --------------------------------------------------------------------------
 # Degradation
 # --------------------------------------------------------------------------
