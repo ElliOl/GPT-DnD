@@ -5,7 +5,7 @@ python-multipart==0.0.6
 websockets==12.0
 
 # AI Providers
-anthropic>=0.34.0  # 0.34.0+ supports tools/function calling
+anthropic>=0.34.0,<1.0.0  # 0.34.0+ supports tools/function calling; <1.0 avoids the 1.x SDK rewrite that dropped `temperature`
 openai>=1.40.0  # 1.40.0+ compatible with httpx 0.28+
 httpx>=0.27.0  # Required for OpenAI SDK 1.40.0+
 
@@ -13,7 +13,7 @@ httpx>=0.27.0  # Required for OpenAI SDK 1.40.0+
 SQLAlchemy>=2.0.25
 
 # Data validation
-pydantic==2.6.0
+pydantic>=2.6.0
 pydantic-settings==2.1.0
 
 # Environment and configuration

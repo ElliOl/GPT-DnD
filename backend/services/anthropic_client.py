@@ -20,6 +20,16 @@ from .ai_client_base import (
 )
 
 
+# Models that reject `temperature` outright (400 invalid_request_error) rather
+# than just deprecating a default. Claude 5 Sonnet/Opus dropped it; Haiku 4.5
+# still accepts it.
+_NO_TEMPERATURE_MODELS = {"claude-sonnet-5", "claude-opus-5"}
+
+
+def _supports_temperature(model: str) -> bool:
+    return model not in _NO_TEMPERATURE_MODELS
+
+
 class AnthropicClient(BaseAIClient):
     """Claude AI client with tool calling and prompt caching"""
 
@@ -27,7 +37,7 @@ class AnthropicClient(BaseAIClient):
         self,
         api_key: Optional[str] = None,
         base_url: Optional[str] = None,
-        model: str = "claude-3-5-sonnet-20241022",
+        model: str = "claude-sonnet-5",
     ):
         super().__init__(api_key, base_url)
         self.model = model
@@ -219,12 +229,14 @@ class AnthropicClient(BaseAIClient):
 
         # Call Claude
         # Build kwargs carefully - tools must be passed correctly
+        resolved_model = model or self.model
         kwargs = {
-            "model": model or self.model,
+            "model": resolved_model,
             "max_tokens": max_tokens,
-            "temperature": temperature,
             "messages": anthropic_messages,
         }
+        if _supports_temperature(resolved_model):
+            kwargs["temperature"] = temperature
 
         # Set system parameter (array for caching, string for non-caching)
         if system_param:
@@ -287,9 +299,10 @@ class AnthropicClient(BaseAIClient):
         kwargs = {
             "model": self.model,
             "max_tokens": max_tokens,
-            "temperature": temperature,
             "messages": anthropic_messages,
         }
+        if _supports_temperature(self.model):
+            kwargs["temperature"] = temperature
 
         if system_prompt:
             kwargs["system"] = system_prompt

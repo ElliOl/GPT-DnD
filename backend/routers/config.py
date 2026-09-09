@@ -21,7 +21,7 @@ async def get_available_providers():
         "models": {k.value: v for k, v in RECOMMENDED_MODELS.items()},
         "current": {
             "provider": os.getenv("AI_PROVIDER", "anthropic"),
-            "model": os.getenv("AI_MODEL", "claude-3-5-sonnet-20241022"),
+            "model": os.getenv("AI_MODEL", "claude-sonnet-5"),
         },
     }
 

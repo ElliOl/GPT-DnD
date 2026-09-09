@@ -39,7 +39,7 @@ class AIProviderConfig(BaseModel):
 # Default configurations for each provider
 PROVIDER_DEFAULTS = {
     AIProvider.ANTHROPIC: {
-        "model": "claude-3-5-sonnet-20241022",
+        "model": "claude-sonnet-5",
         "base_url": "https://api.anthropic.com",
     },
     AIProvider.OPENAI: {
@@ -64,10 +64,9 @@ PROVIDER_DEFAULTS = {
 # Recommended models for D&D DMing
 RECOMMENDED_MODELS = {
     AIProvider.ANTHROPIC: [
-        "claude-3-5-sonnet-20241022",  # Best balance
-        "claude-3-opus-20240229",      # Most creative
-        "claude-3-sonnet-20240229",    # Fast, good quality
-        "claude-3-haiku-20240307",     # Fastest, cheapest
+        "claude-sonnet-5",       # Best balance
+        "claude-opus-5",         # Most creative
+        "claude-haiku-4-5",      # Fastest, cheapest
     ],
     AIProvider.OPENAI: [
         "gpt-4-turbo-preview",
