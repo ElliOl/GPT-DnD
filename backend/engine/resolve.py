@@ -91,6 +91,14 @@ def _hp_deltas(actor: Combatant) -> list[Delta]:
     ]
 
 
+def _dropped_fact(target: Combatant) -> str:
+    """What actually happened at 0 HP, in the words the Narrator will relay.
+    A PC is unconscious and rolling death saves; a monster is simply dead."""
+    if target.is_pc:
+        return f"{target.name} dropped to 0 HP and is unconscious."
+    return f"{target.name} dropped to 0 HP and is dead."
+
+
 def _invalid(reason: str) -> Resolution:
     return Resolution(kind="invalid", invalid_reason=reason, facts=[reason])
 
@@ -189,7 +197,7 @@ def _run_npc_turns(state: GameState) -> tuple[list[str], list[Delta], list[Roll]
                 f"{outcome.damage_type} damage. {target.name} is at {target.hp}/{target.max_hp} HP."
             )
             if damage["dropped"]:
-                facts.append(f"{target.name} dropped to 0 HP and is unconscious.")
+                facts.append(_dropped_fact(target))
         else:
             facts.append(
                 f"{npc.name} attacks {target.name} and misses "
@@ -338,7 +346,7 @@ def _run_attack_roll(
             f"{outcome.damage_type} damage. {target.name} is at {target.hp}/{target.max_hp} HP."
         )
         if damage["dropped"]:
-            facts.append(f"{target.name} dropped to 0 HP and is unconscious.")
+            facts.append(_dropped_fact(target))
 
         resolution = Resolution(
             kind="attack", rolls=rolls, dc=target.ac, success=True,

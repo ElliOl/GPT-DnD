@@ -221,6 +221,38 @@ def commit_resolution(
         )
         written.append(event.id)
 
+    written.extend(_sync_defeated_npcs(session, state.campaign_id, resolution, state.turn_no))
+
+    return written
+
+
+def _sync_defeated_npcs(
+    session: Session, campaign_id: str, resolution: Resolution, turn_no: int
+) -> list[int]:
+    """A monster's backing CharacterRow just gained the ``dead`` condition —
+    the NPCRow's own ``status`` (what scene_roster and present_npcs actually
+    read to decide who's in the scene) needs to follow, or a defeated enemy
+    keeps showing up as a live threat forever. This was the gap that made the
+    Scribe's own attempt to mark an enemy dead get correctly rejected: nothing
+    ever actually authorized it, because nothing did this.
+    """
+    written: list[int] = []
+    for d in resolution.state_deltas:
+        if d.target != "character" or d.field != "conditions":
+            continue
+        if "dead" not in {str(c).lower() for c in (d.value or [])}:
+            continue
+        npc = session.scalars(
+            select(NPCRow).where(NPCRow.campaign_id == campaign_id, NPCRow.character_id == d.id)
+        ).first()
+        if npc is not None and npc.status != "dead":
+            event = record_event(
+                session, campaign_id, EventType.CONDITION_APPLIED,
+                {"npc_id": npc.id, "status": "dead"},
+                deltas=[Delta("npc", npc.id, "set", "status", "dead")],
+                source="engine", turn_no=turn_no,
+            )
+            written.append(event.id)
     return written
 
 

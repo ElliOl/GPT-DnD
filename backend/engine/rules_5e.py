@@ -203,8 +203,10 @@ def attack(
 def apply_damage(target: Combatant, amount: int, damage_type: str = "") -> dict:
     """Resolve damage against temp HP first, then HP. Returns what changed.
 
-    Death is not decided here — dropping to 0 sets ``unconscious`` and the death
-    save track; ``combat.py`` runs the saves.
+    A PC dropping to 0 is ``unconscious`` — death saves decide what happens
+    next, same as any table runs it. A monster dropping to 0 is just dead: no
+    real DM tracks death saves for every mook, and doing so here would leave
+    a "defeated" enemy sitting in the scene as if merely napping.
     """
     resistances = {str(r).lower() for r in (target.resources.get("resistances") or [])}
     immunities = {str(r).lower() for r in (target.resources.get("immunities") or [])}
@@ -225,8 +227,10 @@ def apply_damage(target: Combatant, amount: int, damage_type: str = "") -> dict:
     target.hp = max(0, target.hp - to_hp)
 
     dropped = before > 0 and target.hp == 0
-    if dropped and not target.has_condition("unconscious"):
-        target.conditions.append("unconscious")
+    if dropped:
+        condition = "unconscious" if target.is_pc else "dead"
+        if not target.has_condition(condition):
+            target.conditions.append(condition)
 
     return {
         "amount": amount,

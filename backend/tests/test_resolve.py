@@ -211,6 +211,36 @@ def test_a_save_spell_halves_damage_on_a_success(state):
     assert state.actors["goblin_1"].hp < 7
 
 
+def test_a_monster_at_zero_hp_is_dead_not_merely_unconscious(state):
+    """No table tracks death saves for every mook — a monster at 0 HP is
+    dead. Leaving it "unconscious" left defeated enemies lingering in the
+    scene as if napping, which is what actually happened in play."""
+    for seed in range(200):
+        state.combat = CombatState()
+        state.roller = DiceRoller(seed=seed)
+        state.actors["goblin_1"].hp = 1
+        state.actors["goblin_1"].conditions = []
+        r = resolve(Intent(verb="attack", actor_id="thorin", targets=["goblin_1"],
+                           item="longsword"), state)
+        if r.success:
+            assert state.actors["goblin_1"].has_condition("dead")
+            assert not state.actors["goblin_1"].has_condition("unconscious")
+            assert any("dead" in f for f in r.facts)
+            return
+    pytest.skip("no hit in 200 seeds")
+
+
+def test_a_pc_at_zero_hp_is_unconscious_not_dead(state):
+    """The other half of the same rule: a PC gets the death save track."""
+    from backend.engine import rules_5e as rules
+
+    thorin = state.actors["thorin"]
+    thorin.hp = 3
+    rules.apply_damage(thorin, 3)
+    assert thorin.has_condition("unconscious")
+    assert not thorin.has_condition("dead")
+
+
 def test_an_attack_cantrip_actually_rolls_to_hit(state):
     """Fire Bolt used to fall through to pure narrative — no catalog entry, no
     save_ability, no heal, so nothing rolled and nothing happened mechanically

@@ -35,7 +35,7 @@ SKILL_ABILITY: dict[str, str] = {
 }
 
 #: Conditions that stop a creature acting at all.
-INCAPACITATING = {"unconscious", "paralyzed", "petrified", "stunned", "incapacitated"}
+INCAPACITATING = {"unconscious", "paralyzed", "petrified", "stunned", "incapacitated", "dead"}
 
 
 def ability_modifier(score: int) -> int:

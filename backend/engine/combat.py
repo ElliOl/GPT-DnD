@@ -113,11 +113,21 @@ def end_combat(state: CombatState, reason: str = "") -> CombatState:
 
 
 def check_combat_end(state: CombatState, combatants: dict[str, Combatant]) -> CombatState:
-    """Combat ends when one side can no longer act."""
+    """Combat ends when one side can no longer act.
+
+    A foe is a hostile combatant, not merely a non-PC — an ally standing in
+    the room is neither side's problem, and counting them as an enemy keeps a
+    finished fight running forever with nothing left to fight.
+
+    Only combatants actually in the initiative order count: someone who never
+    joined the fight can't be the reason it hasn't ended.
+    """
     if not state.active:
         return state
-    live_pcs = [c for c in combatants.values() if c.is_pc and c.can_act]
-    live_foes = [c for c in combatants.values() if not c.is_pc and c.can_act]
+    in_fight = {e.combatant_id for e in state.order}
+    engaged = [c for c in combatants.values() if not in_fight or c.id in in_fight]
+    live_pcs = [c for c in engaged if c.is_pc and c.can_act]
+    live_foes = [c for c in engaged if not c.is_pc and c.hostile and c.can_act]
     if not live_foes:
         return end_combat(state, "all enemies down")
     if not live_pcs:
