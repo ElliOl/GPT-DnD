@@ -20,14 +20,53 @@ from .ai_client_base import (
 )
 
 
-# Models that reject `temperature` outright (400 invalid_request_error) rather
-# than just deprecating a default. Claude 5 Sonnet/Opus dropped it; Haiku 4.5
-# still accepts it.
-_NO_TEMPERATURE_MODELS = {"claude-sonnet-5", "claude-opus-5"}
+# Fast-path only, not the source of truth: models already known to reject
+# sampling params outright (400 invalid_request_error) rather than just
+# deprecating a default. Skipping this set entirely would still work — it just
+# costs one wasted round trip the first time a new model is used. The set below,
+# `_learned_no_sampling_models`, is what keeps this correct without maintenance:
+# it's populated live from the API's own response the first time a model
+# rejects a sampling param, so a model added here later, or Haiku changing
+# behavior in some future release, is handled without a code change.
+_KNOWN_NO_SAMPLING_MODELS = {"claude-sonnet-5", "claude-opus-5"}
+
+#: Process-lifetime cache of models discovered at runtime to reject sampling
+#: params. Shared across all AnthropicClient instances in this process, since
+#: the rejection is a property of the model, not of any one client.
+_learned_no_sampling_models: set[str] = set()
+
+#: Parameters Claude 5 Sonnet/Opus reject together as a group; Haiku 4.5 still
+#: accepts all three. `anthropic_client.py` only ever sends `temperature`, but
+#: the other two are stripped too if a caller ever adds them.
+_SAMPLING_PARAMS = ("temperature", "top_p", "top_k")
 
 
 def _supports_temperature(model: str) -> bool:
-    return model not in _NO_TEMPERATURE_MODELS
+    return model not in _KNOWN_NO_SAMPLING_MODELS and model not in _learned_no_sampling_models
+
+
+def _rejected_sampling_param(exc: "anthropic.BadRequestError") -> bool:
+    """Best-effort read of a 400 body: does this look like a sampling-param
+    rejection rather than some other bad request?
+
+    There is no documented, structured error code for this — Anthropic's 400
+    body is a generic ``invalid_request_error``, and the only available signal
+    is that the message conventionally names the offending field (as is
+    standard for the vast majority of JSON APIs, though not a documented
+    guarantee here). If a future response ever stops matching this — different
+    wording, a different field — the exception simply propagates unchanged;
+    this never swallows a 400 it isn't sure about.
+    """
+    message = str(getattr(exc, "message", "") or exc)
+    body = getattr(exc, "body", None)
+    if isinstance(body, dict):
+        message = f"{message} {(body.get('error') or {}).get('message', '')}"
+    message = message.lower()
+    return any(param in message for param in _SAMPLING_PARAMS)
+
+
+def _without_sampling_params(kwargs: Dict[str, Any]) -> Dict[str, Any]:
+    return {k: v for k, v in kwargs.items() if k not in _SAMPLING_PARAMS}
 
 
 class AnthropicClient(BaseAIClient):
@@ -249,7 +288,7 @@ class AnthropicClient(BaseAIClient):
             if force_tool:
                 kwargs["tool_choice"] = {"type": "tool", "name": force_tool}
 
-        response = await self.client.messages.create(**kwargs)
+        response = await self._create_with_sampling_fallback(kwargs)
 
         # Parse response
         text_content = None
@@ -284,6 +323,22 @@ class AnthropicClient(BaseAIClient):
             },
         )
 
+    async def _create_with_sampling_fallback(self, kwargs: Dict[str, Any]):
+        """``messages.create``, self-healing against sampling-param rejection.
+
+        The `_KNOWN_NO_SAMPLING_MODELS` fast path already skips this for models
+        we've seen before, so this only fires the first time a given model
+        rejects temperature — after that ``_supports_temperature`` catches it
+        up front and this whole path is skipped again.
+        """
+        try:
+            return await self.client.messages.create(**kwargs)
+        except anthropic.BadRequestError as exc:
+            if not _rejected_sampling_param(exc):
+                raise
+            _learned_no_sampling_models.add(kwargs.get("model", self.model))
+            return await self.client.messages.create(**_without_sampling_params(kwargs))
+
     async def stream_message(
         self,
         messages: List[Message],
@@ -310,9 +365,19 @@ class AnthropicClient(BaseAIClient):
         if system_prompt:
             kwargs["system"] = system_prompt
 
-        async with self.client.messages.stream(**kwargs) as stream:
-            async for text in stream.text_stream:
-                yield text
+        try:
+            async with self.client.messages.stream(**kwargs) as stream:
+                async for text in stream.text_stream:
+                    yield text
+        except anthropic.BadRequestError as exc:
+            if not _rejected_sampling_param(exc):
+                raise
+            # Nothing will have streamed yet — invalid_request_error is a
+            # request-validation failure, raised before any content is sent.
+            _learned_no_sampling_models.add(kwargs.get("model", self.model))
+            async with self.client.messages.stream(**_without_sampling_params(kwargs)) as stream:
+                async for text in stream.text_stream:
+                    yield text
 
     def _format_game_state(self, state: Dict[str, Any]) -> str:
         """Format game state for context"""
