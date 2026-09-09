@@ -105,12 +105,16 @@ def test_actors_resolve_by_name_as_well_as_id(state):
 
 def test_a_hit_produces_damage_deltas_and_a_fact(state):
     for seed in range(100):
+        state.combat = CombatState()
         state.roller = DiceRoller(seed=seed)
         r = resolve(Intent(verb="attack", actor_id="thorin", targets=["goblin_1"],
                            item="longsword"), state)
         if r.success:
-            assert len(r.rolls) == 2  # attack + damage
-            assert any(d.field == "hp" for d in r.state_deltas)
+            # The first two rolls are always the attacker's own attack + damage —
+            # any further rolls are the goblin's turn, now that combat actually
+            # runs instead of ending the moment the PC's own attack resolves.
+            assert len(r.rolls) >= 2
+            assert any(d.field == "hp" and d.id == "goblin_1" for d in r.state_deltas)
             assert "Goblin" in r.facts[0]
             return
         state.actors["goblin_1"].hp = 7
@@ -119,11 +123,14 @@ def test_a_hit_produces_damage_deltas_and_a_fact(state):
 
 def test_a_miss_leaves_the_target_untouched(state):
     for seed in range(100):
+        state.combat = CombatState()
         state.roller = DiceRoller(seed=seed)
         state.actors["goblin_1"].hp = 7
         r = resolve(Intent(verb="attack", actor_id="thorin", targets=["goblin_1"]), state)
         if r.success is False:
-            assert r.state_deltas == []
+            # The goblin's own turn (now wired up) may still land a hit on
+            # Thorin — what a miss guarantees is that the *target* is untouched.
+            assert not any(d.id == "goblin_1" for d in r.state_deltas)
             assert state.actors["goblin_1"].hp == 7
             assert "missed" in r.facts[0]
             return
@@ -134,6 +141,28 @@ def test_attacking_a_downed_target_is_invalid(state):
     state.actors["goblin_1"].hp = 0
     r = resolve(Intent(verb="attack", actor_id="thorin", targets=["goblin_1"]), state)
     assert r.kind == "invalid"
+
+
+def test_an_attack_starts_initiative_and_the_enemy_can_swing_back(state):
+    """The engine's combat primitives (roll_initiative, advance_turn) existed
+    but nothing ever called them — an attack landed and the fight just ended
+    there, no matter how many enemies were still standing. First attack now
+    rolls initiative; the target gets a turn back if it survives."""
+    for seed in range(100):
+        state.combat = CombatState()
+        state.roller = DiceRoller(seed=seed)
+        state.actors["thorin"].hp = 24
+        state.actors["goblin_1"].hp = 7
+        r = resolve(Intent(verb="attack", actor_id="thorin", targets=["goblin_1"],
+                           item="longsword"), state)
+        assert state.combat.active or state.combat.ended_reason, \
+            "initiative should be rolled regardless of hit or miss"
+        if r.success and state.actors["goblin_1"].hp > 0:
+            # The goblin survived the PC's hit — it should have gotten its own
+            # turn immediately, in the same resolution, not a turn later.
+            assert len(r.rolls) > 2, "the goblin's own attack roll should be included"
+            return
+    pytest.skip("no non-lethal hit in 100 seeds")
 
 
 def test_dropping_the_last_enemy_ends_combat(state):

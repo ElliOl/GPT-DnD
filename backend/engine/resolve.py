@@ -95,6 +95,116 @@ def _invalid(reason: str) -> Resolution:
 
 
 # --------------------------------------------------------------------------
+# Combat: the engine primitives (roll_initiative, advance_turn) existed but
+# nothing ever called them — an attack landed, nothing else ever happened.
+# This is the wiring, kept small on purpose: who acts and in what order is
+# real 5e; what a monster *does* on its turn is a one-line tactic ("hit the
+# weakest PC"), because actual NPC decision-making is a later phase's job.
+# --------------------------------------------------------------------------
+
+def _combatants_here(state: GameState, location_id: str | None) -> list[Combatant]:
+    """Everyone able to fight at this location — the party wherever it stands,
+    plus anything hostile that's been introduced there. A materialized NPC's
+    location is set at creation, so this covers named and ad hoc monsters
+    alike without needing to know which is which.
+
+    An ally present in the same room (Sildar) is not swept into the fight just
+    for standing there — only PCs and combatants flagged hostile join
+    automatically. Someone the player deliberately targets still joins
+    regardless, via the explicit actor/target passed to
+    ``_ensure_combat_started``.
+    """
+    candidates = state.actors.values() if location_id is None else (
+        c for c in state.actors.values() if c.location_id == location_id
+    )
+    return [c for c in candidates if c.can_act and (c.is_pc or c.hostile)]
+
+
+def _ensure_combat_started(state: GameState, actor: Combatant, target: Combatant) -> None:
+    if state.combat.active:
+        return
+    location_id = actor.location_id or target.location_id
+    participants = {c.id: c for c in _combatants_here(state, location_id)}
+    participants[actor.id] = actor
+    participants[target.id] = target
+    state.combat = combat_rules.roll_initiative(list(participants.values()), state.roller)
+
+
+def _run_npc_turns(state: GameState) -> tuple[list[str], list[Delta], list[Roll], list[tuple[str, dict]]]:
+    """Resolve every consecutive NPC turn until it's a PC's turn again or the
+    fight ends. One player message drives one PC's action — the monsters
+    don't wait for a second message to swing back.
+
+    Target choice is deterministic (lowest current HP) rather than random, so
+    a rewind reproduces the same fight rather than a different one.
+    """
+    facts: list[str] = []
+    deltas: list[Delta] = []
+    rolls: list[Roll] = []
+    events: list[tuple[str, dict[str, Any]]] = []
+
+    guard = 0
+    while (
+        state.combat.active and state.combat.current
+        and not state.combat.current.is_pc and guard < 12
+    ):
+        guard += 1
+        npc = state.actors.get(state.combat.current.combatant_id)
+        if npc is None or not npc.can_act:
+            state.combat = combat_rules.advance_turn(state.combat)
+            continue
+
+        alive_pcs = [c for c in state.actors.values() if c.is_pc and c.can_act]
+        if not alive_pcs:
+            state.combat = combat_rules.end_combat(state.combat, "party down")
+            break
+        target = min(alive_pcs, key=lambda c: c.hp)
+
+        weapon = (npc.resources.get("weapons") or [{}])[0]
+        outcome = rules.attack(
+            npc, target, state.roller,
+            damage_dice=weapon.get("damage_dice", "1d6"),
+            damage_type=weapon.get("damage_type", "bludgeoning"),
+            weapon=weapon.get("name", "attack"),
+        )
+        rolls.append(outcome.attack_roll)
+        events.append(
+            (EventType.ROLL, {"actor": npc.id, "roll": outcome.attack_roll.to_dict(), "dc": target.ac})
+        )
+        if outcome.hit:
+            rolls.append(outcome.damage_roll)
+            damage = rules.apply_damage(target, outcome.damage, outcome.damage_type)
+            deltas.extend(_hp_deltas(target))
+            events.append(
+                (EventType.DAMAGE, {
+                    "actor": npc.id, "target": target.id, "amount": damage["amount"],
+                    "damage_type": outcome.damage_type, "critical": outcome.critical,
+                    "hp_after": target.hp,
+                })
+            )
+            hit_word = "critically hits" if outcome.critical else "hits"
+            facts.append(
+                f"{npc.name} {hit_word} {target.name} for {damage['amount']} "
+                f"{outcome.damage_type} damage. {target.name} is at {target.hp}/{target.max_hp} HP."
+            )
+            if damage["dropped"]:
+                facts.append(f"{target.name} dropped to 0 HP and is unconscious.")
+        else:
+            facts.append(
+                f"{npc.name} attacks {target.name} and misses "
+                f"(rolled {outcome.attack_roll.total} against AC {target.ac})."
+            )
+
+        state.combat = combat_rules.advance_turn(state.combat)
+        state.combat = combat_rules.check_combat_end(state.combat, state.actors)
+
+    if state.combat.ended_reason:
+        facts.append(f"Combat ends: {state.combat.ended_reason}.")
+
+    return facts, deltas, rolls, events
+
+
+# --------------------------------------------------------------------------
 # Verb handlers
 # --------------------------------------------------------------------------
 
@@ -166,6 +276,17 @@ def _resolve_attack(intent: Intent, state: GameState) -> Resolution:
     if target.is_down:
         return _invalid(f"{target.name} is already down.")
 
+    _ensure_combat_started(state, actor, target)
+    if state.combat.active:
+        # Whoever the player named acts now, regardless of where initiative
+        # put them — this loop doesn't gate PC actions on turn order, only
+        # uses it to decide who swings back next.
+        actor_index = next(
+            (i for i, e in enumerate(state.combat.order) if e.combatant_id == actor.id), None
+        )
+        if actor_index is not None:
+            state.combat.turn_index = actor_index
+
     weapon_name = intent.item or ""
     spec = state.catalog.get(weapon_name.lower(), {}) if weapon_name else {}
     outcome = rules.attack(
@@ -191,39 +312,47 @@ def _resolve_attack(intent: Intent, state: GameState) -> Resolution:
             f"{actor.name} attacked {target.name} and missed "
             f"(rolled {outcome.attack_roll.total} against AC {target.ac})."
         )
-        return Resolution(
+        resolution = Resolution(
             kind="attack", rolls=rolls, dc=target.ac, success=False,
             degree="crit_fail" if outcome.attack_roll.natural == 1 else "fail",
             facts=facts, events=events,
         )
+    else:
+        rolls.append(outcome.damage_roll)
+        damage = rules.apply_damage(target, outcome.damage, outcome.damage_type)
+        deltas.extend(_hp_deltas(target))
+        events.append(
+            (EventType.DAMAGE, {
+                "actor": actor.id, "target": target.id,
+                "amount": damage["amount"], "damage_type": outcome.damage_type,
+                "critical": outcome.critical, "hp_after": target.hp,
+            })
+        )
 
-    rolls.append(outcome.damage_roll)
-    damage = rules.apply_damage(target, outcome.damage, outcome.damage_type)
-    deltas.extend(_hp_deltas(target))
-    events.append(
-        (EventType.DAMAGE, {
-            "actor": actor.id, "target": target.id,
-            "amount": damage["amount"], "damage_type": outcome.damage_type,
-            "critical": outcome.critical, "hp_after": target.hp,
-        })
-    )
+        hit_word = "critically hit" if outcome.critical else "hit"
+        facts.append(
+            f"{actor.name} {hit_word} {target.name} for {damage['amount']} "
+            f"{outcome.damage_type} damage. {target.name} is at {target.hp}/{target.max_hp} HP."
+        )
+        if damage["dropped"]:
+            facts.append(f"{target.name} dropped to 0 HP and is unconscious.")
 
-    hit_word = "critically hit" if outcome.critical else "hit"
-    facts.append(
-        f"{actor.name} {hit_word} {target.name} for {damage['amount']} "
-        f"{outcome.damage_type} damage. {target.name} is at {target.hp}/{target.max_hp} HP."
-    )
-    if damage["dropped"]:
-        facts.append(f"{target.name} dropped to 0 HP and is unconscious.")
+        resolution = Resolution(
+            kind="attack", rolls=rolls, dc=target.ac, success=True,
+            degree="crit_success" if outcome.critical else "success",
+            state_deltas=deltas, facts=facts, events=events,
+        )
 
     if state.combat.active:
-        combat_rules.check_combat_end(state.combat, state.actors)
+        state.combat = combat_rules.advance_turn(state.combat)
+        state.combat = combat_rules.check_combat_end(state.combat, state.actors)
+        npc_facts, npc_deltas, npc_rolls, npc_events = _run_npc_turns(state)
+        resolution.facts.extend(npc_facts)
+        resolution.state_deltas.extend(npc_deltas)
+        resolution.rolls.extend(npc_rolls)
+        resolution.events.extend(npc_events)
 
-    return Resolution(
-        kind="attack", rolls=rolls, dc=target.ac, success=True,
-        degree="crit_success" if outcome.critical else "success",
-        state_deltas=deltas, facts=facts, events=events,
-    )
+    return resolution
 
 
 def _resolve_cast(intent: Intent, state: GameState) -> Resolution:

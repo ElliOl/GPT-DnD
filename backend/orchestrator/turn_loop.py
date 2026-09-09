@@ -123,8 +123,8 @@ class TurnLoop:
 
     # ---- steps ------------------------------------------------------------
 
-    def _begin_turn(self, campaign_id: str, player_message: str) -> tuple[int, str, dict[str, str]]:
-        """Advance the turn counter and log the input. Returns turn, actor, roster."""
+    def _begin_turn(self, campaign_id: str, player_message: str) -> tuple[int, str, dict[str, str], dict[str, str]]:
+        """Advance the turn counter and log the input. Returns turn, actor, roster, roster HP."""
         with session_scope() as session:
             campaign = session.get(Campaign, campaign_id)
             if campaign is None:
@@ -138,16 +138,18 @@ class TurnLoop:
                 {"text": player_message}, source="engine", turn_no=turn_no,
             )
             roster = context_builder.scene_roster(session, campaign_id)
+            roster_status = context_builder.roster_status(session, campaign_id)
             first_pc = session.query(CharacterRow).filter_by(
                 campaign_id=campaign_id, is_pc=True
             ).order_by(CharacterRow.id).first()
             default_actor = first_pc.id if first_pc else ""
-        return turn_no, default_actor, roster
+        return turn_no, default_actor, roster, roster_status
 
     async def _read_intent(
         self,
         player_message: str,
         roster: dict[str, str],
+        roster_status: dict[str, str],
         default_actor: str,
         context: AgentContext,
         in_combat: bool,
@@ -159,6 +161,7 @@ class TurnLoop:
                 context,
                 player_message=player_message,
                 roster=roster,
+                roster_status=roster_status,
                 default_actor=default_actor,
                 in_combat=in_combat,
             )
@@ -425,7 +428,7 @@ class TurnLoop:
         defer_scribe: bool = True,
     ) -> TurnResult:
         budget = self.budget_for(campaign_id)
-        turn_no, default_actor, roster = self._begin_turn(campaign_id, player_message)
+        turn_no, default_actor, roster, roster_status = self._begin_turn(campaign_id, player_message)
         context = AgentContext(campaign_id=campaign_id, turn_no=turn_no, budget=budget)
 
         with session_scope() as session:
@@ -434,7 +437,7 @@ class TurnLoop:
             in_combat = load_combat_state(session, campaign_id).active
 
         intent = await self._read_intent(
-            player_message, roster, actor_id or default_actor, context, in_combat
+            player_message, roster, roster_status, actor_id or default_actor, context, in_combat
         )
 
         # An honest question beats a confident wrong action. The turn ends here.

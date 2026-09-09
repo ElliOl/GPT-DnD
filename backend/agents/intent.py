@@ -58,14 +58,20 @@ class IntentAgent(Agent[dict]):
         *,
         player_message: str,
         roster: dict[str, str] | None = None,
+        roster_status: dict[str, str] | None = None,
         default_actor: str = "",
         in_combat: bool = False,
         **_: Any,
     ) -> list[Message]:
         roster = roster or {}
+        roster_status = roster_status or {}
         lines = [
-            "ROSTER (use these ids)",
-            *(f"  {rid}: {name}" for rid, name in roster.items()),
+            "ROSTER (use these ids — HP shown so you can resolve \"the injured "
+            "one\", \"the wounded goblin\" etc. yourself, without asking)",
+            *(
+                f"  {rid}: {name}" + (f" ({roster_status[rid]})" if rid in roster_status else "")
+                for rid, name in roster.items()
+            ),
             "",
             f"VERBS: {', '.join(sorted(ALL_VERBS))}",
             f"IN COMBAT: {'yes' if in_combat else 'no'}",

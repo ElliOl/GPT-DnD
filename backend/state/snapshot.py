@@ -143,6 +143,9 @@ def load_game_state(
         combatant = actors.get(npc.character_id)
         if combatant is not None:
             actors[npc.id] = combatant
+            # A bare statted monster defaults hostile; an NPCRow behind it
+            # knows better — Sildar has an attitude, not just a stat block.
+            combatant.hostile = npc.attitude_to_party < 0
 
     roller = DiceRoller(seed=campaign.rng_seed)
     roller.start_turn(campaign.turn_no)

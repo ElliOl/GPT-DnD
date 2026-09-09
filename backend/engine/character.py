@@ -61,6 +61,13 @@ class Combatant:
     death_save_successes: int = 0
     death_save_failures: int = 0
     location_id: str | None = None
+    #: Whether an automatic NPC turn should treat this combatant as an enemy
+    #: to swing at the party. Defaults True — a bare statted monster (no NPCRow
+    #: behind it, e.g. a test fixture) is always presumed hostile, matching
+    #: what "PCs and statted NPCs alike" has always meant here. A combatant
+    #: backed by an NPCRow gets this overridden from its actual attitude, so
+    #: an ally caught in the fight doesn't get swept into attacking the party.
+    hostile: bool = True
 
     # ---- derived ----------------------------------------------------------
 

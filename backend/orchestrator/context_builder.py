@@ -26,6 +26,7 @@ from ..engine.resolve import Resolution
 from ..state.canon import relevant_facts
 from ..state.events import EventType
 from ..state.models import Campaign, CharacterRow, ClockRow, EventRow, LocationRow, NPCRow
+from ..state.snapshot import load_combat_state
 
 #: How many prior turns of transcript ride along.
 RECENT_TURNS = 6
@@ -247,6 +248,20 @@ def party_ooc_facts(session: Session, campaign_id: str) -> list[str]:
         if gold is not None:
             parts.append(f"gold {gold}")
         facts.append(". ".join(parts) + ".")
+
+    combat = load_combat_state(session, campaign_id)
+    if combat.active and combat.order:
+        current = combat.current
+        order_text = ", ".join(
+            e.name + (" (current turn)" if current and e.combatant_id == current.combatant_id else "")
+            for e in combat.order
+        )
+        facts.append(f"Combat is active, round {combat.round}. Turn order: {order_text}.")
+    elif combat.ended_reason:
+        facts.append(f"Combat just ended ({combat.ended_reason}); no fight is active now.")
+    else:
+        facts.append("No combat is currently active.")
+
     return facts
 
 
@@ -260,6 +275,26 @@ def known_locations(session: Session, campaign_id: str) -> dict[str, str]:
             select(LocationRow).where(LocationRow.campaign_id == campaign_id)
         )
     }
+
+
+def roster_status(session: Session, campaign_id: str) -> dict[str, str]:
+    """HP for anyone on the roster with real combat stats.
+
+    Without this, "the injured goblin" is unresolvable to the Intent agent no
+    matter how obvious it is from the fiction — it's only ever been given
+    names, never numbers, so it has to ask instead of just knowing.
+    """
+    status: dict[str, str] = {}
+    for row in session.scalars(
+        select(CharacterRow).where(CharacterRow.campaign_id == campaign_id)
+    ):
+        status[row.id] = f"{row.hp}/{row.max_hp} HP"
+    for npc in session.scalars(
+        select(NPCRow).where(NPCRow.campaign_id == campaign_id, NPCRow.character_id.is_not(None))
+    ):
+        if npc.character_id in status:
+            status[npc.id] = status[npc.character_id]
+    return status
 
 
 def scene_roster(session: Session, campaign_id: str) -> dict[str, str]:

@@ -437,6 +437,62 @@ async def test_attacking_a_present_npc_that_was_never_statted_works(loop, campai
     backing = session.get(CharacterRow, warden.character_id)
     assert backing is not None and backing.is_pc is False and backing.max_hp > 0
 
+    # Initiative is rolled unconditionally before the attack outcome is known
+    # (whether it hits or misses), so a real fight — not just an isolated
+    # attack roll — is now under way regardless of this roll's result.
+    from backend.state.models import EventRow
+
+    combat_events = [e for e in session.query(EventRow).all() if e.type == "combat_state"]
+    assert combat_events, "attacking someone should start real initiative-tracked combat"
+
+
+@pytest.mark.asyncio
+async def test_an_ally_present_at_the_fight_does_not_attack_the_party(loop, campaign, session):
+    """A real bug caught in actual play: an ally standing in the same room as
+    a fight got swept into initiative and attacked a PC, just for being a
+    non-PC combatant. Attitude, not is_pc, decides who's on which side."""
+    from backend.state.models import NPCRow
+
+    session.add(NPCRow(id="ally", campaign_id="c1", name="A Friendly Guard",
+                        status="alive", location_id="antechamber", attitude_to_party=2))
+    session.commit()
+
+    client = client_of(loop)
+    client.queue_tool("record_intent", {
+        "verb": "attack", "actor_id": "thorin", "targets": ["warden"],
+    })
+    client.queue_text("Thorin's blade meets the Warden.")
+    await loop.take_turn(campaign, "I attack the Warden", defer_scribe=False)
+
+    session.expire_all()
+    from backend.state.models import EventRow
+
+    combat_payloads = [
+        e.payload["combat"] for e in session.query(EventRow).all() if e.type == "combat_state"
+    ]
+    assert combat_payloads, "combat should have started"
+    combatant_ids = {entry["combatant_id"] for entry in combat_payloads[-1]["order"]}
+    assert "ally" not in combatant_ids, "an ally in the room should not join a fight it wasn't targeted in"
+
+
+@pytest.mark.asyncio
+async def test_intent_agent_is_told_roster_hp_to_resolve_descriptive_targets(loop, campaign, session):
+    """"Attack the injured goblin" was unresolvable — the Intent agent only
+    ever saw names, never HP, so it had no way to know which one that meant
+    and asked every single time. It needs the numbers, not just the roster."""
+    client = client_of(loop)
+    client.queue_tool("record_intent", {"verb": "attack", "actor_id": "thorin", "targets": ["warden"]})
+    client.queue_text("Thorin's blade meets the Warden.")
+    await loop.take_turn(campaign, "I attack the Warden", defer_scribe=False)
+
+    client.queue_tool("record_intent", {"verb": "look", "actor_id": "thorin"})
+    client.queue_text("The room is quiet.")
+    await loop.take_turn(campaign, "I look around", defer_scribe=False)
+
+    second_turn_intent_call = client.calls[3]
+    assert "warden" in second_turn_intent_call["content"]
+    assert "HP" in second_turn_intent_call["content"]
+
 
 @pytest.mark.asyncio
 async def test_a_dm_introduced_hostile_becomes_attackable_next_turn(loop, campaign, session):
