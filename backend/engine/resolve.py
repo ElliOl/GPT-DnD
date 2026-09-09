@@ -18,6 +18,7 @@ from typing import Any
 from ..state.events import Delta, EventType
 from . import combat as combat_rules
 from . import rules_5e as rules
+from . import spells
 from .character import Combatant
 from .dice import DiceRoller, Roll
 from .intent import Intent
@@ -261,21 +262,24 @@ def _resolve_save(intent: Intent, state: GameState) -> Resolution:
     )
 
 
-def _resolve_attack(intent: Intent, state: GameState) -> Resolution:
-    actor = state.actor(intent.actor_id)
-    if actor is None:
-        return _invalid(f"No such character: {intent.actor_id!r}.")
-    if not actor.can_act:
-        return _invalid(f"{actor.name} cannot act right now.")
-    if not intent.targets:
-        return _invalid("No target given for the attack.")
-
-    target = state.actor(intent.targets[0])
-    if target is None:
-        return _invalid(f"There is no {intent.targets[0]!r} here to attack.")
-    if target.is_down:
-        return _invalid(f"{target.name} is already down.")
-
+def _run_attack_roll(
+    state: GameState,
+    actor: Combatant,
+    target: Combatant,
+    *,
+    damage_dice: str,
+    damage_type: str,
+    weapon: str,
+    attack_bonus: int | None = None,
+    advantage: bool = False,
+    disadvantage: bool = False,
+    finesse: bool = False,
+    ranged: bool = False,
+) -> Resolution:
+    """One attack roll against AC, win or lose, plus starting/continuing
+    combat around it. Shared by weapon attacks and spell attacks — the target
+    doesn't care whether the thing that just hit it was steel or fire, and
+    neither should whether the fight keeps moving."""
     _ensure_combat_started(state, actor, target)
     if state.combat.active:
         # Whoever the player named acts now, regardless of where initiative
@@ -287,17 +291,16 @@ def _resolve_attack(intent: Intent, state: GameState) -> Resolution:
         if actor_index is not None:
             state.combat.turn_index = actor_index
 
-    weapon_name = intent.item or ""
-    spec = state.catalog.get(weapon_name.lower(), {}) if weapon_name else {}
     outcome = rules.attack(
         actor, target, state.roller,
-        damage_dice=spec.get("damage", "1d6"),
-        damage_type=spec.get("damage_type", "bludgeoning"),
-        weapon=weapon_name or spec.get("name", ""),
-        advantage=intent.advantage,
-        disadvantage=intent.disadvantage,
-        finesse=bool(spec.get("finesse")),
-        ranged=bool(spec.get("ranged")),
+        attack_bonus=attack_bonus,
+        damage_dice=damage_dice,
+        damage_type=damage_type,
+        weapon=weapon,
+        advantage=advantage,
+        disadvantage=disadvantage,
+        finesse=finesse,
+        ranged=ranged,
     )
 
     rolls = [outcome.attack_roll]
@@ -355,6 +358,35 @@ def _resolve_attack(intent: Intent, state: GameState) -> Resolution:
     return resolution
 
 
+def _resolve_attack(intent: Intent, state: GameState) -> Resolution:
+    actor = state.actor(intent.actor_id)
+    if actor is None:
+        return _invalid(f"No such character: {intent.actor_id!r}.")
+    if not actor.can_act:
+        return _invalid(f"{actor.name} cannot act right now.")
+    if not intent.targets:
+        return _invalid("No target given for the attack.")
+
+    target = state.actor(intent.targets[0])
+    if target is None:
+        return _invalid(f"There is no {intent.targets[0]!r} here to attack.")
+    if target.is_down:
+        return _invalid(f"{target.name} is already down.")
+
+    weapon_name = intent.item or ""
+    spec = state.catalog.get(weapon_name.lower(), {}) if weapon_name else {}
+    return _run_attack_roll(
+        state, actor, target,
+        damage_dice=spec.get("damage", "1d6"),
+        damage_type=spec.get("damage_type", "bludgeoning"),
+        weapon=weapon_name or spec.get("name", ""),
+        advantage=intent.advantage,
+        disadvantage=intent.disadvantage,
+        finesse=bool(spec.get("finesse")),
+        ranged=bool(spec.get("ranged")),
+    )
+
+
 def _resolve_cast(intent: Intent, state: GameState) -> Resolution:
     actor = state.actor(intent.actor_id)
     if actor is None:
@@ -381,8 +413,28 @@ def _resolve_cast(intent: Intent, state: GameState) -> Resolution:
     # The spell's own effect needs a stat block. Without one, hand the shape of
     # the cast to the Narrator rather than inventing damage.
     spec = state.catalog.get(spell.lower(), {})
+    attack_spec = spells.attack_spell(spell)
     rolls: list[Roll] = []
-    if spec.get("save_ability") and intent.targets:
+    if attack_spec and intent.targets:
+        target = state.actor(intent.targets[0])
+        if target is not None:
+            attack_bonus = actor.proficiency_bonus + actor.modifier(spec.get("cast_ability", "INT"))
+            attack_res = _run_attack_roll(
+                state, actor, target,
+                damage_dice=attack_spec["damage_dice"],
+                damage_type=attack_spec["damage_type"],
+                weapon=spell,
+                attack_bonus=attack_bonus,
+                ranged=bool(attack_spec.get("ranged")),
+            )
+            return Resolution(
+                kind="attack", rolls=list(attack_res.rolls), dc=attack_res.dc,
+                success=attack_res.success, degree=attack_res.degree,
+                state_deltas=deltas + attack_res.state_deltas,
+                facts=facts + attack_res.facts,
+                events=events + attack_res.events,
+            )
+    elif spec.get("save_ability") and intent.targets:
         dc = rules.spell_save_dc(actor, spec.get("cast_ability", "INT"))
         for target_ref in intent.targets:
             target = state.actor(target_ref)

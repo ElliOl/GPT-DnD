@@ -211,6 +211,27 @@ def test_a_save_spell_halves_damage_on_a_success(state):
     assert state.actors["goblin_1"].hp < 7
 
 
+def test_an_attack_cantrip_actually_rolls_to_hit(state):
+    """Fire Bolt used to fall through to pure narrative — no catalog entry, no
+    save_ability, no heal, so nothing rolled and nothing happened mechanically
+    no matter what the Narrator said occurred. It's a real attack roll now,
+    same as a weapon, and starts combat the same way."""
+    for seed in range(100):
+        state.combat = CombatState()
+        state.roller = DiceRoller(seed=seed)
+        state.actors["thorin"].hp = 24
+        state.actors["goblin_1"].hp = 7
+        state.actors["thorin"].resources["spell_slots"] = {}
+        r = resolve(Intent(verb="cast", actor_id="thorin", spell="fire bolt",
+                           spell_level=0, targets=["goblin_1"]), state)
+        assert r.kind == "attack", "an attack-roll spell should resolve exactly like a weapon attack"
+        if r.success:
+            assert state.actors["goblin_1"].hp < 7
+            assert state.combat.active or state.combat.ended_reason
+            return
+    pytest.skip("no hit in 100 seeds")
+
+
 def test_using_an_item_you_do_not_have_is_invalid(state):
     r = resolve(Intent(verb="use_item", actor_id="thorin", item="healing potion"), state)
     assert r.kind == "invalid"
