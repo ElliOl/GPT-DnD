@@ -51,7 +51,7 @@
     "spell_save_dc": 13,
     "spell_attack_bonus": 5,
     "spell_slots": {
-      "1st": 0
+      "1st": 2
     },
     "spells_prepared": [
       "Mage Armor",

@@ -35,9 +35,14 @@ from ..engine.intent import Intent
 from ..engine.resolve import Resolution, resolve
 from ..services.ai_client_base import BaseAIClient
 from ..state.db import session_scope
-from ..state.events import EventType, record_event
+from ..state.events import Delta, EventType, record_event
 from ..state.models import Campaign, CharacterRow
-from ..state.snapshot import apply_proposed_deltas, commit_resolution, load_game_state
+from ..state.snapshot import (
+    apply_proposed_deltas,
+    commit_resolution,
+    ensure_combat_stats,
+    load_game_state,
+)
 from . import context_builder
 from .budget import SessionBudget
 
@@ -166,11 +171,19 @@ class TurnLoop:
             raw, player_message=player_message, default_actor=default_actor, roster=roster
         )
 
-    def _resolve(self, campaign_id: str, intent: Intent) -> tuple[Resolution | None, list[dict]]:
+    def _resolve(
+        self, campaign_id: str, turn_no: int, intent: Intent
+    ) -> tuple[Resolution | None, list[dict]]:
         """Run the engine and persist everything it decided."""
         if not intent.is_mechanical:
             return None, []
         with session_scope() as session:
+            if intent.verb in ("attack", "cast") and intent.targets:
+                location_id = context_builder.party_location(session, campaign_id)
+                ensure_combat_stats(
+                    session, campaign_id, location_id,
+                    npc_kinds=self._npc_kinds(), turn_no=turn_no,
+                )
             state = load_game_state(session, campaign_id, catalog=self._catalog())
             resolution = resolve(intent, state)
             commit_resolution(session, state, resolution)
@@ -188,8 +201,147 @@ class TurnLoop:
             catalog[entity.name.lower()] = entity.data
         return catalog
 
+    def _npc_kinds(self) -> dict[str, str]:
+        """template_id -> race, so a materialized NPC gets Klarg's real bugbear
+        stats instead of a generic mook's — modules give personality, not AC."""
+        kinds: dict[str, str] = {}
+        for npc_id, entity in self.module.npcs.items():
+            race = entity.get("race")
+            if race:
+                kinds[npc_id] = race
+        return kinds
+
     async def _narrate(self, campaign_id: str, packet, context: AgentContext) -> str:
         return await self.narrator.run(context, **packet.as_kwargs())
+
+    def _spawn_hostiles(
+        self, session, campaign_id: str, turn_no: int, hostiles: list[dict[str, str]]
+    ) -> None:
+        """The DM described a creature the module never named. Give it a roster
+        entry now — a bare NPC, no combat stats yet — so the *next* attack on it
+        resolves instead of looping on "who do you mean". ``ensure_combat_stats``
+        attaches the real numbers the moment it's actually fought."""
+        from sqlalchemy import select as _select
+
+        from ..state.models import NPCRow
+
+        location_id = context_builder.party_location(session, campaign_id)
+        existing = {
+            n.name.lower()
+            for n in session.scalars(
+                _select(NPCRow).where(NPCRow.campaign_id == campaign_id)
+            )
+        }
+        for i, h in enumerate(hostiles):
+            name = h["name"].strip()
+            if not name or name.lower() in existing:
+                continue
+            npc_id = f"adhoc_{turn_no}_{i}_{h['kind'].strip().lower().replace(' ', '_')}"
+            record_event(
+                session, campaign_id, EventType.HOSTILE_INTRODUCED,
+                {"npc_id": npc_id, "name": name, "kind": h["kind"]},
+                deltas=[Delta(
+                    "npc", npc_id, "create", "",
+                    {
+                        "name": name, "template_id": None, "status": "alive",
+                        "location_id": location_id, "attitude_to_party": -2,
+                        "importance": 1, "resources": {"kind": h["kind"].strip().lower()},
+                    },
+                )],
+                source="engine", turn_no=turn_no,
+            )
+            existing.add(name.lower())
+
+    def _spawn_locations(
+        self, session, campaign_id: str, turn_no: int, new_locations: list[dict[str, str]]
+    ) -> None:
+        """The DM described somewhere real that isn't in the log yet — whether
+        the module never authored it or the story went past what it wrote (see
+        the Narrator's voice rules on rewarding effort). Give it a real row,
+        nested under wherever the party is, so it can be returned to, and
+        linked to ``connects_to`` when the text said where it leads."""
+        from sqlalchemy import select as _select
+
+        from ..state.models import LocationRow
+
+        parent_id = context_builder.party_location(session, campaign_id)
+        rows = {
+            row.id: row.name
+            for row in session.scalars(
+                _select(LocationRow).where(LocationRow.campaign_id == campaign_id)
+            )
+        }
+        by_name = {name.lower(): lid for lid, name in rows.items()}
+
+        for loc in new_locations:
+            name = loc["name"].strip()
+            if not name or name.lower() in by_name:
+                continue
+            slug = "".join(c if c.isalnum() else "_" for c in name.lower()).strip("_")
+            loc_id = f"{parent_id}__{slug}" if parent_id else slug
+            if loc_id in rows:
+                continue
+
+            connects_to = (loc.get("connects_to") or "").strip()
+            linked_id = connects_to if connects_to in rows else None
+            exits = [x for x in (parent_id, linked_id) if x]
+
+            record_event(
+                session, campaign_id, EventType.LOCATION_DISCOVERED,
+                {"id": loc_id, "name": name, "parent_id": parent_id, "connects_to": linked_id},
+                deltas=[Delta(
+                    "location", loc_id, "create", "",
+                    {
+                        "name": name, "discovered": True, "visited": True,
+                        "parent_id": parent_id, "exits": exits, "state_overrides": {},
+                    },
+                )],
+                source="engine", turn_no=turn_no,
+            )
+            for other_id in exits:
+                record_event(
+                    session, campaign_id, EventType.LOCATION_DISCOVERED,
+                    {"id": other_id, "linked_to": loc_id},
+                    deltas=[Delta("location", other_id, "append", "exits", loc_id)],
+                    source="engine", turn_no=turn_no,
+                )
+            rows[loc_id] = name
+            by_name[name.lower()] = loc_id
+
+    async def _answer_ooc(
+        self,
+        campaign_id: str,
+        turn_no: int,
+        player_message: str,
+        intent: Intent,
+        context: AgentContext,
+    ) -> TurnResult:
+        with session_scope() as session:
+            ooc_facts = context_builder.party_ooc_facts(session, campaign_id)
+
+        try:
+            answer = await self.narrator.run(
+                context, player_message=player_message, ooc=True, ooc_facts=ooc_facts,
+            )
+        except (AgentFailed, AgentSkipped) as exc:
+            # The table doesn't stall because the DM's voice hiccuped — a plain
+            # "ask again" beats an AgentFailed traceback ending the session.
+            print(f"⚠️  ooc answer failed: {exc}")
+            answer = (
+                "I'm not sure how to answer that one — could you ask it a "
+                "different way, or as an in-character action instead?"
+            )
+
+        with session_scope() as session:
+            record_event(
+                session, campaign_id, EventType.NARRATION,
+                {"text": answer, "ooc": True}, source="engine", turn_no=turn_no,
+            )
+
+        return TurnResult(
+            campaign_id=campaign_id, turn_no=turn_no, narration=answer,
+            intent=intent.to_dict(), budget=self.budget_for(campaign_id).snapshot(),
+        )
 
     async def _run_scribe(
         self,
@@ -204,6 +356,9 @@ class TurnLoop:
     ) -> None:
         """Extract state changes and write them. Runs after the player has read
         the prose, so its latency is invisible."""
+        with session_scope() as session:
+            known_locations = context_builder.known_locations(session, campaign_id)
+
         scribe_extraction = parse_extraction({})
         try:
             raw = await self.scribe.run(
@@ -212,10 +367,22 @@ class TurnLoop:
                 narration=narration,
                 resolution_facts=resolution_facts,
                 entities=roster,
+                known_locations=known_locations,
             )
             scribe_extraction = parse_extraction(raw)
         except (AgentFailed, AgentSkipped) as exc:
             print(f"⚠️  scribe skipped: {exc}")
+
+        if scribe_extraction.new_locations:
+            # Before anything else — the Scribe's own `deltas` below may move a
+            # character onto one of these places, and that only validates if
+            # the location already exists by the time it's applied.
+            with session_scope() as session:
+                self._spawn_locations(session, campaign_id, turn_no, scribe_extraction.new_locations)
+
+        if scribe_extraction.new_hostiles:
+            with session_scope() as session:
+                self._spawn_hostiles(session, campaign_id, turn_no, scribe_extraction.new_hostiles)
 
         deltas, facts, disagreements = reconcile(narrator_footer, scribe_extraction)
         if not (deltas or facts or disagreements or scribe_extraction.summary):
@@ -283,7 +450,13 @@ class TurnLoop:
                 intent=intent.to_dict(), needs_clarification=True, budget=budget.snapshot(),
             )
 
-        resolution, rolls = self._resolve(campaign_id, intent)
+        # A player asking the table a question, not their character acting in the
+        # world. No mechanics, no Scribe — answer plainly and stop, same as a DM
+        # pausing to field a rules question rather than narrating through it.
+        if intent.verb == "ooc" or intent.ooc:
+            return await self._answer_ooc(campaign_id, turn_no, player_message, intent, context)
+
+        resolution, rolls = self._resolve(campaign_id, turn_no, intent)
 
         with session_scope() as session:
             packet = context_builder.build_packet(

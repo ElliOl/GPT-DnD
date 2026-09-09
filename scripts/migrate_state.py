@@ -55,6 +55,17 @@ def _slug(text: str) -> str:
 # The party
 # --------------------------------------------------------------------------
 
+def _normalize_slot_levels(slots: dict[str, Any]) -> dict[str, int]:
+    """Sheet slot keys are ordinals ("1st"); the rules engine indexes by plain
+    digit ("1"). Strip whatever's not a leading number so either shape works."""
+    normalized: dict[str, int] = {}
+    for key, value in slots.items():
+        digits = "".join(c for c in str(key) if c.isdigit())
+        if digits:
+            normalized[digits] = int(value)
+    return normalized
+
+
 def character_rows(party_dir: Path, start_location: str | None) -> list[dict[str, Any]]:
     """PCs from a directory of character sheets.
 
@@ -72,6 +83,12 @@ def character_rows(party_dir: Path, start_location: str | None) -> list[dict[str
             for k, v in (data.get("abilities") or {}).items()
             if k in ABILITY_KEYS
         }
+        # Spellcasting sheets nest slots under `spellcasting`; a top-level
+        # `spell_slots` is kept as a fallback for other sheet shapes.
+        spellcasting = data.get("spellcasting") or {}
+        max_slots = _normalize_slot_levels(
+            spellcasting.get("spell_slots") or data.get("spell_slots") or {}
+        )
         rows.append(
             {
                 "id": str(data.get("id") or path.stem),
@@ -90,7 +107,8 @@ def character_rows(party_dir: Path, start_location: str | None) -> list[dict[str
                 "conditions": list(data.get("conditions", [])),
                 "location_id": start_location,
                 "resources": {
-                    "spell_slots": data.get("spell_slots", {}),
+                    "spell_slots": dict(max_slots),
+                    "max_spell_slots": dict(max_slots),
                     "hit_dice": data.get("hit_dice", data.get("level", 1)),
                     "weapons": data.get("weapons", []),
                     "gold": data.get("gold", 0),

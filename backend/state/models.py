@@ -196,6 +196,14 @@ class LocationRow(Base):
     visited: Mapped[bool] = mapped_column(Boolean, default=False)
     # Deltas layered over the content-file definition (cleared rooms, opened doors).
     state_overrides: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    # Where this was found — a module's top-level location for an ad hoc room,
+    # or another ad hoc room for one discovered deeper in. None for anything
+    # the module authored at the top level.
+    parent_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    # Other location ids this one connects to. Grows as play discovers doors,
+    # tunnels, and "wait, this is the room we already found from the other
+    # side" — the substrate for recognizing a loop rather than a new place.
+    exits: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 
 class EventRow(Base):

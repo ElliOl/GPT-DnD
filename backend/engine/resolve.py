@@ -39,6 +39,8 @@ class GameState:
     actors: dict[str, Combatant] = field(default_factory=dict)
     combat: combat_rules.CombatState = field(default_factory=combat_rules.CombatState)
     location_id: str | None = None
+    day: int = 1
+    hour: int = 8
     #: Weapon/spell stat blocks available this turn, keyed by lowercase name.
     catalog: dict[str, dict[str, Any]] = field(default_factory=dict)
 
@@ -342,11 +344,13 @@ def _resolve_rest(intent: Intent, state: GameState) -> Resolution:
     deltas: list[Delta] = []
     facts: list[str] = []
     rolls: list[Roll] = []
+    hours_spent = 8 if (intent.rest_type or "short") == "long" else 1
     if (intent.rest_type or "short") == "long":
         for c in state.actors.values():
             if not c.is_pc:
                 continue
-            rules.long_rest(c)
+            slot_table = c.resources.get("max_spell_slots")
+            rules.long_rest(c, slot_table=slot_table)
             deltas.extend(_hp_deltas(c))
             deltas.append(Delta("character", c.id, "set", "resources", dict(c.resources)))
             facts.append(f"{c.name} finished a long rest at {c.hp}/{c.max_hp} HP.")
@@ -359,6 +363,13 @@ def _resolve_rest(intent: Intent, state: GameState) -> Resolution:
             f"{actor.name} took a short rest, spent one hit die and regained "
             f"{result['amount']} HP — now {actor.hp}/{actor.max_hp}."
         )
+
+    total_hours = state.hour + hours_spent
+    new_day = state.day + total_hours // 24
+    new_hour = total_hours % 24
+    deltas.append(Delta("campaign", state.campaign_id, "set", "day", new_day))
+    deltas.append(Delta("campaign", state.campaign_id, "set", "hour", new_hour))
+    facts.append(f"Time passed: now day {new_day}, {new_hour:02d}:00.")
 
     return Resolution(
         kind="rest", rolls=rolls, success=True, state_deltas=deltas, facts=facts,

@@ -43,6 +43,14 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT))
 
+# Windows terminals commonly default to cp1252, which can't encode the emoji
+# used in output below (🎲 in a roll line is enough to crash the session
+# mid-turn, after the DB write already landed). UTF-8 with replacement is a
+# no-op on terminals that already support it.
+if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
 DIM, BOLD, RESET = "\033[2m", "\033[1m", "\033[0m"
 CYAN, YELLOW, RED, GREEN = "\033[36m", "\033[33m", "\033[31m", "\033[32m"
 

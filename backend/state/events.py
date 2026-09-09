@@ -71,6 +71,7 @@ class EventType:
     TURN_LABEL = "turn_label"
     SCENE_SUMMARY = "scene_summary"
     AUDIT_VIOLATION = "audit_violation"
+    HOSTILE_INTRODUCED = "hostile_introduced"
 
 
 # --------------------------------------------------------------------------
@@ -86,7 +87,7 @@ TARGETS = {
     "location": LocationRow,
 }
 
-OPS = {"set", "inc", "append", "remove"}
+OPS = {"set", "inc", "append", "remove", "create"}
 
 #: Fields a delta may touch, per target. Anything else is rejected outright.
 ALLOWED_FIELDS: dict[str, set[str]] = {
@@ -98,18 +99,18 @@ ALLOWED_FIELDS: dict[str, set[str]] = {
     },
     "npc": {
         "status", "location_id", "attitude_to_party", "goals", "knowledge",
-        "resources", "schedule", "importance",
+        "resources", "schedule", "importance", "character_id",
     },
     "quest": {"status", "hidden", "details", "title", "location_id", "giver_npc"},
     "clock": {"filled", "size", "hidden", "on_complete", "name"},
-    "location": {"discovered", "visited", "state_overrides", "name"},
+    "location": {"discovered", "visited", "state_overrides", "name", "parent_id", "exits"},
 }
 
 #: Fields an LLM may never move on its own authority. An engine-authored event
 #: (or an explicit ``authorized_by`` event id) is required.
 GUARDED_FIELDS: dict[str, set[str]] = {
     "character": {"hp", "max_hp", "temp_hp", "level", "resources", "ac", "stats"},
-    "npc": {"status"},
+    "npc": {"status", "character_id"},
     "clock": {"filled", "size"},
 }
 
@@ -154,12 +155,30 @@ class Delta:
         )
 
 
+#: Targets a trusted source may bring into existence with a ``create`` delta.
+#: ``npc`` — an ad hoc NPC the Scribe noticed the DM introduce (a "goblin" the
+#: module never named) gets a bare roster entry, no combat stats yet.
+#: ``character`` — the engine backs any present NPC (that one, or a named
+#: module NPC like Klarg who was never given stats either) with a real,
+#: persisted combatant the first time it's actually fought.
+#: ``location`` — a room or landmark the module never authored (or authored
+#: only as prose inside a bigger location) becomes a real place the moment
+#: play finds it, the same way an ad hoc monster becomes a real combatant.
+CREATABLE_TARGETS = {"npc", "character", "location"}
+
+
 def validate_delta(d: Delta, source: str) -> None:
     """Raise :class:`DeltaRejected` if this delta may not be applied from ``source``."""
     if d.target not in TARGETS:
         raise DeltaRejected(f"unknown target {d.target!r}")
     if d.op not in OPS:
         raise DeltaRejected(f"unknown op {d.op!r}")
+    if d.op == "create":
+        if d.target not in CREATABLE_TARGETS:
+            raise DeltaRejected(f"{d.target} rows cannot be created by delta")
+        if source not in TRUSTED_SOURCES:
+            raise DeltaRejected(f"creating a {d.target} requires an engine-authorized source")
+        return
     allowed = ALLOWED_FIELDS.get(d.target, set())
     if d.field not in allowed:
         raise DeltaRejected(f"{d.target}.{d.field} is not a writable field")
@@ -181,10 +200,29 @@ def _load_row(session: Session, target: str, row_id: str):
     return row
 
 
-def apply_delta(session: Session, d: Delta, source: str = "engine") -> None:
+def apply_delta(session: Session, d: Delta, source: str = "engine", campaign_id: str | None = None) -> None:
     """Validate and apply a single delta. The only writer of mechanical state."""
     validate_delta(d, source)
+
+    if d.op == "create":
+        model = TARGETS[d.target]
+        if session.get(model, d.id) is not None:
+            return  # already exists — creation is idempotent, not an error
+        fields = dict(d.value or {})
+        fields.setdefault("campaign_id", campaign_id)
+        if not fields.get("campaign_id"):
+            raise DeltaRejected(f"cannot create {d.target} {d.id!r} without a campaign_id")
+        session.add(model(id=d.id, **fields))
+        return
+
     row = _load_row(session, d.target, d.id)
+
+    if d.op == "set" and d.field == "location_id" and d.value is not None:
+        campaign_id = getattr(row, "campaign_id", None)
+        exists = session.get(LocationRow, d.value) if campaign_id else None
+        if campaign_id and (exists is None or exists.campaign_id != campaign_id):
+            raise DeltaRejected(f"location {d.value!r} does not exist")
+
     current = getattr(row, d.field)
 
     if d.op == "set":
@@ -252,7 +290,7 @@ def record_event(
         for d in delta_list:
             if d.authorized_by is None and source in TRUSTED_SOURCES:
                 d.authorized_by = row.id
-            apply_delta(session, d, source=source)
+            apply_delta(session, d, source=source, campaign_id=campaign_id)
         # Rewrite the payload now that the deltas carry the id that authorized
         # them, so replay sees the same provenance the live application did.
         row.payload = {**base_payload, "deltas": [d.to_dict() for d in delta_list]}

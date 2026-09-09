@@ -34,6 +34,66 @@ def _inventory_for(session: Session, character_id: str) -> list[str]:
     ]
 
 
+def ensure_combat_stats(
+    session: Session,
+    campaign_id: str,
+    location_id: str | None,
+    *,
+    npc_kinds: dict[str, str] | None = None,
+    source: str = "engine",
+    turn_no: int = 0,
+) -> None:
+    """Anyone present should be a valid target, not just the party — a module
+    authors Klarg's personality and never his AC, and an ad hoc NPC has no stats
+    at all until now. First contact backs it with a real, persisted combatant
+    (same table PCs use, so every later turn's HP is the same row), written as
+    an event like everything else the world remembers.
+
+    Idempotent: only NPCs at this location without one yet are touched, so a
+    return trip to a cleared room does nothing.
+    """
+    if not location_id:
+        return
+
+    from ..engine.monsters import stat_block_for
+
+    candidates = session.scalars(
+        select(NPCRow).where(
+            NPCRow.campaign_id == campaign_id,
+            NPCRow.location_id == location_id,
+            NPCRow.status.in_(("alive", "captured")),
+            NPCRow.character_id.is_(None),
+        )
+    )
+    for npc in candidates:
+        kind = (
+            (npc.resources or {}).get("kind")
+            or (npc_kinds or {}).get(npc.template_id or "")
+            or npc.name
+        )
+        block = stat_block_for(kind)
+        char_id = f"npc_{npc.id}"
+        record_event(
+            session, campaign_id, EventType.HOSTILE_INTRODUCED,
+            {"npc_id": npc.id, "name": npc.name, "kind": kind},
+            deltas=[
+                Delta(
+                    "character", char_id, "create", "",
+                    {
+                        "name": npc.name, "is_pc": False, "level": block["level"],
+                        "hp": block["hp"], "max_hp": block["max_hp"], "temp_hp": 0,
+                        "ac": block["ac"], "speed": 30, "proficiency_bonus": 2,
+                        "stats": block["stats"], "conditions": [],
+                        "resources": {"weapons": block["weapons"]},
+                        "proficiencies": {}, "location_id": location_id,
+                    },
+                ),
+                Delta("npc", npc.id, "set", "character_id", char_id),
+            ],
+            source=source, turn_no=turn_no,
+        )
+
+
 def load_combat_state(session: Session, campaign_id: str) -> CombatState:
     from .models import EventRow
 
@@ -71,6 +131,19 @@ def load_game_state(
     for row in session.scalars(stmt):
         actors[row.id] = Combatant.from_row(row, _inventory_for(session, row.id))
 
+    # An NPC materialized into a real combatant is still targeted by its own
+    # (roster-visible) id everywhere upstream — the Intent agent and the
+    # player never learn the backing character row's id. Alias it so
+    # ``state.actor("goblin_1")`` finds the same Combatant either way.
+    for npc in session.scalars(
+        select(NPCRow).where(
+            NPCRow.campaign_id == campaign_id, NPCRow.character_id.is_not(None)
+        )
+    ):
+        combatant = actors.get(npc.character_id)
+        if combatant is not None:
+            actors[npc.id] = combatant
+
     roller = DiceRoller(seed=campaign.rng_seed)
     roller.start_turn(campaign.turn_no)
 
@@ -81,6 +154,8 @@ def load_game_state(
         actors=actors,
         combat=load_combat_state(session, campaign_id),
         catalog=catalog or {},
+        day=campaign.day,
+        hour=campaign.hour,
     )
 
 

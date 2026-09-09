@@ -88,8 +88,12 @@ def module(tmp_path):
 @pytest.fixture()
 def loop(module, campaign, session):
     """A loop over the seeded test campaign, with the party in the antechamber."""
-    from backend.state.models import CharacterRow, NPCRow
+    from backend.state.models import CharacterRow, LocationRow, NPCRow
 
+    session.add(
+        LocationRow(id="antechamber", campaign_id="c1", name="Antechamber",
+                    discovered=True, visited=True)
+    )
     for row in session.query(CharacterRow).all():
         row.location_id = "antechamber"
     session.add(
@@ -322,9 +326,6 @@ async def test_scribe_facts_become_canon(loop, campaign, session):
 async def test_the_narrators_hidden_footer_is_stripped_and_used(loop, campaign, session):
     from backend.state.models import EventRow, LocationRow
 
-    session.add(LocationRow(id="antechamber", campaign_id=campaign, name="Antechamber"))
-    session.commit()
-
     client = client_of(loop)
     client.queue_tool("record_intent", {"verb": "look", "actor_id": "thorin"})
     client.queue_text(
@@ -401,3 +402,130 @@ def test_malformed_delta_entries_are_dropped_not_fatal():
     extraction = parse_extraction({"deltas": [{"nonsense": True}, {
         "target": "npc", "id": "x", "op": "set", "field": "status", "value": "fled"}]})
     assert len(extraction.deltas) == 1
+
+
+# --------------------------------------------------------------------------
+# Anyone present is a valid target, not just the party
+# --------------------------------------------------------------------------
+
+def test_new_hostiles_extraction_is_parsed():
+    extraction = parse_extraction(
+        {"new_hostiles": [{"name": "a goblin", "kind": "goblin"}, {"bad": "entry"}]}
+    )
+    assert extraction.new_hostiles == [{"name": "a goblin", "kind": "goblin"}]
+
+
+@pytest.mark.asyncio
+async def test_attacking_a_present_npc_that_was_never_statted_works(loop, campaign, session):
+    """The Warden fixture is a bare NPCRow — name and attitude, no HP or AC.
+    Attacking it should work exactly like attacking the pre-statted goblin."""
+    from backend.state.models import CharacterRow, NPCRow
+
+    client = client_of(loop)
+    client.queue_tool("record_intent", {
+        "verb": "attack", "actor_id": "thorin", "targets": ["warden"],
+    })
+    client.queue_text("Thorin's blade meets the Warden.")
+
+    result = await loop.take_turn(campaign, "I attack the Warden", defer_scribe=False)
+
+    assert result.resolution is not None
+    assert result.resolution["kind"] == "attack"
+    session.expire_all()
+    warden = session.get(NPCRow, "warden")
+    assert warden.character_id is not None
+    backing = session.get(CharacterRow, warden.character_id)
+    assert backing is not None and backing.is_pc is False and backing.max_hp > 0
+
+
+@pytest.mark.asyncio
+async def test_a_dm_introduced_hostile_becomes_attackable_next_turn(loop, campaign, session):
+    """Turn 1: the DM narrates a goblin the module never named. The Scribe
+    notices. Turn 2: attacking "the goblin" resolves instead of looping on
+    who the player means — the whole point of the fix."""
+    from backend.state.models import NPCRow
+
+    client = client_of(loop)
+    client.queue_tool("record_intent", {"verb": "narrate", "actor_id": "thorin"})
+    client.queue_text("A goblin lurches out from behind the altar, blade raised.")
+    client.queue_tool("record_changes", {
+        "deltas": [], "facts": [],
+        "new_hostiles": [{"name": "a goblin", "kind": "goblin"}],
+        "summary": "A goblin appeared.",
+    })
+    await loop.take_turn(campaign, "we push into the antechamber", defer_scribe=False)
+
+    session.expire_all()
+    spawned = [n for n in session.query(NPCRow).all() if n.name == "a goblin"]
+    assert len(spawned) == 1
+    goblin_id = spawned[0].id
+
+    client.queue_tool("record_intent", {
+        "verb": "attack", "actor_id": "thorin", "targets": [goblin_id],
+    })
+    client.queue_text("Thorin cuts the goblin down.")
+    result = await loop.take_turn(campaign, "I attack the goblin", defer_scribe=False)
+
+    assert result.needs_clarification is False
+    assert result.resolution is not None
+    assert result.resolution["kind"] == "attack"
+
+
+@pytest.mark.asyncio
+async def test_a_dm_described_place_becomes_a_real_nested_location(loop, campaign, session):
+    """The module never authored a "hidden passage" off the antechamber. The
+    Scribe notices it anyway, and it becomes a real location a later turn can
+    move a character onto — the whole point being the module's map is
+    reference material, not a hard boundary on where the story can go."""
+    from backend.state.models import LocationRow
+
+    client = client_of(loop)
+    client.queue_tool("record_intent", {"verb": "narrate", "actor_id": "thorin"})
+    client.queue_text("Behind a loose stone, a hidden passage slopes downward.")
+    client.queue_tool("record_changes", {
+        "deltas": [], "facts": [],
+        "new_locations": [{"name": "Hidden Passage", "connects_to": "antechamber"}],
+        "summary": "A hidden passage was found.",
+    })
+    await loop.take_turn(campaign, "I search the wall for secret doors", defer_scribe=False)
+
+    session.expire_all()
+    passage = session.query(LocationRow).filter_by(name="Hidden Passage").one()
+    assert passage.parent_id == "antechamber"
+    assert passage.discovered is True and passage.visited is True
+    assert "antechamber" in passage.exits
+
+    antechamber = session.get(LocationRow, "antechamber")
+    assert passage.id in antechamber.exits, "the link goes both ways"
+
+    # A later turn can now legitimately move a PC onto it.
+    client.queue_tool("record_intent", {"verb": "move", "actor_id": "thorin",
+                                        "targets": [passage.id]})
+    result = await loop.take_turn(campaign, "Thorin heads down the passage", defer_scribe=False)
+    assert result.resolution is not None
+    assert result.resolution["kind"] == "narrative"
+
+
+@pytest.mark.asyncio
+async def test_scribe_cannot_move_a_character_to_a_place_that_does_not_exist(loop, campaign, session):
+    """Without a matching new_locations entry, an invented location name in a
+    plain delta is rejected — this is the bug that let two PCs silently drift
+    to different, nonexistent rooms in actual play."""
+    from backend.state.models import CharacterRow, EventRow
+
+    client = client_of(loop)
+    client.queue_tool("record_intent", {"verb": "talk", "actor_id": "thorin"})
+    client.queue_text("Thorin wanders off.")
+    client.queue_tool("record_changes", {
+        "deltas": [{"target": "character", "id": "thorin", "op": "set",
+                    "field": "location_id", "value": "some_room_the_scribe_invented"}],
+        "facts": [], "summary": "",
+    })
+
+    await loop.take_turn(campaign, "Thorin looks around", defer_scribe=False)
+
+    session.expire_all()
+    assert session.get(CharacterRow, "thorin").location_id == "antechamber", \
+        "the bogus location must not have been applied"
+    violations = [e for e in session.query(EventRow).all() if e.type == "audit_violation"]
+    assert any("does not exist" in str(e.payload) for e in violations)

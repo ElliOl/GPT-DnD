@@ -216,6 +216,52 @@ def build_packet(
     )
 
 
+def party_ooc_facts(session: Session, campaign_id: str) -> list[str]:
+    """Ground truth for an out-of-character rules question.
+
+    A player asking "why can't I cast X" needs the real numbers, not a guess —
+    this is the same resources blob the engine spends from, read-only.
+    """
+    party = session.scalars(
+        select(CharacterRow).where(
+            CharacterRow.campaign_id == campaign_id, CharacterRow.is_pc.is_(True)
+        )
+    )
+    facts = []
+    for c in party:
+        slots = (c.resources or {}).get("spell_slots") or {}
+        max_slots = (c.resources or {}).get("max_spell_slots") or {}
+        slot_text = ", ".join(
+            f"level {lvl}: {slots.get(lvl, 0)}/{max_slots.get(lvl, slots.get(lvl, 0))}"
+            for lvl in sorted(max_slots or slots)
+        )
+        parts = [
+            f"{c.name} ({c.race} {c.char_class} {c.level})",
+            f"HP {c.hp}/{c.max_hp}, AC {c.ac}",
+        ]
+        if slot_text:
+            parts.append(f"spell slots — {slot_text}")
+        if c.conditions:
+            parts.append(f"conditions: {', '.join(c.conditions)}")
+        gold = (c.resources or {}).get("gold")
+        if gold is not None:
+            parts.append(f"gold {gold}")
+        facts.append(". ".join(parts) + ".")
+    return facts
+
+
+def known_locations(session: Session, campaign_id: str) -> dict[str, str]:
+    """Every place this campaign has on record — module-authored or ad hoc —
+    so the Scribe can say a new one connects to something real instead of
+    guessing at an id."""
+    return {
+        row.id: row.name
+        for row in session.scalars(
+            select(LocationRow).where(LocationRow.campaign_id == campaign_id)
+        )
+    }
+
+
 def scene_roster(session: Session, campaign_id: str) -> dict[str, str]:
     """Names the Intent agent may resolve a target to: the party plus who's here.
 

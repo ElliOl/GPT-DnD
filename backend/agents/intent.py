@@ -100,17 +100,41 @@ def to_intent(
     if roster is not None:
         if intent.actor_id not in roster:
             intent.actor_id = default_actor
-        unknown = [t for t in intent.targets if t not in roster]
-        intent.targets = [t for t in intent.targets if t in roster]
-        if unknown and not intent.targets and intent.verb in ("attack", "cast"):
-            intent.ambiguous = True
-            intent.clarification = (
-                intent.clarification or f"There's no {unknown[0]!r} here — who do you mean?"
-            )
+        # The roster is characters and present NPCs — a valid target namespace
+        # for attack/cast, but "move"'s target is a location id, a different
+        # namespace entirely. Clamping it against the wrong list would drop
+        # every legitimate destination.
+        if intent.verb != "move":
+            unknown = [t for t in intent.targets if t not in roster]
+            intent.targets = [t for t in intent.targets if t in roster]
+            if unknown and not intent.targets and intent.verb in ("attack", "cast"):
+                intent.ambiguous = True
+                intent.clarification = (
+                    intent.clarification or f"There's no {unknown[0]!r} here — who do you mean?"
+                )
     elif not intent.actor_id:
         intent.actor_id = default_actor
 
+    _catch_missed_rest(intent, player_message)
     return intent
+
+
+def _catch_missed_rest(intent: Intent, player_message: str) -> None:
+    """A resting party has already told the Narrator it's resting, in a message
+    that usually also carries dialogue or scene-setting the model weighs more
+    heavily — "Thorin says X ... the party takes the long rest" reads as `talk`
+    to a classifier looking for the dominant clause. Getting this wrong is worse
+    than getting most verbs wrong: the Narrator still writes a recovery scene
+    from the player's own words, so the party *believes* they rested while HP,
+    hit dice, and spell slots silently never move. An explicit "long rest" /
+    "short rest" in the text overrides whatever verb the model chose."""
+    if intent.verb == "rest":
+        return
+    lowered = player_message.lower()
+    if "long rest" in lowered:
+        intent.verb, intent.rest_type = "rest", "long"
+    elif "short rest" in lowered:
+        intent.verb, intent.rest_type = "rest", "short"
 
 
 def heuristic_intent(player_message: str, default_actor: str = "") -> Intent:

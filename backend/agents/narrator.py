@@ -23,6 +23,12 @@ PROMPTS_DIR = Path(__file__).resolve().parent.parent / "prompts"
 VOICE_RULES = """
 You are the Dungeon Master's voice. You describe; you do not adjudicate.
 
+Ignore the TOOLS section above — it describes a different agent's setup. You
+have no tools in this call: never emit a tool call, function-call syntax, or
+JSON describing one (e.g. {"name": "skill_check", ...}). If a mechanic needs
+resolving, it has already happened by the time you see this prompt — read the
+result off the RESOLUTION block below, in prose, instead.
+
 Hard rules:
 - The RESOLUTION block below is mechanical truth from the rules engine. Every
   number in it is already final. Never contradict it, never re-roll, never
@@ -34,6 +40,14 @@ Hard rules:
   established canon.
 - Never contradict a CANON fact. Facts absent from canon are not contradictions —
   you may invent colour, and what you invent becomes canon.
+- The module's rooms and exits are reference material, not a script. When the
+  party commits real, sustained effort to something it doesn't describe — a
+  second entrance it never authored, a plan it didn't anticipate — let the
+  effort pay off with something that moves the story forward, in proportion to
+  what they put in. A dead end that erases several turns of searching is a
+  worse table experience than a passage the module didn't draw, and a human DM
+  would improvise the latter. What you invent this way becomes canon exactly
+  like any other detail — the world can't un-discover it later.
 - Speak only as the DM and the NPCs present. Never write the players' actions,
   dialogue, or feelings for them.
 
@@ -89,8 +103,13 @@ class NarratorAgent(Agent[str]):
         canon_facts: list[str] | None = None,
         recent_turns: list[dict[str, Any]] | None = None,
         present_npcs: list[str] | None = None,
+        ooc: bool = False,
+        ooc_facts: list[str] | None = None,
         **_: Any,
     ) -> list[Message]:
+        if ooc:
+            return self._ooc_messages(player_message, ooc_facts or [])
+
         blocks: list[str] = []
         if scene:
             blocks.append(f"SCENE\n{scene}")
@@ -110,6 +129,32 @@ class NarratorAgent(Agent[str]):
 
         return [Message(role="user", content="\n\n".join(blocks))]
 
+    @staticmethod
+    def _ooc_messages(player_message: str, ooc_facts: list[str]) -> list[Message]:
+        """A player broke the fourth wall — a rules question, not an action.
+
+        Kept out of ``system_prompt`` so the cached prefix (the expensive,
+        stable part) is untouched by a path most turns never take.
+        """
+        blocks = [
+            "OUT OF CHARACTER\n"
+            "The player is asking you directly, not describing an action their "
+            "character takes. Drop the in-fiction voice and answer as the game "
+            "system itself — plainly, briefly, like a DM pausing to explain a "
+            "ruling at the table.\n"
+            "Answer only from the FACTS below; they are the actual current game "
+            "state, not flavor. If they don't cover what's being asked, say so "
+            "and ask a clarifying question rather than inventing a number or a "
+            "rule. Do not resume narrating the scene — the player's next message "
+            "will be their next action.",
+        ]
+        if ooc_facts:
+            blocks.append("FACTS\n" + "\n".join(f"- {f}" for f in ooc_facts))
+        else:
+            blocks.append("FACTS\n(none available)")
+        blocks.append(f"PLAYER\n{player_message}")
+        return [Message(role="user", content="\n\n".join(blocks))]
+
     def validate(self, result: str) -> str:
         from .base import AgentFailed
 
@@ -118,4 +163,4 @@ class NarratorAgent(Agent[str]):
         return result.strip()
 
     def trace_meta(self, **kwargs: Any) -> dict[str, Any]:
-        return {"had_resolution": bool(kwargs.get("resolution_facts"))}
+        return {"had_resolution": bool(kwargs.get("resolution_facts")), "ooc": bool(kwargs.get("ooc"))}

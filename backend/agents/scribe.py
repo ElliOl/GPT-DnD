@@ -45,6 +45,16 @@ Hard rules:
 - If nothing changed, return empty lists. An empty extraction is a correct
   answer; inventing a change to look useful is not.
 - Only reference ids that appear in the ENTITIES list.
+- `new_hostiles`: a creature the DM described as present and hostile (or about
+  to fight) that has no id in ENTITIES — a generic monster the module never
+  named, like "a goblin" rather than a named NPC. Give it a short lowercase
+  `kind` (its ordinary species name — "goblin", "wolf") so it gets a real stat
+  block instead of appearing with none. Skip anything already in ENTITIES.
+- `new_locations`: a room, junction, or landmark the DM described that has no
+  id in PLACES — whether the module never authored it or the DM improvised
+  past what it wrote. `connects_to` is the PLACES id it leads from or opens
+  onto, if the text says so (leave it out if unclear). Skip anything already
+  in PLACES — record a place once, the turn it's first described.
 """.strip()
 
 SCRIBE_TOOL_SCHEMA: dict[str, Any] = {
@@ -83,6 +93,33 @@ SCRIBE_TOOL_SCHEMA: dict[str, Any] = {
                     "required": ["text"],
                 },
             },
+            "new_hostiles": {
+                "type": "array",
+                "description": "Hostile creatures present that have no id in ENTITIES.",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "name": {"type": "string", "description": "How the DM referred to it."},
+                        "kind": {"type": "string", "description": "Lowercase species, e.g. 'goblin'."},
+                    },
+                    "required": ["name", "kind"],
+                },
+            },
+            "new_locations": {
+                "type": "array",
+                "description": "Places described that have no id in PLACES.",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "name": {"type": "string", "description": "How the DM referred to it."},
+                        "connects_to": {
+                            "type": "string",
+                            "description": "A PLACES id this leads from or opens onto, if stated.",
+                        },
+                    },
+                    "required": ["name"],
+                },
+            },
             "summary": {"type": "string"},
         },
         "required": ["deltas", "facts", "summary"],
@@ -97,6 +134,8 @@ class Extraction:
     deltas: list[Delta] = field(default_factory=list)
     facts: list[dict[str, Any]] = field(default_factory=list)
     summary: str = ""
+    new_hostiles: list[dict[str, str]] = field(default_factory=list)
+    new_locations: list[dict[str, str]] = field(default_factory=list)
 
 
 def _delta_key(delta: Delta) -> tuple:
@@ -111,7 +150,18 @@ def parse_extraction(raw: dict[str, Any]) -> Extraction:
         except (KeyError, TypeError):
             continue  # malformed entries are dropped, not fatal
     facts = [f for f in (raw.get("facts") or []) if isinstance(f, dict) and f.get("text")]
-    return Extraction(deltas=deltas, facts=facts, summary=str(raw.get("summary", "")))
+    hostiles = [
+        h for h in (raw.get("new_hostiles") or [])
+        if isinstance(h, dict) and h.get("name") and h.get("kind")
+    ]
+    locations = [
+        loc for loc in (raw.get("new_locations") or [])
+        if isinstance(loc, dict) and loc.get("name")
+    ]
+    return Extraction(
+        deltas=deltas, facts=facts, summary=str(raw.get("summary", "")),
+        new_hostiles=hostiles, new_locations=locations,
+    )
 
 
 def strip_footer(prose: str) -> tuple[str, Extraction]:
@@ -190,12 +240,16 @@ class ScribeAgent(Agent[dict]):
         narration: str,
         resolution_facts: list[str] | None = None,
         entities: dict[str, str] | None = None,
+        known_locations: dict[str, str] | None = None,
         **_: Any,
     ) -> list[Message]:
         handled = [f"  - {f}" for f in (resolution_facts or [])] or ["  (nothing)"]
         blocks = [
             "ENTITIES",
             *(f"  {eid}: {name}" for eid, name in (entities or {}).items()),
+            "",
+            "PLACES",
+            *(f"  {lid}: {name}" for lid, name in (known_locations or {}).items()),
             "",
             "ALREADY HANDLED BY THE ENGINE (do not re-extract)",
             *handled,
